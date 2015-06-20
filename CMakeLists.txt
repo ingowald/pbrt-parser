@@ -25,18 +25,16 @@ IF(COMMAND cmake_policy)
   ENDIF(${CMAKE_MAJOR_VERSION} EQUAL 3)
 ENDIF(COMMAND cmake_policy)
 
+SET(PLIB_BINARY_DIR ${PROJECT_BINARY_DIR})
+SET(LIBRARY_OUTPUT_PATH ${PLIB_BINARY_DIR})
+SET(EXECUTABLE_OUTPUT_PATH ${PLIB_BINARY_DIR})
+
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
 ADD_LIBRARY(plib_common
   embree-common/sys/filename.cpp
   embree-common/sys/sysinfo.cpp
 )
+ADD_SUBDIRECTORY(pbrt)
 
-ADD_LIBRARY(plib_pbrt
-  pbrt/parser
-)
-TARGET_LINK_LIBRARIES(plib_pbrt plib_common)
-
-ADD_EXECUTABLE(pbrtInfo pbrt/info.cpp)
-TARGET_LINK_LIBRARIES(pbrtInfo plib_pbrt)
 

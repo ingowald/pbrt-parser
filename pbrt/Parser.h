@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "pbrt/scene.h"
+#include "pbrt/Scene.h"
 
 namespace plib {
   namespace pbrt {
