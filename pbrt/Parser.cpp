@@ -510,6 +510,10 @@ namespace plib {
           }
           
           if (token->text == "ObjectEnd") {
+            continue;
+          }
+
+          if (token->text == "ObjectInstance") {
             std::string name = tokens->next()->text;
             continue;
           }
