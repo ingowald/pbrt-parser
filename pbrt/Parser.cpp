@@ -332,38 +332,6 @@ namespace plib {
       }
     }
 
-    // /*! parse given file, and add it to the scene we hold */
-    // void Parser::parseWorld(Tokenizer &tokenizer)
-    // {
-    //   try {
-    //     while (1) {
-    //       Loc lastLoc = tokenizer.getLastLoc();
-    //       Ref<Token> token = tokenizer.next();
-
-    //       if (!token)
-    //         throw new ParserException("unexpected end of file at "+lastLoc.toString()+": expected WorldEnd");
-          
-    //       if (token->text == "AttributeBegin") {
-    //         pushAttributes();
-    //         continue;
-    //       }
-
-    //       if (token->text == "AttributeEnd") {
-    //         popAttributes();
-    //         continue;
-    //       }
-
-    //       if (token->text == "WorldEnd")
-    //         return;
-
-    //       throw new ParserException("unexpected token '"+token->text+"' at "+token->loc.toString());
-    //     }
-    //   } catch (ParserException *e) {
-    //     e->addBackTrace(__PRETTY_FUNCTION__);
-    //     throw e;
-    //   }
-    // }
-
     /*! parse given file, and add it to the scene we hold */
     void Parser::parse(const FileName &fn)
     {
@@ -397,18 +365,15 @@ namespace plib {
 
           if (token->text == "Scale") {
             vec3f scale = parseVec3f(*tokens);
-            cout << "Scale " << scale << endl;
             continue;
           }
           if (token->text == "Translate") {
             vec3f translate = parseVec3f(*tokens);
-            cout << "Translate " << translate << endl;
             continue;
           }
           if (token->text == "Rotate") {
             vec3f axis = parseVec3f(*tokens);
             float angle = parseFloat(*tokens);
-            cout << "Rotate " << axis << ":" << angle << endl;
             continue;
           }
 

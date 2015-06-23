@@ -36,9 +36,20 @@ int main(int ac, char **av)
     }          
   }
 
-  plib::pbrt::Parser *parser = new plib::pbrt::Parser(dbg);
+  std::cout << "-------------------------------------------------------" << std::endl;
+  std::cout << "parsing:";
   for (int i=0;i<fileName.size();i++)
-    parser->parse(fileName[i]);
+    std::cout << " " << fileName[i];
+  std::cout << std::endl;
 
-  std::cout << "done parsing" << std::endl;
+  plib::pbrt::Parser *parser = new plib::pbrt::Parser(dbg);
+  try {
+    for (int i=0;i<fileName.size();i++)
+      parser->parse(fileName[i]);
+    
+    std::cout << "==> parsing successful (grammar only for now)" << std::endl;
+  } catch (std::runtime_error e) {
+    std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
+    exit(1);
+  }
 }

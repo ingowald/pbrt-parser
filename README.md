@@ -21,6 +21,8 @@ UPDATES
 
 (newest ones on top)
 
+- can now parse anim-bluespheres.pbrt
+- can now parse complete san miguel scene (the new one)
 - Can now parse entire GRAMMAR required for the san miguel scene.
   Note the parser isn't actually doing anything with the parsed items,
   yet - they are discarded right after each one is parsed - but at
@@ -28,6 +30,17 @@ UPDATES
 - added namedmaterial, texture, materials.
 - implemented 'Include' statement, fixed bug in lexer that would randomly return EOFs.
 
+STATUS
+======
+
+The following scenes from the pbrt scenes are known to pass the
+grammar parsing stage (we do not more than that for now, anyway)
+
+- 
+
+The following scenes are known to NOT work, yet
+
+<currently none>
 
 
 
