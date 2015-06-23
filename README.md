@@ -7,7 +7,7 @@ some of the other formats my other software (e.g., ospray) can also
 read.
 
 I'll be working on this on and off in my spare time; right now this is
-little more than a few early steps.
+little more than a few early steps to get a hang of the pbrt grammar.
 
 
 LICENSE
@@ -20,6 +20,11 @@ UPDATES
 =======
 
 (newest ones on top)
+
+- Can now parse entire GRAMMAR required for the san miguel scene.
+  Note the parser isn't actually doing anything with the parsed items,
+  yet - they are discarded right after each one is parsed - but at
+  least the grammar seems to be correct.
 - added namedmaterial, texture, materials.
 - implemented 'Include' statement, fixed bug in lexer that would randomly return EOFs.
 
