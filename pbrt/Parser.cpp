@@ -302,17 +302,21 @@ namespace plib {
 
       Ref<Param> ret = NULL;
       if (type == "float") {
-        ret = new ParamT<float>("float");
+        ret = new ParamT<float>(type);
       } else if (type == "color") {
-        ret = new ParamT<float>("color");
+        ret = new ParamT<float>(type);
       } else if (type == "integer") {
-        ret = new ParamT<int>("integer");
+        ret = new ParamT<int>(type);
       } else if (type == "bool") {
-        ret = new ParamT<bool>("boolean");
+        ret = new ParamT<bool>(type);
       } else if (type == "texture") {
-        ret = new ParamT<std::string>("texture");
+        ret = new ParamT<std::string>(type);
+      } else if (type == "normal") {
+        ret = new ParamT<float>(type);
+      } else if (type == "point") {
+        ret = new ParamT<float>(type);
       } else if (type == "string") {
-        ret = new ParamT<std::string>("string");
+        ret = new ParamT<std::string>(type);
       } else {
         throw new ParserException("unknown parameter type '"+type+"' "+token->loc.toString(),
                                   __PRETTY_FUNCTION__);
@@ -418,6 +422,14 @@ namespace plib {
             cout << "Rotate " << axis << ":" << angle << endl;
             continue;
           }
+          if (token->text == "Transform") {
+            tokens->next(); // '['
+            float mat[16];
+            for (int i=0;i<16;i++)
+              mat[i] = atof(tokens->next()->text.c_str());
+            tokens->next(); // ']'
+            continue;
+          }
           if (token->text == "LookAt") {
             vec3f v0 = parseVec3f(*tokens);
             vec3f v1 = parseVec3f(*tokens);
@@ -491,7 +503,16 @@ namespace plib {
           if (token->text == "WorldEnd") {
             continue;
           }
+
+          if (token->text == "ObjectBegin") {
+            std::string name = tokens->next()->text;
+            continue;
+          }
           
+          if (token->text == "ObjectEnd") {
+            std::string name = tokens->next()->text;
+            continue;
+          }
           
         
           throw new ParserException("unexpected token '"+token->text+"' at "+token->loc.toString());
