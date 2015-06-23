@@ -83,6 +83,9 @@ namespace plib {
     struct LightSource : public Node {
       LightSource(const std::string &type) : Node(type) {};
     };
+    struct AreaLightSource : public Node {
+      AreaLightSource(const std::string &type) : Node(type) {};
+    };
 
     struct Film : public Node {
       Film(const std::string &type) : Node(type) {};

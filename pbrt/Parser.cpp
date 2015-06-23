@@ -389,7 +389,6 @@ namespace plib {
         while (1) {
           Ref<Token> token = tokens->next();
           if (!token || token->type == Token::TOKEN_TYPE_EOF) {
-            PING;
             if (tokenizerStack.empty())
               break;
             tokens = tokenizerStack.top();
@@ -398,7 +397,7 @@ namespace plib {
           }
 
           if (dbg) 
-            PRINT(token->text);
+            cout << token->toString() << endl;
           if (token->text == "Include") {
             Ref<Token> fileNameToken = tokens->next();
             FileName includedFileName = fileNameToken->text;
@@ -449,6 +448,11 @@ namespace plib {
           }
           if (token->text == "LightSource") {
             Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
+            parseParams(lightSource->param,*tokens);
+            continue;
+          }
+          if (token->text == "AreaLightSource") {
+            Ref<AreaLightSource> lightSource = new AreaLightSource(tokens->next()->text);
             parseParams(lightSource->param,*tokens);
             continue;
           }
