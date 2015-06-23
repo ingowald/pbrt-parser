@@ -15,9 +15,10 @@
 // ======================================================================== //
 
 // pbrt
-#include "pbrt/parser.h"
+#include "pbrt/Parser.h"
 // stl
 #include <iostream>
+#include <vector>
 
 int main(int ac, char **av)
 {
