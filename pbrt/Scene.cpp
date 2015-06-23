@@ -78,8 +78,10 @@ namespace plib {
     }
 
 
-
     template struct ParamT<float>;
+    template struct ParamT<int>;
+    template struct ParamT<bool>;
+    // template struct ParamT<Color>;
 
   }
 }

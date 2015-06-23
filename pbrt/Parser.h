@@ -21,6 +21,8 @@
 namespace plib {
   namespace pbrt {
 
+    struct Tokenizer;
+
     /*! parser object that holds persistent state about the parsing
         state (e.g., file paths, named objects, etc), even if they are
         split over multiple files. To parse different scenes, use
@@ -32,6 +34,9 @@ namespace plib {
       /*! parse given file, and add it to the scene we hold */
       void parse(const FileName &fn);
       
+      void pushAttributes() {}
+      void popAttributes() {}
+
       /*! return the scene we have parsed */
       Ref<Scene> getScene() { return scene; }
       

@@ -10,12 +10,18 @@ I'll be working on this on and off in my spare time; right now this is
 little more than a few early steps.
 
 
-
-
-
 LICENSE
 =======
 
 This project comes with Apache 2.0 license - pretty much "use as you see fit".
+
+
+UPDATES
+=======
+
+(newest ones on top)
+- implemented 'Include' statement, fixed bug in lexer that would randomly return EOFs.
+
+
 
 

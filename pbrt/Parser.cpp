@@ -19,6 +19,7 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
+#include <stack>
 // std
 #include <stdio.h>
 #include <string.h>
@@ -81,7 +82,6 @@ namespace plib {
         : file(new File(fn)), loc(file), peekedChar(-1) 
       {
       }
-
 
       std::deque<Ref<Token> > peekedTokens;
 
@@ -152,8 +152,9 @@ namespace plib {
       Ref<Token> produceNextToken() 
       {
         // skip all white space and comments
+        // int c = peeked_char;
+        // if (c < 0) return Token::TOKEN_EOF;
         int c;
-        if (c < 0) return Token::TOKEN_EOF;
 
         std::stringstream ss;
 
@@ -302,6 +303,8 @@ namespace plib {
       Ref<Param> ret = NULL;
       if (type == "float") {
         ret = new ParamT<float>;
+      } else if (type == "color") {
+        ret = new ParamT<float>;
       } else if (type == "integer") {
         ret = new ParamT<int>;
       } else if (type == "bool") {
@@ -312,9 +315,11 @@ namespace plib {
         throw new ParserException("unknown parameter type '"+type+"' "+token->loc.toString(),
                                   __PRETTY_FUNCTION__);
       }
+
       if (tokens.peek()->text == "[") {
         tokens.next();
         Ref<Token> p = tokens.next();
+
         while (p->text != "]") {
           ret->add(p->text);
           p = tokens.next();
@@ -333,43 +338,127 @@ namespace plib {
       }
     }
 
+    // /*! parse given file, and add it to the scene we hold */
+    // void Parser::parseWorld(Tokenizer &tokenizer)
+    // {
+    //   try {
+    //     while (1) {
+    //       Loc lastLoc = tokenizer.getLastLoc();
+    //       Ref<Token> token = tokenizer.next();
+
+    //       if (!token)
+    //         throw new ParserException("unexpected end of file at "+lastLoc.toString()+": expected WorldEnd");
+          
+    //       if (token->text == "AttributeBegin") {
+    //         pushAttributes();
+    //         continue;
+    //       }
+
+    //       if (token->text == "AttributeEnd") {
+    //         popAttributes();
+    //         continue;
+    //       }
+
+    //       if (token->text == "WorldEnd")
+    //         return;
+
+    //       throw new ParserException("unexpected token '"+token->text+"' at "+token->loc.toString());
+    //     }
+    //   } catch (ParserException *e) {
+    //     e->addBackTrace(__PRETTY_FUNCTION__);
+    //     throw e;
+    //   }
+    // }
+
     /*! parse given file, and add it to the scene we hold */
     void Parser::parse(const FileName &fn)
     {
       try {
-      Tokenizer tokenizer(fn);
-      Ref<Token> token;
-      while ((token = tokenizer.next())) {
-        if (token->text == "Scale") {
-          vec3f scale = parseVec3f(tokenizer);
-          cout << "Scale " << scale << endl;
-          continue;
-        }
-        if (token->text == "LookAt") {
-          vec3f v0 = parseVec3f(tokenizer);
-          vec3f v1 = parseVec3f(tokenizer);
-          vec3f v2 = parseVec3f(tokenizer);
-          cout << "LookAt " << v0 << " " << v1 << " " << v2 << endl;
-          continue;
-        }
-        if (token->text == "Camera") {
-          Ref<Camera> camera = new Camera(tokenizer.next()->text);
-          parseParams(camera.cast<Node>(),tokenizer);
-          continue;
-        }
-        if (token->text == "Film") {
-          Ref<Film> film = new Film(tokenizer.next()->text);
-          parseParams(film.cast<Node>(),tokenizer);
-          continue;
-        }
-        if (token->text == "Renderer") {
-          Ref<Renderer> renderer = new Renderer(tokenizer.next()->text);
-          parseParams(renderer.cast<Node>(),tokenizer);
-          continue;
-        }
+        std::stack<Tokenizer *> tokenizerStack;
+        Tokenizer *tokens = new Tokenizer(fn);
+
+        while (1) {
+          Ref<Token> token = tokens->next();
+          if (!token) {
+            if (tokenizerStack.empty())
+              break;
+            tokens = tokenizerStack.top();
+            tokenizerStack.pop();
+            continue;
+          }
+
+          if (token->text == "Include") {
+            Ref<Token> fileNameToken = tokens->next();
+            FileName includedFileName = fileNameToken->text;
+            if (includedFileName.str()[0] != '/') {
+              includedFileName = tokens->file->name.path()+includedFileName;
+            }
+            cout << "... including file '" << includedFileName.str() << " ..." << endl;
+            tokenizerStack.push(tokens);
+            tokens = new Tokenizer(includedFileName);
+            continue;
+          }
+
+          if (token->text == "Scale") {
+            vec3f scale = parseVec3f(*tokens);
+            cout << "Scale " << scale << endl;
+            continue;
+          }
+          if (token->text == "Rotate") {
+            vec3f axis = parseVec3f(*tokens);
+            float angle = parseFloat(*tokens);
+            cout << "Rotate " << axis << ":" << angle << endl;
+            continue;
+          }
+          if (token->text == "LookAt") {
+            vec3f v0 = parseVec3f(*tokens);
+            vec3f v1 = parseVec3f(*tokens);
+            vec3f v2 = parseVec3f(*tokens);
+            cout << "LookAt " << v0 << " " << v1 << " " << v2 << endl;
+            continue;
+          }
+          if (token->text == "Camera") {
+            Ref<Camera> camera = new Camera(tokens->next()->text);
+            parseParams(camera.cast<Node>(),*tokens);
+            continue;
+          }
+          if (token->text == "LightSource") {
+            Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
+            parseParams(lightSource.cast<Node>(),*tokens);
+            continue;
+          }
+          if (token->text == "Film") {
+            Ref<Film> film = new Film(tokens->next()->text);
+            parseParams(film.cast<Node>(),*tokens);
+            continue;
+          }
+          if (token->text == "Renderer") {
+            Ref<Renderer> renderer = new Renderer(tokens->next()->text);
+            parseParams(renderer.cast<Node>(),*tokens);
+            continue;
+          }
+
+          if (token->text == "AttributeBegin") {
+            pushAttributes();
+            continue;
+          }
         
-        throw new ParserException("unexpected token '"+token->text+"' at "+token->loc.toString());
-      }
+          if (token->text == "AttributeEnd") {
+            popAttributes();
+            continue;
+          }
+        
+          if (token->text == "WorldBegin") {
+            continue;
+          }
+          if (token->text == "WorldEnd") {
+            continue;
+          }
+          
+          
+        
+          throw new ParserException("unexpected token '"+token->text+"' at "+token->loc.toString());
+        }
       } catch (ParserException *e) {
         THROW_RUNTIME_ERROR("plib::pbrt parser fatal error:\n"+e->toString());
       }

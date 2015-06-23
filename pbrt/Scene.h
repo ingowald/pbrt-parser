@@ -55,6 +55,10 @@ namespace plib {
       Camera(const std::string &type) : Node(type) {};
     };
 
+    struct LightSource : public Node {
+      LightSource(const std::string &type) : Node(type) {};
+    };
+
     struct Film : public Node {
       Film(const std::string &type) : Node(type) {};
     };
