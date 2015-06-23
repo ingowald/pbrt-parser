@@ -106,27 +106,21 @@ namespace plib {
         if (peekedChar >= 0) {
           int c = peekedChar;
           peekedChar = -1;
-          // PING; PRINT(c);
           return c;
         }
         
         if (!file->file || feof(file->file)) {
-          // PING; 
           return -1;
         }
         
         int c = fgetc(file->file);
         int eol = '\n';
-        // PRINT(eol);
         if (c == '\n') {
-          // PING;
-          // cout << "NEWLINE" << endl;
           loc.line++;
           loc.col = 0;
         } else {
           loc.col++;
         }
-        // PING; PRINT(loc.toString()); PRINT(c); PRINT((char)c);
         return c;
       };
       
@@ -152,25 +146,18 @@ namespace plib {
       Ref<Token> produceNextToken() 
       {
         // skip all white space and comments
-        // int c = peeked_char;
-        // if (c < 0) return Token::TOKEN_EOF;
         int c;
 
         std::stringstream ss;
 
         Loc startLoc = loc;
-        // PING;
         // skip all whitespaces and comments
         while (1) {
-          // PING;
           c = get_char();
-          // PRINT(c);
-          // PRINT((char)c);
 
           if (c < 0) return Token::TOKEN_EOF;
           
           if (isWhite(c)) {
-            // PING; PRINT((char)c); PRINT(loc.toString());
             continue;
           }
           
@@ -227,9 +214,7 @@ namespace plib {
             return new Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
           if (c == '#' || isSpecial(c) || isWhite(c)) {
             // cout << "END OF TOKEN AT " << lastLoc.toString() << endl;
-            // PRINT((char)c);
             unget_char(c);
-            // PRINT(ss.str());
             return new Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
           }
           ss << (char)c;
@@ -415,12 +400,23 @@ namespace plib {
             cout << "Scale " << scale << endl;
             continue;
           }
+          if (token->text == "Translate") {
+            vec3f translate = parseVec3f(*tokens);
+            cout << "Translate " << translate << endl;
+            continue;
+          }
           if (token->text == "Rotate") {
             vec3f axis = parseVec3f(*tokens);
             float angle = parseFloat(*tokens);
             cout << "Rotate " << axis << ":" << angle << endl;
             continue;
           }
+
+          if (token->text == "ActiveTransform") {
+            std::string time = tokens->next()->text;
+            continue;
+          }
+
           if (token->text == "Transform") {
             tokens->next(); // '['
             float mat[16];
@@ -439,6 +435,21 @@ namespace plib {
           if (token->text == "Camera") {
             Ref<Camera> camera = new Camera(tokens->next()->text);
             parseParams(camera->param,*tokens);
+            continue;
+          }
+          if (token->text == "Sampler") {
+            Ref<Sampler> sampler = new Sampler(tokens->next()->text);
+            parseParams(sampler->param,*tokens);
+            continue;
+          }
+          if (token->text == "SurfaceIntegrator") {
+            Ref<SurfaceIntegrator> surfaceIntegrator = new SurfaceIntegrator(tokens->next()->text);
+            parseParams(surfaceIntegrator->param,*tokens);
+            continue;
+          }
+          if (token->text == "PixelFilter") {
+            Ref<PixelFilter> pixelFilter = new PixelFilter(tokens->next()->text);
+            parseParams(pixelFilter->param,*tokens);
             continue;
           }
           if (token->text == "Shape") {
@@ -471,6 +482,12 @@ namespace plib {
             std::string name = tokens->next()->text;
             Ref<Material> material = new Material(name);
             namedMaterial[name] = material;
+            parseParams(material->param,*tokens);
+            continue;
+          }
+          if (token->text == "Material") {
+            std::string name = tokens->next()->text;
+            Ref<Material> material = new Material(name);
             parseParams(material->param,*tokens);
             continue;
           }
