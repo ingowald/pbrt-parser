@@ -46,7 +46,8 @@ LEX_FILE(lexer.ll)
 ADD_LIBRARY(plib_pbrt
   lexer_l.cpp
   parser_y.cpp
-  parser
+  Parser.cpp
+  Scene.cpp
   )
 TARGET_LINK_LIBRARIES(plib_pbrt plib_common)
 

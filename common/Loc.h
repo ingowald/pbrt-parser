@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015 Ingo Wald
+// Copyright 2015 Ingo Wald                                                 //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,17 +14,38 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// embree
-#include "embree-common/sys/platform.h"
-#include "embree-common/sys/ref.h"
-#include "embree-common/sys/filename.h"
-#include "embree-common/math/vec3.h"
+#pragma once
+
+#include "common/plib.h"
+// std
+#include <string>
+#include <ostream>
 
 namespace plib {
+  using std::string;
 
-  typedef embree::RefCount RefCounted;
-  using embree::Ref;
-  using embree::FileName;
+  struct Loc {
+    Loc() { name = "(undef/internal)"; line = 0; }
+    const char *name;
+    int line;
+    void Print() const { printf(" @ [%s:%d] ", name, line); }
+    string toString() const;
+  
+    static Loc current;
+  };
 
-  typedef embree::Vec3f vec3f;
-}
+  inline std::ostream &operator<<(std::ostream &o, const Loc &fp)
+  {
+    o << fp.toString();
+    return o;
+  }
+
+  void Warning(Loc p, const char *, ...);
+  void Error(Loc p, const char *, ...);
+  void PerformanceNotice(Loc p, const char *, ...);
+  void PerformanceWarning(Loc p, const char *, ...);
+
+} // ::plib
+
+
+
