@@ -35,13 +35,34 @@ namespace plib {
 
     template<typename T>
     struct ParamT : public Param {
-      virtual std::string getType() const;
+      ParamT(const std::string &type) : type(type) {};
+      virtual std::string getType() const { return type; };
       virtual size_t getSize() const { return paramVec.size(); }
       /*! used during parsing, to add a newly parsed parameter value
           to the list */
       virtual void add(const std::string &text);
     private:
+      std::string type;
       std::vector<T> paramVec;
+    };
+
+    struct Material : public RefCounted {
+      std::string name;
+      Material(const std::string &name) : name(name) {};
+      std::map<std::string,Ref<Param> > param;
+    };
+
+    struct Texture : public RefCounted {
+      std::string name;
+      std::string texelType;
+      std::string mapType;
+
+      Texture(const std::string &name,
+              const std::string &texelType,
+              const std::string &mapType) 
+        : name(name), texelType(texelType), mapType(mapType)
+      {};
+      std::map<std::string,Ref<Param> > param;
     };
 
     struct Node : public RefCounted {

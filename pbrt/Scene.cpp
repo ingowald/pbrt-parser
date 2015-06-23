@@ -19,55 +19,16 @@
 namespace plib {
   namespace pbrt {
 
-    // -------------------------------------------------------
-    // float
-    // -------------------------------------------------------
-
-    template<> 
-    std::string ParamT<float>::getType() const
-    { return "float"; }
-
-    template<> 
-    void ParamT<float>::add(const std::string &text)
+    template<> void ParamT<float>::add(const std::string &text)
     { paramVec.push_back(atof(text.c_str())); }
 
-
-    // -------------------------------------------------------
-    // integer
-    // -------------------------------------------------------
-
-    template<> 
-    std::string ParamT<int>::getType() const
-    { return "integer"; }
-
-    template<> 
-    void ParamT<int>::add(const std::string &text)
+    template<> void ParamT<int>::add(const std::string &text)
     { paramVec.push_back(atoi(text.c_str())); }
 
-
-    // -------------------------------------------------------
-    // string
-    // -------------------------------------------------------
-
-    template<> 
-    std::string ParamT<std::string>::getType() const
-    { return "string"; }
-
-    template<> 
-    void ParamT<std::string>::add(const std::string &text)
+    template<> void ParamT<std::string>::add(const std::string &text)
     { paramVec.push_back(text); }
 
-
-    // -------------------------------------------------------
-    // bool
-    // -------------------------------------------------------
-
-    template<> 
-    std::string ParamT<bool>::getType() const
-    { return "bool"; }
-
-    template<> 
-    void ParamT<bool>::add(const std::string &text)
+    template<> void ParamT<bool>::add(const std::string &text)
     { 
       if (text == "true")
         paramVec.push_back(true); 

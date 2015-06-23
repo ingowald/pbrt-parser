@@ -20,6 +20,7 @@ UPDATES
 =======
 
 (newest ones on top)
+- added namedmaterial, texture, materials.
 - implemented 'Include' statement, fixed bug in lexer that would randomly return EOFs.
 
 

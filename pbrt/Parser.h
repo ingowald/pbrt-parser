@@ -29,7 +29,7 @@ namespace plib {
         different instances of this class. */
     struct Parser {
       /*! constructor */
-      Parser() : scene(new Scene) {};
+      Parser(bool dbg) : scene(new Scene), dbg(dbg) {};
 
       /*! parse given file, and add it to the scene we hold */
       void parse(const FileName &fn);
@@ -41,7 +41,11 @@ namespace plib {
       Ref<Scene> getScene() { return scene; }
       
     private:
+      // emit debug status messages...
+      bool dbg;
       Ref<Scene> scene;
+      std::map<std::string,Ref<Material> > namedMaterial;
+      std::map<std::string,Ref<Texture> > namedTexture;
     };
 
   }

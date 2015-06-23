@@ -302,39 +302,44 @@ namespace plib {
 
       Ref<Param> ret = NULL;
       if (type == "float") {
-        ret = new ParamT<float>;
+        ret = new ParamT<float>("float");
       } else if (type == "color") {
-        ret = new ParamT<float>;
+        ret = new ParamT<float>("color");
       } else if (type == "integer") {
-        ret = new ParamT<int>;
+        ret = new ParamT<int>("integer");
       } else if (type == "bool") {
-        ret = new ParamT<bool>;
+        ret = new ParamT<bool>("boolean");
+      } else if (type == "texture") {
+        ret = new ParamT<std::string>("texture");
       } else if (type == "string") {
-        ret = new ParamT<std::string>;
+        ret = new ParamT<std::string>("string");
       } else {
         throw new ParserException("unknown parameter type '"+type+"' "+token->loc.toString(),
                                   __PRETTY_FUNCTION__);
       }
 
-      if (tokens.peek()->text == "[") {
+      Ref<Token> value = tokens.next();
+      if (value->text == "[") {
         tokens.next();
         Ref<Token> p = tokens.next();
-
+        
         while (p->text != "]") {
           ret->add(p->text);
           p = tokens.next();
         }
+      } else {
+        ret->add(value->text);
       }
       return ret;
     }
 
-    void parseParams(Ref<Node> node, Tokenizer &tokens)
+    void parseParams(std::map<std::string, Ref<Param> > &params, Tokenizer &tokens)
     {
       while (1) {
         std::string name;
         Ref<Param> param = parseParam(name,tokens);
         if (!param) return;
-        node->param[name] = param;
+        params[name] = param;
       }
     }
 
@@ -379,7 +384,8 @@ namespace plib {
 
         while (1) {
           Ref<Token> token = tokens->next();
-          if (!token) {
+          if (!token || token->type == Token::TOKEN_TYPE_EOF) {
+            PING;
             if (tokenizerStack.empty())
               break;
             tokens = tokenizerStack.top();
@@ -387,6 +393,8 @@ namespace plib {
             continue;
           }
 
+          if (dbg) 
+            PRINT(token->text);
           if (token->text == "Include") {
             Ref<Token> fileNameToken = tokens->next();
             FileName includedFileName = fileNameToken->text;
@@ -419,22 +427,45 @@ namespace plib {
           }
           if (token->text == "Camera") {
             Ref<Camera> camera = new Camera(tokens->next()->text);
-            parseParams(camera.cast<Node>(),*tokens);
+            parseParams(camera->param,*tokens);
             continue;
           }
           if (token->text == "LightSource") {
             Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
-            parseParams(lightSource.cast<Node>(),*tokens);
+            parseParams(lightSource->param,*tokens);
             continue;
           }
           if (token->text == "Film") {
             Ref<Film> film = new Film(tokens->next()->text);
-            parseParams(film.cast<Node>(),*tokens);
+            parseParams(film->param,*tokens);
             continue;
           }
           if (token->text == "Renderer") {
             Ref<Renderer> renderer = new Renderer(tokens->next()->text);
-            parseParams(renderer.cast<Node>(),*tokens);
+            parseParams(renderer->param,*tokens);
+            continue;
+          }
+
+          if (token->text == "MakeNamedMaterial") {
+            std::string name = tokens->next()->text;
+            Ref<Material> material = new Material(name);
+            namedMaterial[name] = material;
+            parseParams(material->param,*tokens);
+            continue;
+          }
+
+          if (token->text == "NamedMaterial") {
+            // USE named material
+            std::string which = tokens->next()->text;
+            continue;
+          }
+          if (token->text == "Texture") {
+            std::string name = tokens->next()->text;
+            std::string texelType = tokens->next()->text;
+            std::string mapType = tokens->next()->text;
+            Ref<Texture> texture = new Texture(name,texelType,mapType);
+            namedTexture[name] = texture;
+            parseParams(texture->param,*tokens);
             continue;
           }
 
@@ -451,6 +482,7 @@ namespace plib {
           if (token->text == "WorldBegin") {
             continue;
           }
+
           if (token->text == "WorldEnd") {
             continue;
           }

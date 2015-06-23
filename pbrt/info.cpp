@@ -21,14 +21,23 @@
 
 int main(int ac, char **av)
 {
-  plib::pbrt::Parser *parser = new plib::pbrt::Parser;
+  std::vector<std::string> fileName;
+  bool dbg = false;
   for (int i=1;i<ac;i++) {
     const std::string arg = av[i];
     if (arg[0] == '-') {
-      THROW_RUNTIME_ERROR("invalid argument '"+arg+"'");
+      if (arg == "-dbg" || arg == "--dbg")
+        dbg = true;
+      else
+        THROW_RUNTIME_ERROR("invalid argument '"+arg+"'");
     } else {
-      parser->parse(arg);
+      fileName.push_back(arg);
     }          
   }
+
+  plib::pbrt::Parser *parser = new plib::pbrt::Parser(dbg);
+  for (int i=0;i<fileName.size();i++)
+    parser->parse(fileName[i]);
+
   std::cout << "done parsing" << std::endl;
 }
