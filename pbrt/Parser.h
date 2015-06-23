@@ -37,6 +37,9 @@ namespace plib {
       void pushAttributes() {}
       void popAttributes() {}
 
+      void pushTransform() {}
+      void popTransform() {}
+
       /*! return the scene we have parsed */
       Ref<Scene> getScene() { return scene; }
       

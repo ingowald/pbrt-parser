@@ -212,7 +212,7 @@ namespace plib {
           c = get_char();
           if (c < 0)
             return new Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
-          if (c == '#' || isSpecial(c) || isWhite(c)) {
+          if (c == '#' || isSpecial(c) || isWhite(c) || c=='"') {
             // cout << "END OF TOKEN AT " << lastLoc.toString() << endl;
             unget_char(c);
             return new Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
@@ -482,9 +482,17 @@ namespace plib {
             pushAttributes();
             continue;
           }
-        
           if (token->text == "AttributeEnd") {
             popAttributes();
+            continue;
+          }
+
+          if (token->text == "TransformBegin") {
+            pushTransform();
+            continue;
+          }
+          if (token->text == "TransformEnd") {
+            popTransform();
             continue;
           }
         

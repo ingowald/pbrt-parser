@@ -46,11 +46,11 @@ grammar parsing stage (we do not more than that for now, anyway)
  - killeroo-simple.pbrt
  - sanmiguel.pbrt
  - teapot-subsurface.pbrt
+ - arcsphere.pbrt
+ - ballpile.pbrt
 
 FAILED
 
- - arcsphere.pbrt
- - ballpile.pbrt
  - buddha.pbrt
  - bump-sphere.pbrt
  - city-ao.pbrt
