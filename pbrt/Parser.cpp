@@ -394,7 +394,6 @@ namespace plib {
             vec3f v0 = parseVec3f(*tokens);
             vec3f v1 = parseVec3f(*tokens);
             vec3f v2 = parseVec3f(*tokens);
-            cout << "LookAt " << v0 << " " << v1 << " " << v2 << endl;
             continue;
           }
           if (token->text == "Camera") {
@@ -408,8 +407,15 @@ namespace plib {
             continue;
           }
           if (token->text == "SurfaceIntegrator") {
-            Ref<SurfaceIntegrator> surfaceIntegrator = new SurfaceIntegrator(tokens->next()->text);
+            Ref<SurfaceIntegrator> surfaceIntegrator
+              = new SurfaceIntegrator(tokens->next()->text);
             parseParams(surfaceIntegrator->param,*tokens);
+            continue;
+          }
+          if (token->text == "VolumeIntegrator") {
+            Ref<VolumeIntegrator> volumeIntegrator
+              = new VolumeIntegrator(tokens->next()->text);
+            parseParams(volumeIntegrator->param,*tokens);
             continue;
           }
           if (token->text == "PixelFilter") {

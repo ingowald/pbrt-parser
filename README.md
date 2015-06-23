@@ -36,11 +36,61 @@ STATUS
 The following scenes from the pbrt scenes are known to pass the
 grammar parsing stage (we do not more than that for now, anyway)
 
-- 
+ - anim-bluespheres.pbrt
+ - anim-killeroos-moving.pbrt
+ - buddhamesh.pbrt
+ - bunny.pbrt
+ - caustic-proj.pbrt
+ - dof-dragons.pbrt
+ - killeroo-glossy-prt.pbrt
+ - killeroo-simple.pbrt
+ - sanmiguel.pbrt
+ - teapot-subsurface.pbrt
 
-The following scenes are known to NOT work, yet
+FAILED
 
-<currently none>
-
-
-
+ - arcsphere.pbrt
+ - ballpile.pbrt
+ - buddha.pbrt
+ - bump-sphere.pbrt
+ - city-ao.pbrt
+ - city-env.pbrt
+ - cornell-mlt.pbrt
+ - killeroo-gold.pbrt
+ - metal-ssynth.pbrt
+ - microcity.pbrt
+ - miscquads.pbrt
+ - plants-dusk.pbrt
+ - plants-godrays.pbrt
+ - probe-cornell.pbrt
+ - room-igi.pbrt
+ - room-mlt.pbrt
+ - room-path.pbrt
+ - room-photon-nogather.pbrt
+ - room-photon.pbrt
+ - sanmiguel_cam14.pbrt
+ - sanmiguel_cam15.pbrt
+ - sanmiguel_cam18.pbrt
+ - sanmiguel_cam1.pbrt
+ - sanmiguel_cam20.pbrt
+ - sanmiguel_cam25.pbrt
+ - sanmiguel_cam3.pbrt
+ - sanmiguel_cam4.pbrt
+ - sanmiguel_cam5.pbrt
+ - sanmiguel_cam6.pbrt
+ - sibenik-igi.pbrt
+ - smoke-2.pbrt
+ - sphere-ewa-vs-trilerp.pbrt
+ - spheres-differentials-texfilt.pbrt
+ - sponza-fog.pbrt
+ - sponza-phomap.pbrt
+ - spotfog.pbrt
+ - teapot-area-light.pbrt
+ - teapot-cornell-brdf.pbrt
+ - teapot-metal.pbrt
+ - tt.pbrt
+ - villa-daylight.pbrt
+ - villa-igi.pbrt
+ - villa-lights-on.pbrt
+ - villa-photons.pbrt
+ - yeahright.pbrt

@@ -82,6 +82,9 @@ namespace plib {
     struct SurfaceIntegrator : public Node {
       SurfaceIntegrator(const std::string &type) : Node(type) {};
     };
+    struct VolumeIntegrator : public Node {
+      VolumeIntegrator(const std::string &type) : Node(type) {};
+    };
     struct PixelFilter : public Node {
       PixelFilter(const std::string &type) : Node(type) {};
     };
