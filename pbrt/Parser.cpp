@@ -290,6 +290,8 @@ namespace plib {
         ret = new ParamT<float>(type);
       } else if (type == "color") {
         ret = new ParamT<float>(type);
+      } else if (type == "spectrum") {
+        ret = new ParamT<std::string>(type);
       } else if (type == "integer") {
         ret = new ParamT<int>(type);
       } else if (type == "bool") {
