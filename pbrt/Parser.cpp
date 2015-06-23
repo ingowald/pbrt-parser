@@ -430,6 +430,11 @@ namespace plib {
             parseParams(camera->param,*tokens);
             continue;
           }
+          if (token->text == "Shape") {
+            Ref<Shape> shape = new Shape(tokens->next()->text);
+            parseParams(shape->param,*tokens);
+            continue;
+          }
           if (token->text == "LightSource") {
             Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
             parseParams(lightSource->param,*tokens);

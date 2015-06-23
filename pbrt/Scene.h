@@ -76,6 +76,10 @@ namespace plib {
       Camera(const std::string &type) : Node(type) {};
     };
 
+    struct Shape : public Node {
+      Shape(const std::string &type) : Node(type) {};
+    };
+
     struct LightSource : public Node {
       LightSource(const std::string &type) : Node(type) {};
     };
