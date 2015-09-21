@@ -46,6 +46,13 @@ namespace plib {
       std::vector<T> paramVec;
     };
 
+    struct Attributes: public RefCounted {
+      Attributes();
+      Attributes(const Attributes &other);
+
+      virtual Attributes *clone() const { return new Attributes(*this); }
+    };
+
     struct Material : public RefCounted {
       std::string name;
       Material(const std::string &name) : name(name) {};
@@ -67,6 +74,7 @@ namespace plib {
 
     struct Node : public RefCounted {
       Node(const std::string &type) : type(type) {};
+      virtual std::string toString() const { return type; }
 
       const std::string type;
       std::map<std::string,Ref<Param> > param;
@@ -90,7 +98,16 @@ namespace plib {
     };
 
     struct Shape : public Node {
-      Shape(const std::string &type) : Node(type) {};
+      Shape(const std::string &type,
+            Ref<Attributes> attributes,
+            affine3f &transform) 
+        : Node(type), 
+          attributes(attributes),
+          transform(transform)
+      {};
+
+      Ref<Attributes> attributes;
+      affine3f        transform;
     };
 
     struct LightSource : public Node {
@@ -108,7 +125,57 @@ namespace plib {
       Renderer(const std::string &type) : Node(type) {};
     };
 
-    struct Scene : public RefCounted {
+    // a "LookAt" in the pbrt file has three vec3fs, no idea what for
+    // right now - need to rename once we figure that out
+    struct LookAt : public RefCounted {
+      LookAt(const vec3f &v0, 
+             const vec3f &v1, 
+             const vec3f &v2)
+        : v0(v0),v1(v1),v2(v2)
+      {}
+
+      vec3f v0, v1, v2;
+    };
+
+    //! what's in a objectbegin/objectned, as well as the root object
+    struct Object : public RefCounted {
+      struct Instance : public RefCounted {
+        Instance(Ref<Object> object,
+                 affine3f    xfm)
+          : object(object), xfm(xfm)
+        {}
+
+        Ref<Object> object;
+        affine3f    xfm;
+      };
+
+      std::string name;
+
+      //! list of cameras defined in the scene
+      std::vector<Ref<Camera> > cameras;
+      //! list of all shapes defined in the scene
+      std::vector<Ref<Shape> > shapes;
+      //! list of all shapes defined in the scene
+      std::vector<Ref<Object::Instance> > objectInstances;
+    };
+
+
+    struct Scene : public Object {
+
+      //! last lookat specified in the scene, or NULL if none.
+      Ref<LookAt> lookAt;
+
+      //! last sampler specified in the scene, or NULL if none.
+      Ref<Sampler> sampler;
+
+      //! last volume integrator specified in the scene, or NULL if none.
+      Ref<VolumeIntegrator> volumeIntegrator;
+
+      //! last surface integrator specified in the scene, or NULL if none.
+      Ref<SurfaceIntegrator> surfaceIntegrator;
+
+      //! last pixel filter specified in the scene, or NULL if none.
+      Ref<PixelFilter> pixelFilter;
     };
 
   }

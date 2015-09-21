@@ -20,6 +20,8 @@
 #include <iostream>
 #include <vector>
 
+using namespace plib::pbrt;
+
 int main(int ac, char **av)
 {
   std::vector<std::string> fileName;
@@ -79,6 +81,17 @@ int main(int ac, char **av)
         parser->parse(fileName[i]);
     
       std::cout << "==> parsing successful (grammar only for now)" << std::endl;
+
+      embree::Ref<Scene> scene = parser->getScene();
+
+      std::cout << "num cameras: " << scene->cameras.size() << std::endl;
+      for (int i=0;i<scene->cameras.size();i++)
+        std::cout << " - " << scene->cameras[i]->toString() << std::endl;
+
+      std::cout << "num shapes: " << scene->shapes.size() << std::endl;
+      for (int i=0;i<scene->shapes.size();i++)
+        std::cout << " - " << scene->shapes[i]->toString() << std::endl;
+
     } catch (std::runtime_error e) {
       std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
       exit(1);
