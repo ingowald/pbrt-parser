@@ -27,6 +27,8 @@ namespace plib {
   using embree::Ref;
   using embree::FileName;
 
+  typedef embree::Vec2f vec2f;
+  typedef embree::Vec3i vec3i;
   typedef embree::Vec3f vec3f;
   typedef embree::AffineSpace3f affine3f;
 }

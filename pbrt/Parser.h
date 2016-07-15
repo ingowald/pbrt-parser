@@ -49,6 +49,8 @@ namespace plib {
       // add additional transform to current transform
       void addTransform(const affine3f &add)
       { transformStack.top() *= add; }
+      void setTransform(const affine3f &xfm)
+      { transformStack.top() = xfm; }
 
       std::stack<Ref<Attributes> > attributesStack;
       std::stack<affine3f>         transformStack;
@@ -56,7 +58,7 @@ namespace plib {
 
       Ref<Object> getCurrentObject();
       affine3f    getCurrentXfm() { return transformStack.top(); }
-      Ref<Object> findNamedObject(const std::string &name);
+      Ref<Object> findNamedObject(const std::string &name, bool createIfNotExist=false);
 
       // emit debug status messages...
       bool dbg;

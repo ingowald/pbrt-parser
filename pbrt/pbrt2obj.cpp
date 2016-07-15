@@ -28,13 +28,45 @@ namespace plib {
     using std::cout;
     using std::endl;
 
+    // the output file we're writing.
+    FILE *out = NULL;
+
     void writeTriangleMesh(Ref<Shape> shape, const affine3f &instanceXfm)
     {
       const affine3f xfm = instanceXfm*shape->transform;
 
       static size_t numVerticesWritten = 0;
-      size_t firstVertexID = numVerticesWritten;
-      
+      size_t firstVertexID = numVerticesWritten+1;
+
+      { // parse "point P"
+        Ref<ParamT<float> > param_P = shape->findParam<float>("P");
+        if (param_P) {
+          const size_t numPoints = param_P->paramVec.size() / 3;
+          for (int i=0;i<numPoints;i++) {
+          vec3f v(param_P->paramVec[3*i+0],
+                  param_P->paramVec[3*i+1],
+                  param_P->paramVec[3*i+2]);
+          v = xfmPoint(xfm,v);
+          fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
+          numVerticesWritten++;
+          }
+        }
+      }
+
+      { // parse "int indices"
+        Ref<ParamT<int> > param_indices = shape->findParam<int>("indices");
+        if (param_indices) {
+          
+          const size_t numIndices = param_indices->paramVec.size() / 3;
+          for (int i=0;i<numIndices;i++) {
+            vec3i v(param_indices->paramVec[3*i+0],
+                    param_indices->paramVec[3*i+1],
+                    param_indices->paramVec[3*i+2]);
+            fprintf(out,"f %lu %lu %lu\n",firstVertexID+v.x,firstVertexID+v.y,firstVertexID+v.z);
+          }
+        }
+      }
+        
 //       "indices"
 // "point P"
 // "float uv"
@@ -48,8 +80,9 @@ namespace plib {
         if (shape->type == "trianglemesh") {
           writeTriangleMesh(shape,instanceXfm);
         } else 
-          cout << "invalid shape #" << shapeID << " : " << shape->type << endl;
+          cout << "**** invalid shape #" << shapeID << " : " << shape->type << endl;
       }
+      PRINT(object->objectInstances.size());
       for (int instID=0;instID<object->objectInstances.size();instID++) {
         writeObject(object->objectInstances[instID]->object,
                     instanceXfm*object->objectInstances[instID]->xfm);
@@ -61,7 +94,7 @@ namespace plib {
     {
       std::vector<std::string> fileName;
       bool dbg = false;
-      std::string outFileName = "";
+      std::string outFileName = "a.obj";
       for (int i=1;i<ac;i++) {
         const std::string arg = av[i];
         if (arg[0] == '-') {
@@ -75,6 +108,9 @@ namespace plib {
           fileName.push_back(arg);
         }          
       }
+
+      out = fopen(outFileName.c_str(),"w");
+      assert(out);
   
       std::cout << "-------------------------------------------------------" << std::endl;
       std::cout << "parsing:";
@@ -91,6 +127,7 @@ namespace plib {
     
         embree::Ref<Scene> scene = parser->getScene();
         writeObject(scene.cast<Object>(),embree::one);
+        fclose(out);
       } catch (std::runtime_error e) {
         std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
         exit(1);

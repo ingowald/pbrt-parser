@@ -64,6 +64,9 @@ namespace plib {
         : loc(loc), type(type), text(text) 
       {}
       
+      inline operator std::string() const { return toString(); }
+      inline const char *c_str() const { return text.c_str(); }
+
       std::string toString() const { 
         std::stringstream ss;
         ss << loc.toString() <<": " << text;
@@ -87,21 +90,21 @@ namespace plib {
 
       Loc getLastLoc() { return loc; }
 
-      Ref<Token> peek(size_t i=0)
+      inline Ref<Token> peek(size_t i=0)
       {
         while (i >= peekedTokens.size())
           peekedTokens.push_back(produceNextToken());
         return peekedTokens[i];
       }
       
-      void unget_char(int c)
+      inline void unget_char(int c)
       {
         if (peekedChar >= 0) 
           THROW_RUNTIME_ERROR("can't push back more than one char ...");
         peekedChar = c;
       }
 
-      int get_char() 
+      inline int get_char() 
       {
         if (peekedChar >= 0) {
           int c = peekedChar;
@@ -133,7 +136,7 @@ namespace plib {
         return strchr("[,]",c)!=NULL;
       }
 
-      Ref<Token> next(bool consumePeeks=false) 
+      inline Ref<Token> next(bool consumePeeks=false) 
       {
         if (peekedTokens.empty())
           return produceNextToken();
@@ -143,7 +146,7 @@ namespace plib {
         return token;
       }
 
-      Ref<Token> produceNextToken() 
+      inline Ref<Token> produceNextToken() 
       {
         // skip all white space and comments
         int c;
@@ -246,7 +249,7 @@ namespace plib {
     };
 
 
-    float parseFloat(Tokenizer &tokens)
+    inline float parseFloat(Tokenizer &tokens)
     {
       Ref<Token> token = tokens.next();
       if (token == Token::TOKEN_EOF)
@@ -254,7 +257,7 @@ namespace plib {
       return atof(token->text.c_str());
     }
 
-    vec3f parseVec3f(Tokenizer &tokens)
+    inline vec3f parseVec3f(Tokenizer &tokens)
     {
       try {
         const float x = parseFloat(tokens);
@@ -267,7 +270,7 @@ namespace plib {
       }
     }
 
-    Ref<Param> parseParam(std::string &name, Tokenizer &tokens)
+    inline Ref<Param> parseParam(std::string &name, Tokenizer &tokens)
     {
       Ref<Token> token = tokens.peek();
       if (token->type != Token::TOKEN_TYPE_STRING)
@@ -290,6 +293,8 @@ namespace plib {
         ret = new ParamT<float>(type);
       } else if (type == "color") {
         ret = new ParamT<float>(type);
+      } else if (type == "rgb") {
+        ret = new ParamT<float>(type);
       } else if (type == "spectrum") {
         ret = new ParamT<std::string>(type);
       } else if (type == "integer") {
@@ -302,6 +307,8 @@ namespace plib {
         ret = new ParamT<float>(type);
       } else if (type == "point") {
         ret = new ParamT<float>(type);
+      } else if (type == "vector") {
+        ret = new ParamT<float>(type);
       } else if (type == "string") {
         ret = new ParamT<std::string>(type);
       } else {
@@ -311,7 +318,6 @@ namespace plib {
 
       Ref<Token> value = tokens.next();
       if (value->text == "[") {
-        tokens.next();
         Ref<Token> p = tokens.next();
         
         while (p->text != "]") {
@@ -357,10 +363,26 @@ namespace plib {
       return objectStack.top(); 
     }
 
-    Ref<Object> Parser::findNamedObject(const std::string &name)
+    Ref<Object> Parser::findNamedObject(const std::string &name, bool createIfNotExist)
     {
-      if (namedObjects.find(name) == namedObjects.end())
-        throw std::runtime_error("could not find object named '"+name+"'");
+      if (namedObjects.find(name) == namedObjects.end()) {
+
+        if (createIfNotExist) {
+          Ref<Object> object = new Object;
+          object->name = name;
+          // if (namedObjects.find(name) != namedObjects.end())
+          //   // throw new ParserException("named object '"+name+"' already defined!? (at "+token->loc.toString()+")");
+          //   // cout << token->loc.toString() << ": warning - named object '"+name+"' already defined!? (redefining!)" << endl;
+          
+          namedObjects[name] = object;
+          // cout << "defining object '" << name << "'" << endl;
+          
+        } else {
+          PING;
+          PRINT(name);
+          throw std::runtime_error("could not find object named '"+name+"'");
+        }
+      }
       return namedObjects[name];
     }
 
@@ -384,7 +406,42 @@ namespace plib {
     {
       transformStack.pop();
     }
+    
+    affine3f parseMatrix(Tokenizer &tokens)
+    {
+      const std::string open = *tokens.next();
+      assert(open == "[");
 
+      affine3f xfm;
+      xfm.l.vx.x = atof(tokens.next()->c_str());
+      xfm.l.vx.y = atof(tokens.next()->c_str());
+      xfm.l.vx.z = atof(tokens.next()->c_str());
+      float vx_w = atof(tokens.next()->c_str());
+      assert(vx_w == 0.f);
+
+      xfm.l.vy.x = atof(tokens.next()->c_str());
+      xfm.l.vy.y = atof(tokens.next()->c_str());
+      xfm.l.vy.z = atof(tokens.next()->c_str());
+      float vy_w = atof(tokens.next()->c_str());
+      assert(vy_w == 0.f);
+
+      xfm.l.vz.x = atof(tokens.next()->c_str());
+      xfm.l.vz.y = atof(tokens.next()->c_str());
+      xfm.l.vz.z = atof(tokens.next()->c_str());
+      float vz_w = atof(tokens.next()->c_str());
+      assert(vz_w == 0.f);
+
+      xfm.p.x    = atof(tokens.next()->c_str());
+      xfm.p.y    = atof(tokens.next()->c_str());
+      xfm.p.z    = atof(tokens.next()->c_str());
+      float p_w  = atof(tokens.next()->c_str());
+      assert(p_w == 1.f);
+
+      const std::string close = *tokens.next();
+      assert(open == "=");
+
+      return xfm;
+    }
 
     /*! parse given file, and add it to the scene we hold */
     void Parser::parse(const FileName &fn)
@@ -417,6 +474,19 @@ namespace plib {
             continue;
           }
 
+          if (token->text == "Identity") {
+            setTransform(affine3f(embree::one));
+            continue;
+          }
+          if (token->text == "ReverseOrientation") {
+            addTransform(affine3f::scale(vec3f(1.f,1.f,-1.f)));
+            continue;
+          }
+          if (token->text == "CoordSysTransform") {
+            Ref<Token> nameOfObject = tokens->next();
+            cout << "ignoring 'CoordSysTransform'" << endl;
+            continue;
+          }
           if (token->text == "Scale") {
             vec3f scale = parseVec3f(*tokens);
             addTransform(affine3f::scale(scale));
@@ -425,6 +495,10 @@ namespace plib {
           if (token->text == "Translate") {
             vec3f translate = parseVec3f(*tokens);
             addTransform(affine3f::translate(translate));
+            continue;
+          }
+          if (token->text == "ConcatTransform") {
+            addTransform(parseMatrix(*tokens));
             continue;
           }
           if (token->text == "Rotate") {
@@ -503,6 +577,12 @@ namespace plib {
             scene->shapes.push_back(shape);
             continue;
           }
+          if (token->text == "Volume") {
+            Ref<Volume> volume = new Volume(tokens->next()->text);
+            parseParams(volume->param,*tokens);
+            scene->volumes.push_back(volume);
+            continue;
+          }
           if (token->text == "LightSource") {
             Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
             parseParams(lightSource->param,*tokens);
@@ -517,6 +597,11 @@ namespace plib {
           if (token->text == "Film") {
             Ref<Film> film = new Film(tokens->next()->text);
             parseParams(film->param,*tokens);
+            continue;
+          }
+          if (token->text == "Accelerator") {
+            Ref<Accelerator> accelerator = new Accelerator(tokens->next()->text);
+            parseParams(accelerator->param,*tokens);
             continue;
           }
           if (token->text == "Renderer") {
@@ -581,14 +666,11 @@ namespace plib {
           }
 
           if (token->text == "ObjectBegin") {
+            PING;
             std::string name = tokens->next()->text;
-            Ref<Object> object = new Object;
-            object->name = name;
-            if (namedObjects.find(name) != namedObjects.end())
-              // throw new ParserException("named object '"+name+"' already defined!? (at "+token->loc.toString()+")");
-              cout << token->loc.toString() << ": warning - named object '"+name+"' already defined!? (redefining!)" << endl;
+            PRINT(name);
+            Ref<Object> object = findNamedObject(name,1);
 
-            namedObjects[name] = object;
             objectStack.push(object);
             transformStack.push(embree::one);
             continue;
@@ -602,7 +684,7 @@ namespace plib {
 
           if (token->text == "ObjectInstance") {
             std::string name = tokens->next()->text;
-            Ref<Object> object = findNamedObject(name);
+            Ref<Object> object = findNamedObject(name,1);
             Ref<Object::Instance> inst = new Object::Instance(object,getCurrentXfm());
             getCurrentObject()->objectInstances.push_back(inst);
             continue;

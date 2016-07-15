@@ -21,6 +21,8 @@ UPDATES
 
 (newest ones on top)
 
+- pbrt2obj exporter can write first triangle mesh geometry (so far only sibenik)
+- fixed bug in parameter array parsing - prev always 'swallowed' first element
 - can now parse anim-bluespheres.pbrt
 - can now parse complete san miguel scene (the new one)
 - Can now parse entire GRAMMAR required for the san miguel scene.

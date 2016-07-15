@@ -41,7 +41,7 @@ namespace plib {
       /*! used during parsing, to add a newly parsed parameter value
           to the list */
       virtual void add(const std::string &text);
-    private:
+      //    private:
       std::string type;
       std::vector<T> paramVec;
     };
@@ -75,6 +75,13 @@ namespace plib {
     struct Node : public RefCounted {
       Node(const std::string &type) : type(type) {};
       virtual std::string toString() const { return type; }
+
+      template<typename T>
+      Ref<ParamT<T> > findParam(const std::string &name) const {
+        std::map<std::string,Ref<Param> >::const_iterator it = param.find(name);
+        if (it == param.end()) return NULL;
+        return dynamic_cast<ParamT<T> *>(it->second.ptr);
+      }
 
       const std::string type;
       std::map<std::string,Ref<Param> > param;
@@ -113,12 +120,19 @@ namespace plib {
     struct LightSource : public Node {
       LightSource(const std::string &type) : Node(type) {};
     };
+    struct Volume : public Node {
+      Volume(const std::string &type) : Node(type) {};
+    };
     struct AreaLightSource : public Node {
       AreaLightSource(const std::string &type) : Node(type) {};
     };
 
     struct Film : public Node {
       Film(const std::string &type) : Node(type) {};
+    };
+
+    struct Accelerator : public Node {
+      Accelerator(const std::string &type) : Node(type) {};
     };
 
     struct Renderer : public Node {
@@ -151,11 +165,13 @@ namespace plib {
 
       std::string name;
 
-      //! list of cameras defined in the scene
+      //! list of cameras defined in this object
       std::vector<Ref<Camera> > cameras;
-      //! list of all shapes defined in the scene
+      //! list of all shapes defined in this object
       std::vector<Ref<Shape> > shapes;
-      //! list of all shapes defined in the scene
+      //! list of all volumes defined in this object
+      std::vector<Ref<Volume> > volumes;
+      //! list of all instances defined in this object
       std::vector<Ref<Object::Instance> > objectInstances;
     };
 
