@@ -507,14 +507,26 @@ namespace plib {
             addTransform(affine3f::rotate(axis,angle));
             continue;
           }
-
+          if (token->text == "Transform") {
+            tokens->next(); // '['
+            float mat[16];
+            for (int i=0;i<16;i++)
+              mat[i] = atof(tokens->next()->text.c_str());
+            tokens->next(); // ']'
+            continue;
+          }
           if (token->text == "ActiveTransform") {
             std::string time = tokens->next()->text;
             std::cout << "'ActiveTransform' not implemented" << endl;
             continue;
           }
-
-          if (token->text == "Transform") {
+          if (token->text == "Identity") {
+            continue;
+          }
+          if (token->text == "ReverseOrientation") {
+            continue;
+          }
+          if (token->text == "ConcatTransform") {
             tokens->next(); // '['
             float mat[16];
             for (int i=0;i<16;i++)
@@ -530,6 +542,17 @@ namespace plib {
             tokens->next(); // ']'
             continue;
           }
+          if (token->text == "CoordSysTransform") {
+            std::string transformType = tokens->next()->text;
+            continue;
+          }
+
+
+          if (token->text == "ActiveTransform") {
+            std::string time = tokens->next()->text;
+            continue;
+          }
+
           if (token->text == "LookAt") {
             vec3f v0 = parseVec3f(*tokens);
             vec3f v1 = parseVec3f(*tokens);
@@ -547,6 +570,12 @@ namespace plib {
             Ref<Sampler> sampler = new Sampler(tokens->next()->text);
             parseParams(sampler->param,*tokens);
             scene->sampler = sampler;
+            continue;
+          }
+          if (token->text == "Integrator") {
+            Ref<Integrator> integrator = new Integrator(tokens->next()->text);
+            parseParams(integrator->param,*tokens);
+            scene->integrator = integrator;
             continue;
           }
           if (token->text == "SurfaceIntegrator") {
@@ -567,6 +596,11 @@ namespace plib {
             Ref<PixelFilter> pixelFilter = new PixelFilter(tokens->next()->text);
             parseParams(pixelFilter->param,*tokens);
             scene->pixelFilter = pixelFilter;
+            continue;
+          }
+          if (token->text == "Accelerator") {
+            Ref<Accelerator> accelerator = new Accelerator(tokens->next()->text);
+            parseParams(accelerator->param,*tokens);
             continue;
           }
           if (token->text == "Shape") {
@@ -660,7 +694,6 @@ namespace plib {
           if (token->text == "WorldBegin") {
             continue;
           }
-
           if (token->text == "WorldEnd") {
             continue;
           }

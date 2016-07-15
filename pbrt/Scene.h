@@ -94,6 +94,9 @@ namespace plib {
     struct Sampler : public Node {
       Sampler(const std::string &type) : Node(type) {};
     };
+    struct Integrator : public Node {
+      Integrator(const std::string &type) : Node(type) {};
+    };
     struct SurfaceIntegrator : public Node {
       SurfaceIntegrator(const std::string &type) : Node(type) {};
     };
@@ -102,6 +105,10 @@ namespace plib {
     };
     struct PixelFilter : public Node {
       PixelFilter(const std::string &type) : Node(type) {};
+    };
+
+    struct Accelerator : public Node {
+      Accelerator(const std::string &type) : Node(type) {};
     };
 
     struct Shape : public Node {
@@ -115,6 +122,9 @@ namespace plib {
 
       Ref<Attributes> attributes;
       affine3f        transform;
+    };
+    struct Volume : public Node {
+      Volume(const std::string &type) : Node(type) {};
     };
 
     struct LightSource : public Node {
@@ -183,6 +193,9 @@ namespace plib {
 
       //! last sampler specified in the scene, or NULL if none.
       Ref<Sampler> sampler;
+
+      //! last integrator specified in the scene, or NULL if none.
+      Ref<Integrator> integrator;
 
       //! last volume integrator specified in the scene, or NULL if none.
       Ref<VolumeIntegrator> volumeIntegrator;
