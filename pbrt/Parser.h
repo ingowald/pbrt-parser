@@ -17,6 +17,8 @@
 #pragma once
 
 #include "pbrt/Scene.h"
+// std
+#include <stack>
 
 namespace plib {
   namespace pbrt {
@@ -29,24 +31,38 @@ namespace plib {
         different instances of this class. */
     struct Parser {
       /*! constructor */
-      Parser(bool dbg) : scene(new Scene), dbg(dbg) {};
+      Parser(bool dbg);
 
       /*! parse given file, and add it to the scene we hold */
       void parse(const FileName &fn);
       
-      void pushAttributes() {}
-      void popAttributes() {}
+      void pushAttributes();
+      void popAttributes();
 
-      void pushTransform() {}
-      void popTransform() {}
+      void pushTransform();
+      void popTransform();
 
       /*! return the scene we have parsed */
       Ref<Scene> getScene() { return scene; }
       
     private:
+      // add additional transform to current transform
+      void addTransform(const affine3f &add)
+      { transformStack.top() *= add; }
+
+      std::stack<Ref<Attributes> > attributesStack;
+      std::stack<affine3f>         transformStack;
+      std::stack<Ref<Object> >     objectStack;
+
+      Ref<Object> getCurrentObject();
+      affine3f    getCurrentXfm() { return transformStack.top(); }
+      Ref<Object> findNamedObject(const std::string &name);
+
       // emit debug status messages...
       bool dbg;
       Ref<Scene> scene;
+      Ref<Object> currentObject;
+      std::map<std::string,Ref<Object> > namedObjects;
       std::map<std::string,Ref<Material> > namedMaterial;
       std::map<std::string,Ref<Texture> > namedTexture;
     };

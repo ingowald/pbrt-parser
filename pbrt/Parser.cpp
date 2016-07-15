@@ -336,6 +336,58 @@ namespace plib {
       }
     }
 
+    Attributes::Attributes()
+    {
+    }
+
+    Attributes::Attributes(const Attributes &other)
+    {
+    }
+
+    Parser::Parser(bool dbg) 
+      : scene(new Scene), dbg(dbg) 
+    {
+      transformStack.push(affine3f(embree::one));
+      attributesStack.push(new Attributes);
+      objectStack.push(scene.cast<Object>());
+    }
+
+    Ref<Object> Parser::getCurrentObject() 
+    {
+      if (objectStack.empty())
+        throw std::runtime_error("no active object!?");
+      return objectStack.top(); 
+    }
+
+    Ref<Object> Parser::findNamedObject(const std::string &name)
+    {
+      if (namedObjects.find(name) == namedObjects.end())
+        throw std::runtime_error("could not find object named '"+name+"'");
+      return namedObjects[name];
+    }
+
+
+    void Parser::pushAttributes() 
+    {
+      attributesStack.push(new Attributes(*attributesStack.top()));
+    }
+
+    void Parser::popAttributes() 
+    {
+      attributesStack.pop();
+    }
+    
+    void Parser::pushTransform() 
+    {
+      transformStack.push(transformStack.top());
+    }
+
+    void Parser::popTransform() 
+    {
+      transformStack.pop();
+    }
+
+
     /*! parse given file, and add it to the scene we hold */
     void Parser::parse(const FileName &fn)
     {
@@ -369,15 +421,18 @@ namespace plib {
 
           if (token->text == "Scale") {
             vec3f scale = parseVec3f(*tokens);
+            addTransform(affine3f::scale(scale));
             continue;
           }
           if (token->text == "Translate") {
             vec3f translate = parseVec3f(*tokens);
+            addTransform(affine3f::translate(translate));
             continue;
           }
           if (token->text == "Rotate") {
             vec3f axis = parseVec3f(*tokens);
             float angle = parseFloat(*tokens);
+            addTransform(affine3f::rotate(axis,angle));
             continue;
           }
           if (token->text == "Transform") {
@@ -386,6 +441,11 @@ namespace plib {
             for (int i=0;i<16;i++)
               mat[i] = atof(tokens->next()->text.c_str());
             tokens->next(); // ']'
+            continue;
+          }
+          if (token->text == "ActiveTransform") {
+            std::string time = tokens->next()->text;
+            std::cout << "'ActiveTransform' not implemented" << endl;
             continue;
           }
           if (token->text == "Identity") {
@@ -399,6 +459,14 @@ namespace plib {
             float mat[16];
             for (int i=0;i<16;i++)
               mat[i] = atof(tokens->next()->text.c_str());
+
+            affine3f xfm;
+            xfm.l.vx = vec3f(mat[0],mat[1],mat[2]);
+            xfm.l.vy = vec3f(mat[4],mat[5],mat[6]);
+            xfm.l.vz = vec3f(mat[8],mat[9],mat[10]);
+            xfm.p    = vec3f(mat[12],mat[13],mat[14]);
+            addTransform(xfm);
+
             tokens->next(); // ']'
             continue;
           }
@@ -417,33 +485,39 @@ namespace plib {
             vec3f v0 = parseVec3f(*tokens);
             vec3f v1 = parseVec3f(*tokens);
             vec3f v2 = parseVec3f(*tokens);
+            scene->lookAt = new LookAt(v0,v1,v2);
             continue;
           }
           if (token->text == "Camera") {
             Ref<Camera> camera = new Camera(tokens->next()->text);
             parseParams(camera->param,*tokens);
+            scene->cameras.push_back(camera);
             continue;
           }
           if (token->text == "Sampler") {
             Ref<Sampler> sampler = new Sampler(tokens->next()->text);
             parseParams(sampler->param,*tokens);
+            scene->sampler = sampler;
             continue;
           }
           if (token->text == "SurfaceIntegrator") {
             Ref<SurfaceIntegrator> surfaceIntegrator
               = new SurfaceIntegrator(tokens->next()->text);
             parseParams(surfaceIntegrator->param,*tokens);
+            scene->surfaceIntegrator = surfaceIntegrator;
             continue;
           }
           if (token->text == "VolumeIntegrator") {
             Ref<VolumeIntegrator> volumeIntegrator
               = new VolumeIntegrator(tokens->next()->text);
             parseParams(volumeIntegrator->param,*tokens);
+            scene->volumeIntegrator = volumeIntegrator;
             continue;
           }
           if (token->text == "PixelFilter") {
             Ref<PixelFilter> pixelFilter = new PixelFilter(tokens->next()->text);
             parseParams(pixelFilter->param,*tokens);
+            scene->pixelFilter = pixelFilter;
             continue;
           }
           if (token->text == "Accelerator") {
@@ -452,8 +526,11 @@ namespace plib {
             continue;
           }
           if (token->text == "Shape") {
-            Ref<Shape> shape = new Shape(tokens->next()->text);
+            Ref<Shape> shape = new Shape(tokens->next()->text,
+                                         attributesStack.top()->clone(),
+                                         transformStack.top());
             parseParams(shape->param,*tokens);
+            scene->shapes.push_back(shape);
             continue;
           }
           if (token->text == "Volume") {
@@ -464,6 +541,7 @@ namespace plib {
           if (token->text == "LightSource") {
             Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
             parseParams(lightSource->param,*tokens);
+            cout << "'lightsource' not implemented" << endl;
             continue;
           }
           if (token->text == "AreaLightSource") {
@@ -538,15 +616,29 @@ namespace plib {
 
           if (token->text == "ObjectBegin") {
             std::string name = tokens->next()->text;
+            Ref<Object> object = new Object;
+            object->name = name;
+            if (namedObjects.find(name) != namedObjects.end())
+              // throw new ParserException("named object '"+name+"' already defined!? (at "+token->loc.toString()+")");
+              cout << token->loc.toString() << ": warning - named object '"+name+"' already defined!? (redefining!)" << endl;
+
+            namedObjects[name] = object;
+            objectStack.push(object);
+            transformStack.push(embree::one);
             continue;
           }
           
           if (token->text == "ObjectEnd") {
+            objectStack.pop();
+            transformStack.pop();
             continue;
           }
 
           if (token->text == "ObjectInstance") {
             std::string name = tokens->next()->text;
+            Ref<Object> object = findNamedObject(name);
+            Ref<Object::Instance> inst = new Object::Instance(object,getCurrentXfm());
+            getCurrentObject()->objectInstances.push_back(inst);
             continue;
           }
           
