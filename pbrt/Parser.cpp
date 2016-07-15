@@ -500,6 +500,12 @@ namespace plib {
             scene->sampler = sampler;
             continue;
           }
+          if (token->text == "Integrator") {
+            Ref<Integrator> integrator = new Integrator(tokens->next()->text);
+            parseParams(integrator->param,*tokens);
+            scene->integrator = integrator;
+            continue;
+          }
           if (token->text == "SurfaceIntegrator") {
             Ref<SurfaceIntegrator> surfaceIntegrator
               = new SurfaceIntegrator(tokens->next()->text);

@@ -87,6 +87,9 @@ namespace plib {
     struct Sampler : public Node {
       Sampler(const std::string &type) : Node(type) {};
     };
+    struct Integrator : public Node {
+      Integrator(const std::string &type) : Node(type) {};
+    };
     struct SurfaceIntegrator : public Node {
       SurfaceIntegrator(const std::string &type) : Node(type) {};
     };
@@ -174,6 +177,9 @@ namespace plib {
 
       //! last sampler specified in the scene, or NULL if none.
       Ref<Sampler> sampler;
+
+      //! last integrator specified in the scene, or NULL if none.
+      Ref<Integrator> integrator;
 
       //! last volume integrator specified in the scene, or NULL if none.
       Ref<VolumeIntegrator> volumeIntegrator;
