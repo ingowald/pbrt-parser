@@ -107,10 +107,6 @@ namespace plib {
       PixelFilter(const std::string &type) : Node(type) {};
     };
 
-    struct Accelerator : public Node {
-      Accelerator(const std::string &type) : Node(type) {};
-    };
-
     struct Shape : public Node {
       Shape(const std::string &type,
             Ref<Attributes> attributes,
@@ -123,6 +119,7 @@ namespace plib {
       Ref<Attributes> attributes;
       affine3f        transform;
     };
+
     struct Volume : public Node {
       Volume(const std::string &type) : Node(type) {};
     };
@@ -130,9 +127,7 @@ namespace plib {
     struct LightSource : public Node {
       LightSource(const std::string &type) : Node(type) {};
     };
-    struct Volume : public Node {
-      Volume(const std::string &type) : Node(type) {};
-    };
+
     struct AreaLightSource : public Node {
       AreaLightSource(const std::string &type) : Node(type) {};
     };
