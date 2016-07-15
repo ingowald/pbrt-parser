@@ -89,8 +89,15 @@ namespace plib {
       PixelFilter(const std::string &type) : Node(type) {};
     };
 
+    struct Accelerator : public Node {
+      Accelerator(const std::string &type) : Node(type) {};
+    };
+
     struct Shape : public Node {
       Shape(const std::string &type) : Node(type) {};
+    };
+    struct Volume : public Node {
+      Volume(const std::string &type) : Node(type) {};
     };
 
     struct LightSource : public Node {

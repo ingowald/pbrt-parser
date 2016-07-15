@@ -290,6 +290,8 @@ namespace plib {
         ret = new ParamT<float>(type);
       } else if (type == "color") {
         ret = new ParamT<float>(type);
+      } else if (type == "rgb") {
+        ret = new ParamT<float>(type);
       } else if (type == "spectrum") {
         ret = new ParamT<std::string>(type);
       } else if (type == "integer") {
@@ -378,12 +380,6 @@ namespace plib {
             float angle = parseFloat(*tokens);
             continue;
           }
-
-          if (token->text == "ActiveTransform") {
-            std::string time = tokens->next()->text;
-            continue;
-          }
-
           if (token->text == "Transform") {
             tokens->next(); // '['
             float mat[16];
@@ -392,6 +388,31 @@ namespace plib {
             tokens->next(); // ']'
             continue;
           }
+          if (token->text == "Identity") {
+            continue;
+          }
+          if (token->text == "ReverseOrientation") {
+            continue;
+          }
+          if (token->text == "ConcatTransform") {
+            tokens->next(); // '['
+            float mat[16];
+            for (int i=0;i<16;i++)
+              mat[i] = atof(tokens->next()->text.c_str());
+            tokens->next(); // ']'
+            continue;
+          }
+          if (token->text == "CoordSysTransform") {
+            std::string transformType = tokens->next()->text;
+            continue;
+          }
+
+
+          if (token->text == "ActiveTransform") {
+            std::string time = tokens->next()->text;
+            continue;
+          }
+
           if (token->text == "LookAt") {
             vec3f v0 = parseVec3f(*tokens);
             vec3f v1 = parseVec3f(*tokens);
@@ -425,9 +446,19 @@ namespace plib {
             parseParams(pixelFilter->param,*tokens);
             continue;
           }
+          if (token->text == "Accelerator") {
+            Ref<Accelerator> accelerator = new Accelerator(tokens->next()->text);
+            parseParams(accelerator->param,*tokens);
+            continue;
+          }
           if (token->text == "Shape") {
             Ref<Shape> shape = new Shape(tokens->next()->text);
             parseParams(shape->param,*tokens);
+            continue;
+          }
+          if (token->text == "Volume") {
+            Ref<Volume> volume = new Volume(tokens->next()->text);
+            parseParams(volume->param,*tokens);
             continue;
           }
           if (token->text == "LightSource") {
@@ -501,7 +532,6 @@ namespace plib {
           if (token->text == "WorldBegin") {
             continue;
           }
-
           if (token->text == "WorldEnd") {
             continue;
           }

@@ -48,9 +48,6 @@ grammar parsing stage (we do not more than that for now, anyway)
  - teapot-subsurface.pbrt
  - arcsphere.pbrt
  - ballpile.pbrt
-
-FAILED
-
  - buddha.pbrt
  - bump-sphere.pbrt
  - city-ao.pbrt
@@ -68,6 +65,9 @@ FAILED
  - room-path.pbrt
  - room-photon-nogather.pbrt
  - room-photon.pbrt
+
+NOT yet verified to parse:
+
  - sanmiguel_cam14.pbrt
  - sanmiguel_cam15.pbrt
  - sanmiguel_cam18.pbrt
