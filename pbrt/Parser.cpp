@@ -28,6 +28,8 @@ namespace plib {
   namespace pbrt {
     using namespace std;
 
+    int verbose = 1;
+
     struct File : public RefCounted {
       File(const FileName &fn)
         : name(fn)
@@ -348,7 +350,7 @@ namespace plib {
     {
       transformStack.push(affine3f(embree::one));
       attributesStack.push(new Attributes);
-      objectStack.push(scene.cast<Object>());
+      objectStack.push(scene->world);//scene.cast<Object>());
     }
 
     Ref<Object> Parser::getCurrentObject() 
@@ -433,335 +435,366 @@ namespace plib {
       return xfm;
     }
 
+    void Parser::parseWorld()
+    {
+      while (1) {
+        Ref<Token> token = getNextToken();
+        if (token->text == "WorldEnd") {
+          continue;
+        }
+        throw new ParserException("unexpected token '"+token->text
+                                  +"' at "+token->loc.toString());
+      }
+    }
+
+    Ref<Token> Parser::getNextToken()
+    {
+      Ref<Token> token = tokens->next();
+      if (!token || token->type == Token::TOKEN_TYPE_EOF) {
+        if (tokenizerStack.empty())
+          return token;
+        tokens = tokenizerStack.top();
+        tokenizerStack.pop();
+        token = getNextToken();
+      }
+
+      if (token->text == "Include") {
+        Ref<Token> fileNameToken = tokens->next();
+        FileName includedFileName = fileNameToken->text;
+        if (includedFileName.str()[0] != '/') {
+          /* iw, jul 29 2016: apparently, file names are always
+             relative to the ROOT file, not the last included file
+             (at least in ecosys that seems to be the case) */
+          includedFileName = rootNamePath+includedFileName;
+          // includedFileName = tokens->file->name.path()+includedFileName;
+        }
+        cout << "... including file '" << includedFileName.str() << " ..." << endl;
+        
+        tokenizerStack.push(tokens);
+        return getNextToken();
+      }
+      else
+        return token;
+    }
+    
+    void Parser::parseScene()
+    {
+      while (1) {
+        Ref<Token> token = getNextToken();
+        if (dbg) 
+          cout << token->toString() << endl;
+        // if (token->text == "Include") {
+        //   Ref<Token> fileNameToken = tokens->next();
+        //   FileName includedFileName = fileNameToken->text;
+        //   if (includedFileName.str()[0] != '/') {
+        //     /* iw, jul 29 2016: apparently, file names are always
+        //        relative to the ROOT file, not the last included file
+        //        (at least in ecosys that seems to be the case) */
+        //     includedFileName = rootNamePath+includedFileName;
+        //     // includedFileName = tokens->file->name.path()+includedFileName;
+        //   }
+        //   cout << "... including file '" << includedFileName.str() << " ..." << endl;
+
+        //   tokenizerStack.push(tokens);
+        //   tokens = new Tokenizer(includedFileName);
+        //   continue;
+        // }
+
+        if (token->text == "Identity") {
+          setTransform(affine3f(embree::one));
+          continue;
+        }
+        if (token->text == "ReverseOrientation") {
+          // addTransform(affine3f::scale(vec3f(1.f,1.f,-1.f)));
+          continue;
+        }
+        if (token->text == "CoordSysTransform") {
+          Ref<Token> nameOfObject = tokens->next();
+          cout << "ignoring 'CoordSysTransform'" << endl;
+          continue;
+        }
+        if (token->text == "Scale") {
+          vec3f scale = parseVec3f(*tokens);
+          addTransform(affine3f::scale(scale));
+          continue;
+        }
+        if (token->text == "Translate") {
+          vec3f translate = parseVec3f(*tokens);
+          addTransform(affine3f::translate(translate));
+          continue;
+        }
+        if (token->text == "ConcatTransform") {
+          addTransform(parseMatrix(*tokens));
+          continue;
+        }
+        if (token->text == "Rotate") {
+          float angle = parseFloat(*tokens);
+          vec3f axis = parseVec3f(*tokens);
+          // cout << "=========== rotate ===========" << endl;
+          // PRINT(angle);
+          // PRINT(axis);
+          const affine3f rot = affine3f::rotate(axis,angle*M_PI/180.f);
+          // PRINT(rot);
+          addTransform(rot);
+          continue;
+        }
+        if (token->text == "Transform") {
+          tokens->next(); // '['
+          float mat[16];
+          for (int i=0;i<16;i++)
+            mat[i] = atof(tokens->next()->text.c_str());
+          tokens->next(); // ']'
+
+          affine3f xfm;
+          xfm.l.vx.x = mat[0];
+          xfm.l.vx.y = mat[1];
+          xfm.l.vx.z = mat[2];
+
+          xfm.l.vy.x = mat[4];
+          xfm.l.vy.y = mat[5];
+          xfm.l.vy.z = mat[6];
+
+          xfm.l.vz.x = mat[8];
+          xfm.l.vz.y = mat[9];
+          xfm.l.vz.z = mat[10];
+
+          xfm.p.x = mat[12];
+          xfm.p.y = mat[13];
+          xfm.p.z = mat[14];
+
+          addTransform(xfm);
+          continue;
+        }
+        if (token->text == "ActiveTransform") {
+          std::string time = tokens->next()->text;
+          std::cout << "'ActiveTransform' not implemented" << endl;
+          continue;
+        }
+        if (token->text == "Identity") {
+          continue;
+        }
+        if (token->text == "ReverseOrientation") {
+          continue;
+        }
+        if (token->text == "ConcatTransform") {
+          tokens->next(); // '['
+          float mat[16];
+          for (int i=0;i<16;i++)
+            mat[i] = atof(tokens->next()->text.c_str());
+
+          affine3f xfm;
+          xfm.l.vx = vec3f(mat[0],mat[1],mat[2]);
+          xfm.l.vy = vec3f(mat[4],mat[5],mat[6]);
+          xfm.l.vz = vec3f(mat[8],mat[9],mat[10]);
+          xfm.p    = vec3f(mat[12],mat[13],mat[14]);
+          addTransform(xfm);
+
+          tokens->next(); // ']'
+          continue;
+        }
+        if (token->text == "CoordSysTransform") {
+          std::string transformType = tokens->next()->text;
+          continue;
+        }
+
+
+        if (token->text == "ActiveTransform") {
+          std::string time = tokens->next()->text;
+          continue;
+        }
+
+        if (token->text == "LookAt") {
+          vec3f v0 = parseVec3f(*tokens);
+          vec3f v1 = parseVec3f(*tokens);
+          vec3f v2 = parseVec3f(*tokens);
+          scene->lookAt = new LookAt(v0,v1,v2);
+          continue;
+        }
+        if (token->text == "Camera") {
+          Ref<Camera> camera = new Camera(tokens->next()->text);
+          parseParams(camera->param,*tokens);
+          scene->cameras.push_back(camera);
+          continue;
+        }
+        if (token->text == "Sampler") {
+          Ref<Sampler> sampler = new Sampler(tokens->next()->text);
+          parseParams(sampler->param,*tokens);
+          scene->sampler = sampler;
+          continue;
+        }
+        if (token->text == "Integrator") {
+          Ref<Integrator> integrator = new Integrator(tokens->next()->text);
+          parseParams(integrator->param,*tokens);
+          scene->integrator = integrator;
+          continue;
+        }
+        if (token->text == "SurfaceIntegrator") {
+          Ref<SurfaceIntegrator> surfaceIntegrator
+            = new SurfaceIntegrator(tokens->next()->text);
+          parseParams(surfaceIntegrator->param,*tokens);
+          scene->surfaceIntegrator = surfaceIntegrator;
+          continue;
+        }
+        if (token->text == "VolumeIntegrator") {
+          Ref<VolumeIntegrator> volumeIntegrator
+            = new VolumeIntegrator(tokens->next()->text);
+          parseParams(volumeIntegrator->param,*tokens);
+          scene->volumeIntegrator = volumeIntegrator;
+          continue;
+        }
+        if (token->text == "PixelFilter") {
+          Ref<PixelFilter> pixelFilter = new PixelFilter(tokens->next()->text);
+          parseParams(pixelFilter->param,*tokens);
+          scene->pixelFilter = pixelFilter;
+          continue;
+        }
+        if (token->text == "Accelerator") {
+          Ref<Accelerator> accelerator = new Accelerator(tokens->next()->text);
+          parseParams(accelerator->param,*tokens);
+          continue;
+        }
+        if (token->text == "Shape") {
+          Ref<Shape> shape = new Shape(tokens->next()->text,
+                                       attributesStack.top()->clone(),
+                                       transformStack.top());
+
+          // std::stringstream name;
+          // name << "#" << getCurrentObject()->shapes.size() << "@" << getCurrentObject()->name << " (" << shape->toString() << ")";
+          // shape->name = name.str();
+
+          parseParams(shape->param,*tokens);
+          if (verbose)
+            cout << "adding shape " << shape->toString() 
+                 << " to object " << getCurrentObject()->toString() << endl;
+          getCurrentObject()->shapes.push_back(shape);
+          continue;
+        }
+        if (token->text == "Volume") {
+          Ref<Volume> volume = new Volume(tokens->next()->text);
+          parseParams(volume->param,*tokens);
+          getCurrentObject()->volumes.push_back(volume);
+          continue;
+        }
+        if (token->text == "LightSource") {
+          Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
+          parseParams(lightSource->param,*tokens);
+          cout << "'lightsource' not implemented" << endl;
+          continue;
+        }
+        if (token->text == "AreaLightSource") {
+          Ref<AreaLightSource> lightSource = new AreaLightSource(tokens->next()->text);
+          parseParams(lightSource->param,*tokens);
+          continue;
+        }
+        if (token->text == "Film") {
+          Ref<Film> film = new Film(tokens->next()->text);
+          parseParams(film->param,*tokens);
+          continue;
+        }
+        if (token->text == "Accelerator") {
+          Ref<Accelerator> accelerator = new Accelerator(tokens->next()->text);
+          parseParams(accelerator->param,*tokens);
+          continue;
+        }
+        if (token->text == "Renderer") {
+          Ref<Renderer> renderer = new Renderer(tokens->next()->text);
+          parseParams(renderer->param,*tokens);
+          continue;
+        }
+
+        if (token->text == "MakeNamedMaterial") {
+          std::string name = tokens->next()->text;
+          Ref<Material> material = new Material(name);
+          namedMaterial[name] = material;
+          parseParams(material->param,*tokens);
+          continue;
+        }
+        if (token->text == "Material") {
+          std::string name = tokens->next()->text;
+          Ref<Material> material = new Material(name);
+          parseParams(material->param,*tokens);
+          continue;
+        }
+
+        if (token->text == "NamedMaterial") {
+          // USE named material
+          std::string which = tokens->next()->text;
+          continue;
+        }
+        if (token->text == "Texture") {
+          std::string name = tokens->next()->text;
+          std::string texelType = tokens->next()->text;
+          std::string mapType = tokens->next()->text;
+          Ref<Texture> texture = new Texture(name,texelType,mapType);
+          namedTexture[name] = texture;
+          parseParams(texture->param,*tokens);
+          continue;
+        }
+
+        if (token->text == "AttributeBegin") {
+          pushAttributes();
+          continue;
+        }
+        if (token->text == "AttributeEnd") {
+          popAttributes();
+          continue;
+        }
+
+        if (token->text == "TransformBegin") {
+          pushTransform();
+          continue;
+        }
+        if (token->text == "TransformEnd") {
+          popTransform();
+          continue;
+        }
+        
+        if (token->text == "WorldBegin") {
+          parseWorld();
+          continue;
+        }
+
+        if (token->text == "ObjectBegin") {
+          std::string name = tokens->next()->text;
+          Ref<Object> object = findNamedObject(name,1);
+
+          objectStack.push(object);
+          // if (verbose)
+          //   cout << "pushing object " << object->toString() << endl;
+          // transformStack.push(embree::one);
+          continue;
+        }
+          
+        if (token->text == "ObjectEnd") {
+          objectStack.pop();
+          // transformStack.pop();
+          continue;
+        }
+
+        if (token->text == "ObjectInstance") {
+          std::string name = tokens->next()->text;
+          Ref<Object> object = findNamedObject(name,1);
+          Ref<Object::Instance> inst = new Object::Instance(object,getCurrentXfm());
+          getCurrentObject()->objectInstances.push_back(inst);
+          if (verbose)
+            cout << "adding instance " << inst->toString()
+                 << " to object " << getCurrentObject()->toString() << endl;
+          continue;
+        }
+          
+        
+        throw new ParserException("unexpected token '"+token->text
+                                  +"' at "+token->loc.toString());
+      }
+  }
+
+    
     /*! parse given file, and add it to the scene we hold */
     void Parser::parse(const FileName &fn)
     {
-      FileName rootNamePath = basePath==""?fn.path():FileName(basePath);
-      int verbose = 1;
-      try {
-        std::stack<Tokenizer *> tokenizerStack;
-
-        Tokenizer *tokens = new Tokenizer(fn);
-
-        while (1) {
-          Ref<Token> token = tokens->next();
-          if (!token || token->type == Token::TOKEN_TYPE_EOF) {
-            if (tokenizerStack.empty())
-              break;
-            tokens = tokenizerStack.top();
-            tokenizerStack.pop();
-            continue;
-          }
-
-          if (dbg) 
-            cout << token->toString() << endl;
-          if (token->text == "Include") {
-            Ref<Token> fileNameToken = tokens->next();
-            FileName includedFileName = fileNameToken->text;
-            if (includedFileName.str()[0] != '/') {
-              /* iw, jul 29 2016: apparently, file names are always
-                 relative to the ROOT file, not the last included file
-                 (at least in ecosys that seems to be the case) */
-              includedFileName = rootNamePath+includedFileName;
-              // includedFileName = tokens->file->name.path()+includedFileName;
-            }
-            cout << "... including file '" << includedFileName.str() << " ..." << endl;
-
-            tokenizerStack.push(tokens);
-            tokens = new Tokenizer(includedFileName);
-            continue;
-          }
-
-          if (token->text == "Identity") {
-            setTransform(affine3f(embree::one));
-            continue;
-          }
-          if (token->text == "ReverseOrientation") {
-            // addTransform(affine3f::scale(vec3f(1.f,1.f,-1.f)));
-            continue;
-          }
-          if (token->text == "CoordSysTransform") {
-            Ref<Token> nameOfObject = tokens->next();
-            cout << "ignoring 'CoordSysTransform'" << endl;
-            continue;
-          }
-          if (token->text == "Scale") {
-            vec3f scale = parseVec3f(*tokens);
-            addTransform(affine3f::scale(scale));
-            continue;
-          }
-          if (token->text == "Translate") {
-            vec3f translate = parseVec3f(*tokens);
-            addTransform(affine3f::translate(translate));
-            continue;
-          }
-          if (token->text == "ConcatTransform") {
-            addTransform(parseMatrix(*tokens));
-            continue;
-          }
-          if (token->text == "Rotate") {
-            float angle = parseFloat(*tokens);
-            vec3f axis = parseVec3f(*tokens);
-            // cout << "=========== rotate ===========" << endl;
-            // PRINT(angle);
-            // PRINT(axis);
-            const affine3f rot = affine3f::rotate(axis,angle*M_PI/180.f);
-            // PRINT(rot);
-            addTransform(rot);
-            continue;
-          }
-          if (token->text == "Transform") {
-            tokens->next(); // '['
-            float mat[16];
-            for (int i=0;i<16;i++)
-              mat[i] = atof(tokens->next()->text.c_str());
-            tokens->next(); // ']'
-
-            affine3f xfm;
-            xfm.l.vx.x = mat[0];
-            xfm.l.vx.y = mat[1];
-            xfm.l.vx.z = mat[2];
-
-            xfm.l.vy.x = mat[4];
-            xfm.l.vy.y = mat[5];
-            xfm.l.vy.z = mat[6];
-
-            xfm.l.vz.x = mat[8];
-            xfm.l.vz.y = mat[9];
-            xfm.l.vz.z = mat[10];
-
-            xfm.p.x = mat[12];
-            xfm.p.y = mat[13];
-            xfm.p.z = mat[14];
-
-            addTransform(xfm);
-            continue;
-          }
-          if (token->text == "ActiveTransform") {
-            std::string time = tokens->next()->text;
-            std::cout << "'ActiveTransform' not implemented" << endl;
-            continue;
-          }
-          if (token->text == "Identity") {
-            continue;
-          }
-          if (token->text == "ReverseOrientation") {
-            continue;
-          }
-          if (token->text == "ConcatTransform") {
-            tokens->next(); // '['
-            float mat[16];
-            for (int i=0;i<16;i++)
-              mat[i] = atof(tokens->next()->text.c_str());
-
-            affine3f xfm;
-            xfm.l.vx = vec3f(mat[0],mat[1],mat[2]);
-            xfm.l.vy = vec3f(mat[4],mat[5],mat[6]);
-            xfm.l.vz = vec3f(mat[8],mat[9],mat[10]);
-            xfm.p    = vec3f(mat[12],mat[13],mat[14]);
-            addTransform(xfm);
-
-            tokens->next(); // ']'
-            continue;
-          }
-          if (token->text == "CoordSysTransform") {
-            std::string transformType = tokens->next()->text;
-            continue;
-          }
-
-
-          if (token->text == "ActiveTransform") {
-            std::string time = tokens->next()->text;
-            continue;
-          }
-
-          if (token->text == "LookAt") {
-            vec3f v0 = parseVec3f(*tokens);
-            vec3f v1 = parseVec3f(*tokens);
-            vec3f v2 = parseVec3f(*tokens);
-            scene->lookAt = new LookAt(v0,v1,v2);
-            continue;
-          }
-          if (token->text == "Camera") {
-            Ref<Camera> camera = new Camera(tokens->next()->text);
-            parseParams(camera->param,*tokens);
-            getCurrentObject()->cameras.push_back(camera);
-            continue;
-          }
-          if (token->text == "Sampler") {
-            Ref<Sampler> sampler = new Sampler(tokens->next()->text);
-            parseParams(sampler->param,*tokens);
-            scene->sampler = sampler;
-            continue;
-          }
-          if (token->text == "Integrator") {
-            Ref<Integrator> integrator = new Integrator(tokens->next()->text);
-            parseParams(integrator->param,*tokens);
-            scene->integrator = integrator;
-            continue;
-          }
-          if (token->text == "SurfaceIntegrator") {
-            Ref<SurfaceIntegrator> surfaceIntegrator
-              = new SurfaceIntegrator(tokens->next()->text);
-            parseParams(surfaceIntegrator->param,*tokens);
-            scene->surfaceIntegrator = surfaceIntegrator;
-            continue;
-          }
-          if (token->text == "VolumeIntegrator") {
-            Ref<VolumeIntegrator> volumeIntegrator
-              = new VolumeIntegrator(tokens->next()->text);
-            parseParams(volumeIntegrator->param,*tokens);
-            scene->volumeIntegrator = volumeIntegrator;
-            continue;
-          }
-          if (token->text == "PixelFilter") {
-            Ref<PixelFilter> pixelFilter = new PixelFilter(tokens->next()->text);
-            parseParams(pixelFilter->param,*tokens);
-            scene->pixelFilter = pixelFilter;
-            continue;
-          }
-          if (token->text == "Accelerator") {
-            Ref<Accelerator> accelerator = new Accelerator(tokens->next()->text);
-            parseParams(accelerator->param,*tokens);
-            continue;
-          }
-          if (token->text == "Shape") {
-            Ref<Shape> shape = new Shape(tokens->next()->text,
-                                         attributesStack.top()->clone(),
-                                         transformStack.top());
-
-            // std::stringstream name;
-            // name << "#" << getCurrentObject()->shapes.size() << "@" << getCurrentObject()->name << " (" << shape->toString() << ")";
-            // shape->name = name.str();
-
-            parseParams(shape->param,*tokens);
-            if (verbose)
-              cout << "adding shape " << shape->toString() 
-                   << " to object " << getCurrentObject()->toString() << endl;
-            getCurrentObject()->shapes.push_back(shape);
-            continue;
-          }
-          if (token->text == "Volume") {
-            Ref<Volume> volume = new Volume(tokens->next()->text);
-            parseParams(volume->param,*tokens);
-            getCurrentObject()->volumes.push_back(volume);
-            continue;
-          }
-          if (token->text == "LightSource") {
-            Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
-            parseParams(lightSource->param,*tokens);
-            cout << "'lightsource' not implemented" << endl;
-            continue;
-          }
-          if (token->text == "AreaLightSource") {
-            Ref<AreaLightSource> lightSource = new AreaLightSource(tokens->next()->text);
-            parseParams(lightSource->param,*tokens);
-            continue;
-          }
-          if (token->text == "Film") {
-            Ref<Film> film = new Film(tokens->next()->text);
-            parseParams(film->param,*tokens);
-            continue;
-          }
-          if (token->text == "Accelerator") {
-            Ref<Accelerator> accelerator = new Accelerator(tokens->next()->text);
-            parseParams(accelerator->param,*tokens);
-            continue;
-          }
-          if (token->text == "Renderer") {
-            Ref<Renderer> renderer = new Renderer(tokens->next()->text);
-            parseParams(renderer->param,*tokens);
-            continue;
-          }
-
-          if (token->text == "MakeNamedMaterial") {
-            std::string name = tokens->next()->text;
-            Ref<Material> material = new Material(name);
-            namedMaterial[name] = material;
-            parseParams(material->param,*tokens);
-            continue;
-          }
-          if (token->text == "Material") {
-            std::string name = tokens->next()->text;
-            Ref<Material> material = new Material(name);
-            parseParams(material->param,*tokens);
-            continue;
-          }
-
-          if (token->text == "NamedMaterial") {
-            // USE named material
-            std::string which = tokens->next()->text;
-            continue;
-          }
-          if (token->text == "Texture") {
-            std::string name = tokens->next()->text;
-            std::string texelType = tokens->next()->text;
-            std::string mapType = tokens->next()->text;
-            Ref<Texture> texture = new Texture(name,texelType,mapType);
-            namedTexture[name] = texture;
-            parseParams(texture->param,*tokens);
-            continue;
-          }
-
-          if (token->text == "AttributeBegin") {
-            pushAttributes();
-            continue;
-          }
-          if (token->text == "AttributeEnd") {
-            popAttributes();
-            continue;
-          }
-
-          if (token->text == "TransformBegin") {
-            pushTransform();
-            continue;
-          }
-          if (token->text == "TransformEnd") {
-            popTransform();
-            continue;
-          }
-        
-          if (token->text == "WorldBegin") {
-            continue;
-          }
-          if (token->text == "WorldEnd") {
-            continue;
-          }
-
-          if (token->text == "ObjectBegin") {
-            std::string name = tokens->next()->text;
-            Ref<Object> object = findNamedObject(name,1);
-
-            objectStack.push(object);
-            // if (verbose)
-            //   cout << "pushing object " << object->toString() << endl;
-            // transformStack.push(embree::one);
-            continue;
-          }
-          
-          if (token->text == "ObjectEnd") {
-            objectStack.pop();
-            // transformStack.pop();
-            continue;
-          }
-
-          if (token->text == "ObjectInstance") {
-            std::string name = tokens->next()->text;
-            Ref<Object> object = findNamedObject(name,1);
-            Ref<Object::Instance> inst = new Object::Instance(object,getCurrentXfm());
-            getCurrentObject()->objectInstances.push_back(inst);
-            if (verbose)
-              cout << "adding instance " << inst->toString()
-                   << " to object " << getCurrentObject()->toString() << endl;
-            continue;
-          }
-          
-        
-          throw new ParserException("unexpected token '"+token->text+"' at "+token->loc.toString());
-        }
-      } catch (ParserException *e) {
-        THROW_RUNTIME_ERROR("plib::pbrt parser fatal error:\n"+e->toString());
-      }
+      rootNamePath = basePath==""?fn.path():FileName(basePath);
+      this->tokens = new Tokenizer(fn);
+      parseScene();      
     }
 
   }

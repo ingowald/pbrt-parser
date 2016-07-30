@@ -37,5 +37,6 @@ ADD_LIBRARY(plib_common
   embree-common/sys/sysinfo.cpp
 )
 ADD_SUBDIRECTORY(pbrt)
+ADD_SUBDIRECTORY(apps)
 
 

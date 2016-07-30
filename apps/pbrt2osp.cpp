@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015 Ingo Wald
+// Copyright 2016 Ingo Wald
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -105,7 +105,7 @@ namespace plib {
       }
     }
 
-    void writeObject(Ref<Object> object, 
+    void writeObject(const Ref<Object> &object, 
                      const affine3f &instanceXfm)
     {
       cout << "writing " << object->toString() << endl;
@@ -165,7 +165,7 @@ namespace plib {
         std::cout << "==> parsing successful (grammar only for now)" << std::endl;
     
         embree::Ref<Scene> scene = parser->getScene();
-        writeObject(scene.cast<Object>(),embree::one);
+        writeObject(scene->world.ptr,embree::one);
         fclose(out);
         cout << "Done exporting to OBJ; wrote a total of " << numWritten << " triangles" << endl;
       } catch (std::runtime_error e) {

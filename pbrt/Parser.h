@@ -24,6 +24,7 @@ namespace plib {
   namespace pbrt {
 
     struct Tokenizer;
+    struct Token;
 
     /*! parser object that holds persistent state about the parsing
         state (e.g., file paths, named objects, etc), even if they are
@@ -35,6 +36,11 @@ namespace plib {
 
       /*! parse given file, and add it to the scene we hold */
       void parse(const FileName &fn);
+
+      /*! parse everything in WorldBegin/WorldEnd */
+      void parseWorld();
+      /*! parse everything in the root scene file */
+      void parseScene();
       
       void pushAttributes();
       void popAttributes();
@@ -46,6 +52,15 @@ namespace plib {
       Ref<Scene> getScene() { return scene; }
       
     private:
+      //! stack of parent files' token streams
+      std::stack<Tokenizer *> tokenizerStack;
+      //! token stream of currently open file
+      Tokenizer *tokens;
+      /*! get the next token to process (either from current file, or
+        parent file(s) if current file is EOL!); return NULL if
+        complete end of input */
+      Ref<Token> getNextToken();
+
       // add additional transform to current transform
       void addTransform(const affine3f &add)
       {
@@ -67,6 +82,7 @@ namespace plib {
       Ref<Scene> scene;
       Ref<Object> currentObject;
       const std::string basePath;
+      FileName rootNamePath;
       std::map<std::string,Ref<Object> > namedObjects;
       std::map<std::string,Ref<Material> > namedMaterial;
       std::map<std::string,Ref<Texture> > namedTexture;

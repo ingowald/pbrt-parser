@@ -176,8 +176,6 @@ namespace plib {
 
       std::string name;
 
-      //! list of cameras defined in this object
-      std::vector<Ref<Camera> > cameras;
       //! list of all shapes defined in this object
       std::vector<Ref<Shape> > shapes;
       //! list of all volumes defined in this object
@@ -187,11 +185,15 @@ namespace plib {
     };
 
 
-    struct Scene : public Object {
+    struct Scene : public RefCounted {
 
       Scene()
-        : Object("<root>")
-      {};
+      {
+        world = new Object("<root>");
+      };
+
+      //! list of cameras defined in this object
+      std::vector<Ref<Camera> > cameras;
 
       //! last lookat specified in the scene, or NULL if none.
       Ref<LookAt> lookAt;
@@ -210,6 +212,9 @@ namespace plib {
 
       //! last pixel filter specified in the scene, or NULL if none.
       Ref<PixelFilter> pixelFilter;
+
+      //! the 'world' scene geometry
+      Ref<Object> world;
     };
 
   }
