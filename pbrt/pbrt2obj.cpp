@@ -31,10 +31,11 @@ namespace plib {
     // the output file we're writing.
     FILE *out = NULL;
 
+    size_t numWritten = 0;
+
     void writeTriangleMesh(Ref<Shape> shape, const affine3f &instanceXfm)
     {
       const affine3f xfm = instanceXfm*shape->transform;
-
       static size_t numVerticesWritten = 0;
       size_t firstVertexID = numVerticesWritten+1;
 
@@ -63,18 +64,16 @@ namespace plib {
                     param_indices->paramVec[3*i+1],
                     param_indices->paramVec[3*i+2]);
             fprintf(out,"f %lu %lu %lu\n",firstVertexID+v.x,firstVertexID+v.y,firstVertexID+v.z);
+            numWritten++;
           }
         }
       }
         
-//       "indices"
-// "point P"
-// "float uv"
-// "normal N"
     }
 
     void writeObject(Ref<Object> object, const affine3f &instanceXfm)
     {
+      cout << "writing " << object->toString() << endl;
       for (int shapeID=0;shapeID<object->shapes.size();shapeID++) {
         Ref<Shape> shape = object->shapes[shapeID];
         if (shape->type == "trianglemesh") {
@@ -82,7 +81,6 @@ namespace plib {
         } else 
           cout << "**** invalid shape #" << shapeID << " : " << shape->type << endl;
       }
-      PRINT(object->objectInstances.size());
       for (int instID=0;instID<object->objectInstances.size();instID++) {
         writeObject(object->objectInstances[instID]->object,
                     instanceXfm*object->objectInstances[instID]->xfm);
@@ -95,11 +93,14 @@ namespace plib {
       std::vector<std::string> fileName;
       bool dbg = false;
       std::string outFileName = "a.obj";
+      std::string basePath = "";
       for (int i=1;i<ac;i++) {
         const std::string arg = av[i];
         if (arg[0] == '-') {
           if (arg == "-dbg" || arg == "--dbg")
             dbg = true;
+          else if (arg == "--path" || arg == "-path")
+            basePath = av[++i];
           else if (arg == "-o")
             outFileName = av[++i];
           else
@@ -118,7 +119,7 @@ namespace plib {
         std::cout << " " << fileName[i];
       std::cout << std::endl;
   
-      plib::pbrt::Parser *parser = new plib::pbrt::Parser(dbg);
+      plib::pbrt::Parser *parser = new plib::pbrt::Parser(dbg,basePath);
       try {
         for (int i=0;i<fileName.size();i++)
           parser->parse(fileName[i]);

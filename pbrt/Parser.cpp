@@ -179,11 +179,6 @@ namespace plib {
           break;
         }
 
-        // PING;
-        // cout << "end of whitespace at " << loc.toString() << " c = " << (char)c << endl;
-        // -------------------------------------------------------
-        // STRING LITERAL
-        // -------------------------------------------------------
         startLoc = loc;
         Loc lastLoc = loc;
         if (c == '"') {
@@ -348,8 +343,8 @@ namespace plib {
     {
     }
 
-    Parser::Parser(bool dbg) 
-      : scene(new Scene), dbg(dbg) 
+    Parser::Parser(bool dbg, const std::string &basePath) 
+      : scene(new Scene), dbg(dbg), basePath(basePath) 
     {
       transformStack.push(affine3f(embree::one));
       attributesStack.push(new Attributes);
@@ -368,18 +363,9 @@ namespace plib {
       if (namedObjects.find(name) == namedObjects.end()) {
 
         if (createIfNotExist) {
-          Ref<Object> object = new Object;
-          object->name = name;
-          // if (namedObjects.find(name) != namedObjects.end())
-          //   // throw new ParserException("named object '"+name+"' already defined!? (at "+token->loc.toString()+")");
-          //   // cout << token->loc.toString() << ": warning - named object '"+name+"' already defined!? (redefining!)" << endl;
-          
+          Ref<Object> object = new Object(name);
           namedObjects[name] = object;
-          // cout << "defining object '" << name << "'" << endl;
-          
         } else {
-          PING;
-          PRINT(name);
           throw std::runtime_error("could not find object named '"+name+"'");
         }
       }
@@ -390,10 +376,14 @@ namespace plib {
     void Parser::pushAttributes() 
     {
       attributesStack.push(new Attributes(*attributesStack.top()));
+      pushTransform();
+      // setTransform(embree::one);
+
     }
 
     void Parser::popAttributes() 
     {
+      popTransform();
       attributesStack.pop();
     }
     
@@ -446,8 +436,11 @@ namespace plib {
     /*! parse given file, and add it to the scene we hold */
     void Parser::parse(const FileName &fn)
     {
+      FileName rootNamePath = basePath==""?fn.path():FileName(basePath);
+      int verbose = 1;
       try {
         std::stack<Tokenizer *> tokenizerStack;
+
         Tokenizer *tokens = new Tokenizer(fn);
 
         while (1) {
@@ -466,9 +459,14 @@ namespace plib {
             Ref<Token> fileNameToken = tokens->next();
             FileName includedFileName = fileNameToken->text;
             if (includedFileName.str()[0] != '/') {
-              includedFileName = tokens->file->name.path()+includedFileName;
+              /* iw, jul 29 2016: apparently, file names are always
+                 relative to the ROOT file, not the last included file
+                 (at least in ecosys that seems to be the case) */
+              includedFileName = rootNamePath+includedFileName;
+              // includedFileName = tokens->file->name.path()+includedFileName;
             }
             cout << "... including file '" << includedFileName.str() << " ..." << endl;
+
             tokenizerStack.push(tokens);
             tokens = new Tokenizer(includedFileName);
             continue;
@@ -479,7 +477,7 @@ namespace plib {
             continue;
           }
           if (token->text == "ReverseOrientation") {
-            addTransform(affine3f::scale(vec3f(1.f,1.f,-1.f)));
+            // addTransform(affine3f::scale(vec3f(1.f,1.f,-1.f)));
             continue;
           }
           if (token->text == "CoordSysTransform") {
@@ -502,9 +500,14 @@ namespace plib {
             continue;
           }
           if (token->text == "Rotate") {
-            vec3f axis = parseVec3f(*tokens);
             float angle = parseFloat(*tokens);
-            addTransform(affine3f::rotate(axis,angle));
+            vec3f axis = parseVec3f(*tokens);
+            // cout << "=========== rotate ===========" << endl;
+            // PRINT(angle);
+            // PRINT(axis);
+            const affine3f rot = affine3f::rotate(axis,angle*M_PI/180.f);
+            // PRINT(rot);
+            addTransform(rot);
             continue;
           }
           if (token->text == "Transform") {
@@ -563,7 +566,7 @@ namespace plib {
           if (token->text == "Camera") {
             Ref<Camera> camera = new Camera(tokens->next()->text);
             parseParams(camera->param,*tokens);
-            scene->cameras.push_back(camera);
+            getCurrentObject()->cameras.push_back(camera);
             continue;
           }
           if (token->text == "Sampler") {
@@ -607,14 +610,22 @@ namespace plib {
             Ref<Shape> shape = new Shape(tokens->next()->text,
                                          attributesStack.top()->clone(),
                                          transformStack.top());
+
+            // std::stringstream name;
+            // name << "#" << getCurrentObject()->shapes.size() << "@" << getCurrentObject()->name << " (" << shape->toString() << ")";
+            // shape->name = name.str();
+
             parseParams(shape->param,*tokens);
-            scene->shapes.push_back(shape);
+            if (verbose)
+              cout << "adding shape " << shape->toString() 
+                   << " to object " << getCurrentObject()->toString() << endl;
+            getCurrentObject()->shapes.push_back(shape);
             continue;
           }
           if (token->text == "Volume") {
             Ref<Volume> volume = new Volume(tokens->next()->text);
             parseParams(volume->param,*tokens);
-            scene->volumes.push_back(volume);
+            getCurrentObject()->volumes.push_back(volume);
             continue;
           }
           if (token->text == "LightSource") {
@@ -699,19 +710,19 @@ namespace plib {
           }
 
           if (token->text == "ObjectBegin") {
-            PING;
             std::string name = tokens->next()->text;
-            PRINT(name);
             Ref<Object> object = findNamedObject(name,1);
 
             objectStack.push(object);
-            transformStack.push(embree::one);
+            // if (verbose)
+            //   cout << "pushing object " << object->toString() << endl;
+            // transformStack.push(embree::one);
             continue;
           }
           
           if (token->text == "ObjectEnd") {
             objectStack.pop();
-            transformStack.pop();
+            // transformStack.pop();
             continue;
           }
 
@@ -720,6 +731,9 @@ namespace plib {
             Ref<Object> object = findNamedObject(name,1);
             Ref<Object::Instance> inst = new Object::Instance(object,getCurrentXfm());
             getCurrentObject()->objectInstances.push_back(inst);
+            if (verbose)
+              cout << "adding instance " << inst->toString()
+                   << " to object " << getCurrentObject()->toString() << endl;
             continue;
           }
           

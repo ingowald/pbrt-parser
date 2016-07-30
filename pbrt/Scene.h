@@ -158,15 +158,21 @@ namespace plib {
 
     //! what's in a objectbegin/objectned, as well as the root object
     struct Object : public RefCounted {
+      Object(const std::string &name) : name(name) {}
+
       struct Instance : public RefCounted {
-        Instance(Ref<Object> object,
-                 affine3f    xfm)
+        Instance(const Ref<Object> &object,
+                 const affine3f    &xfm)
           : object(object), xfm(xfm)
         {}
+
+        std::string toString() const;
 
         Ref<Object> object;
         affine3f    xfm;
       };
+
+      virtual std::string toString() const;
 
       std::string name;
 
@@ -182,6 +188,10 @@ namespace plib {
 
 
     struct Scene : public Object {
+
+      Scene()
+        : Object("<root>")
+      {};
 
       //! last lookat specified in the scene, or NULL if none.
       Ref<LookAt> lookAt;

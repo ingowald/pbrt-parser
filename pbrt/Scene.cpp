@@ -19,6 +19,20 @@
 namespace plib {
   namespace pbrt {
 
+    std::string Object::toString() const 
+    { 
+      std::stringstream ss;
+      ss << "Object '"<<name<<"' : "<<shapes.size()<<"shps, " << objectInstances.size() << "insts";
+      return ss.str();
+    }
+
+    std::string Object::Instance::toString() const
+    { 
+      std::stringstream ss;
+      ss << "Inst: " << object->toString() << " xfm " << xfm; 
+      return ss.str();
+    }
+
     template<> void ParamT<float>::add(const std::string &text)
     { paramVec.push_back(atof(text.c_str())); }
 

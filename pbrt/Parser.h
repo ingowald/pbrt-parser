@@ -31,7 +31,7 @@ namespace plib {
         different instances of this class. */
     struct Parser {
       /*! constructor */
-      Parser(bool dbg);
+      Parser(bool dbg, const std::string &basePath="");
 
       /*! parse given file, and add it to the scene we hold */
       void parse(const FileName &fn);
@@ -48,7 +48,9 @@ namespace plib {
     private:
       // add additional transform to current transform
       void addTransform(const affine3f &add)
-      { transformStack.top() *= add; }
+      {
+        transformStack.top() *= add; 
+      }
       void setTransform(const affine3f &xfm)
       { transformStack.top() = xfm; }
 
@@ -64,6 +66,7 @@ namespace plib {
       bool dbg;
       Ref<Scene> scene;
       Ref<Object> currentObject;
+      const std::string basePath;
       std::map<std::string,Ref<Object> > namedObjects;
       std::map<std::string,Ref<Material> > namedMaterial;
       std::map<std::string,Ref<Texture> > namedTexture;
