@@ -305,8 +305,18 @@ namespace plib {
                 // vtx = vtx - vec3i(1);
                 idx.push_back(vtx);
               } else {
-                PRINT((int)tmp.nverts);
-                FATAL("can only read ply files made up of triangles...");
+                for (int i=2;i<tmp.nverts;i++) {
+                  vec3i vtx;
+                  vtx.x = tmp.verts[0]; //builder.addVertex(pos[tmp.verts[0]]);
+                  vtx.y = tmp.verts[i-1]; //builder.addVertex(pos[tmp.verts[1]]);
+                  vtx.z = tmp.verts[i]; //builder.addVertex(pos[tmp.verts[2]]);
+                  // int matID = builder.addMaterial(material,true);
+                  // builder.addTriangle(vtx,matID);
+                  // vtx = vtx - vec3i(1);
+                  idx.push_back(vtx);
+                }
+                // PRINT((int)tmp.nverts);
+                // FATAL("can only read ply files made up of triangles...");
               }
               free(tmp.verts);
               if (tmp.other_props) free(tmp.other_props);

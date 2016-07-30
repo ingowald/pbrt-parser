@@ -54,7 +54,7 @@ namespace plib {
       int thisID = nextNodeID++;
       const affine3f xfm = instanceXfm*shape->transform;
       alreadyExported[shape.ptr] = thisID;
-      transformOfFirstInstance[thisID] = instanceXfm;
+      transformOfFirstInstance[thisID] = xfm;
 
       fprintf(out,"<Mesh id=\"%i\">\n",thisID);
       fprintf(out,"  <materiallist>0</materiallist>\n");
@@ -160,7 +160,8 @@ namespace plib {
         if (alreadyExported.find(shape.ptr) != alreadyExported.end()) {
           
           int childID = alreadyExported[shape.ptr];
-          affine3f xfm = instanceXfm * rcp(transformOfFirstInstance[childID]);
+          affine3f xfm = instanceXfm * //shape->transform * 
+            rcp(transformOfFirstInstance[childID]);
           numInstancedTriangles += numTrisOfInstance[childID];
 
           int thisID = nextNodeID++;
