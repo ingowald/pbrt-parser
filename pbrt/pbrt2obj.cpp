@@ -129,6 +129,7 @@ namespace plib {
         embree::Ref<Scene> scene = parser->getScene();
         writeObject(scene.cast<Object>(),embree::one);
         fclose(out);
+        cout << "Done exporting to OBJ; wrote a total of " << numWritten << " triangles" << endl;
       } catch (std::runtime_error e) {
         std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
         exit(1);
