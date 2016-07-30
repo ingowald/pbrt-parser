@@ -516,6 +516,25 @@ namespace plib {
             for (int i=0;i<16;i++)
               mat[i] = atof(tokens->next()->text.c_str());
             tokens->next(); // ']'
+
+            affine3f xfm;
+            xfm.l.vx.x = mat[0];
+            xfm.l.vx.y = mat[1];
+            xfm.l.vx.z = mat[2];
+
+            xfm.l.vy.x = mat[4];
+            xfm.l.vy.y = mat[5];
+            xfm.l.vy.z = mat[6];
+
+            xfm.l.vz.x = mat[8];
+            xfm.l.vz.y = mat[9];
+            xfm.l.vz.z = mat[10];
+
+            xfm.p.x = mat[12];
+            xfm.p.y = mat[13];
+            xfm.p.z = mat[14];
+
+            addTransform(xfm);
             continue;
           }
           if (token->text == "ActiveTransform") {
