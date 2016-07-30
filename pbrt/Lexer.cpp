@@ -76,6 +76,7 @@ namespace plib {
     // Lexer
     // =======================================================
 
+    //! constructor
     Lexer::Lexer(const FileName &fn)
       : file(new File(fn)), loc(file), peekedChar(-1) 
     {

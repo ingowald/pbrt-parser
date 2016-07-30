@@ -77,6 +77,7 @@ namespace plib {
         stream of chars into an input stream of tokens.  */
     struct Lexer {
 
+      //! constructor
       Lexer(const FileName &fn);
 
       Ref<Token> next();
