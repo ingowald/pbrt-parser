@@ -182,6 +182,8 @@ namespace plib {
       std::vector<Ref<Volume> > volumes;
       //! list of all instances defined in this object
       std::vector<Ref<Object::Instance> > objectInstances;
+      //! list of all light sources defined in this object
+      std::vector<Ref<LightSource> > lightSources;
     };
 
 

@@ -44,6 +44,10 @@ namespace plib {
       
       void pushAttributes();
       void popAttributes();
+      
+      /*! try parsing this token as some sort of transform token, and
+          return true if successful, false if not recognized  */
+      bool parseTransforms(Ref<Token> token);
 
       void pushTransform();
       void popTransform();

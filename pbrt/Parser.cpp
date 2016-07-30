@@ -15,10 +15,10 @@
 // ======================================================================== //
 
 #include "Parser.h"
+#include "Lexer.h"
 // stl
 #include <fstream>
 #include <sstream>
-#include <queue>
 #include <stack>
 // std
 #include <stdio.h>
@@ -30,227 +30,12 @@ namespace plib {
 
     int verbose = 1;
 
-    struct File : public RefCounted {
-      File(const FileName &fn)
-        : name(fn)
-      {
-        file = fopen(fn.str().c_str(),"r");
-      }
-
-      FileName name;
-      FILE *file;
-    };
-
-    struct Loc {
-      Loc(Ref<File> file) : file(file), line(1), col(0) {}
-      Loc(const Loc &loc) : file(loc.file), line(loc.line), col(loc.col) {}
-      
-      std::string toString() const { 
-        std::stringstream ss;
-        ss << "@" << file->name.str() << ":" << line << "." << col;
-        return ss.str();
-      }
-
-      Ref<File> file;
-      int line, col;
-    };
-
-    struct Token : public RefCounted {
-      static Ref<Token> TOKEN_EOF;
-
-      typedef enum { TOKEN_TYPE_EOF, TOKEN_TYPE_STRING, TOKEN_TYPE_LITERAL, TOKEN_TYPE_SPECIAL } Type;
-
-      Token(const Loc &loc, 
-            const Type type,
-            const std::string &text) 
-        : loc(loc), type(type), text(text) 
-      {}
-      
-      inline operator std::string() const { return toString(); }
-      inline const char *c_str() const { return text.c_str(); }
-
-      std::string toString() const { 
-        std::stringstream ss;
-        ss << loc.toString() <<": " << text;
-        return ss.str();
-      }
-      const Loc         loc;
-      const std::string text;
-      const Type        type;
-    };
-
-    Ref<Token> Token::TOKEN_EOF = new Token(Loc(NULL),Token::TOKEN_TYPE_EOF,"<EOF>");
-
-    struct Tokenizer {
-
-      Tokenizer(const FileName &fn)
-        : file(new File(fn)), loc(file), peekedChar(-1) 
-      {
-      }
-
-      std::deque<Ref<Token> > peekedTokens;
-
-      Loc getLastLoc() { return loc; }
-
-      inline Ref<Token> peek(size_t i=0)
-      {
-        while (i >= peekedTokens.size())
-          peekedTokens.push_back(produceNextToken());
-        return peekedTokens[i];
-      }
-      
-      inline void unget_char(int c)
-      {
-        if (peekedChar >= 0) 
-          THROW_RUNTIME_ERROR("can't push back more than one char ...");
-        peekedChar = c;
-      }
-
-      inline int get_char() 
-      {
-        if (peekedChar >= 0) {
-          int c = peekedChar;
-          peekedChar = -1;
-          return c;
-        }
-        
-        if (!file->file || feof(file->file)) {
-          return -1;
-        }
-        
-        int c = fgetc(file->file);
-        int eol = '\n';
-        if (c == '\n') {
-          loc.line++;
-          loc.col = 0;
-        } else {
-          loc.col++;
-        }
-        return c;
-      };
-      
-      inline bool isWhite(const char c)
-      {
-        return strchr(" \t\n\r",c)!=NULL;
-      }
-      inline bool isSpecial(const char c)
-      {
-        return strchr("[,]",c)!=NULL;
-      }
-
-      inline Ref<Token> next(bool consumePeeks=false) 
-      {
-        if (peekedTokens.empty())
-          return produceNextToken();
-
-        Ref<Token> token = peekedTokens.front();
-        peekedTokens.pop_front();
-        return token;
-      }
-
-      inline Ref<Token> produceNextToken() 
-      {
-        // skip all white space and comments
-        int c;
-
-        std::stringstream ss;
-
-        Loc startLoc = loc;
-        // skip all whitespaces and comments
-        while (1) {
-          c = get_char();
-
-          if (c < 0) return Token::TOKEN_EOF;
-          
-          if (isWhite(c)) {
-            continue;
-          }
-          
-          if (c == '#') {
-            startLoc = loc;
-            Loc lastLoc = loc;
-            // std::cout << "start of comment at " << startLoc.toString() << std::endl;
-            while (c != '\n') {
-              lastLoc = loc;
-              c = get_char();
-              if (c < 0) return Token::TOKEN_EOF;
-            }
-            // std::cout << "END of comment at " << lastLoc.toString() << std::endl;
-            continue;
-          }
-          break;
-        }
-
-        startLoc = loc;
-        Loc lastLoc = loc;
-        if (c == '"') {
-          // cout << "START OF STRING at " << loc.toString() << endl;
-          while (1) {
-            lastLoc = loc;
-            c = get_char();
-            if (c < 0)
-              THROW_RUNTIME_ERROR("could not find end of string literal (found eof instead)");
-            if (c == '"') 
-              break;
-            ss << (char)c;
-          } 
-          return new Token(startLoc,Token::TOKEN_TYPE_STRING,ss.str());
-        }
-
-        // -------------------------------------------------------
-        // special char
-        // -------------------------------------------------------
-        if (isSpecial(c)) {
-          ss << (char)c;
-          return new Token(startLoc,Token::TOKEN_TYPE_SPECIAL,ss.str());
-        }
-
-        ss << (char)c;
-        // cout << "START OF TOKEN at " << loc.toString() << endl;
-        while (1) {
-          lastLoc = loc;
-          c = get_char();
-          if (c < 0)
-            return new Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
-          if (c == '#' || isSpecial(c) || isWhite(c) || c=='"') {
-            // cout << "END OF TOKEN AT " << lastLoc.toString() << endl;
-            unget_char(c);
-            return new Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
-          }
-          ss << (char)c;
-        }
-      }
-
-      Ref<File> file;
-      Loc loc;
-      int peekedChar;
-    };
-
-
-    struct ParserException {
-      ParserException(const std::string &error,
-                      const std::string &where="")
-        : error(error)
-      { if (where != "") addBackTrace(where); }
-      void addBackTrace(const std::string &where) 
-      { backTrace.push_back(where); }
-      std::string toString() const {
-        if (backTrace.empty()) return error;
-        std::string msg = error + "\nBacktrace:\n";
-        for (int i=0;i<backTrace.size();i++)
-          msg += (backTrace[i]+"\n");
-        return msg;
-      }
-      std::string error;
-      std::vector<std::string> backTrace;
-    };
-
-
     inline float parseFloat(Tokenizer &tokens)
     {
       Ref<Token> token = tokens.next();
-      if (token == Token::TOKEN_EOF)
-        throw new ParserException("unexpected end of file",__PRETTY_FUNCTION__);
+      // if (token == Token::TOKEN_EOF)
+      if (!token)
+        throw std::runtime_error("unexpected end of file\n@"+std::string(__PRETTY_FUNCTION__));
       return atof(token->text.c_str());
     }
 
@@ -261,16 +46,17 @@ namespace plib {
         const float y = parseFloat(tokens);
         const float z = parseFloat(tokens);
         return vec3f(x,y,z);
-      } catch (ParserException *e) {
-        e->addBackTrace(__PRETTY_FUNCTION__);
-        throw e;
+      } catch (std::runtime_error e) {
+        // e->addBackTrace(__PRETTY_FUNCTION__);
+        throw e.what()+std::string("\n@")+std::string(__PRETTY_FUNCTION__);
+        // throw e;
       }
     }
 
     inline Ref<Param> parseParam(std::string &name, Tokenizer &tokens)
     {
       Ref<Token> token = tokens.peek();
-      if (token->type != Token::TOKEN_TYPE_STRING)
+      if (!token || token->type != Token::TOKEN_TYPE_STRING)
         return NULL;
 
       token = tokens.next();
@@ -278,8 +64,11 @@ namespace plib {
       char *_name = strdup(token->text.c_str());
       int rc = sscanf(token->text.c_str(),"%s %s",_type,_name);
       if (rc != 2)
-        throw new ParserException("could not parse object parameter's type and name "+token->loc.toString(),
-                                  __PRETTY_FUNCTION__);
+        throw std::runtime_error("could not parse object parameter's type and name "
+                                 +token->loc.toString()
+                                 +std::string("\n@")+std::string(__PRETTY_FUNCTION__));
+      // throw new ParserException("could not parse object parameter's type and name "+token->loc.toString(),
+      //                           __PRETTY_FUNCTION__);
       string type = _type;
       name = _name;
       free(_name);
@@ -309,8 +98,8 @@ namespace plib {
       } else if (type == "string") {
         ret = new ParamT<std::string>(type);
       } else {
-        throw new ParserException("unknown parameter type '"+type+"' "+token->loc.toString(),
-                                  __PRETTY_FUNCTION__);
+        throw std::runtime_error("unknown parameter type '"+type+"' "+token->loc.toString()
+                                 +std::string("\n@")+std::string(__PRETTY_FUNCTION__));
       }
 
       Ref<Token> value = tokens.next();
@@ -435,42 +224,178 @@ namespace plib {
       return xfm;
     }
 
+    bool Parser::parseTransforms(Ref<Token> token)
+    {
+      if (token->text == "TransformBegin") {
+        pushTransform();
+        return true;
+      }
+      if (token->text == "TransformEnd") {
+        popTransform();
+        return true;
+      }
+      if (token->text == "Scale") {
+        vec3f scale = parseVec3f(*tokens);
+        addTransform(affine3f::scale(scale));
+        return true;
+      }
+      if (token->text == "Translate") {
+        vec3f translate = parseVec3f(*tokens);
+        addTransform(affine3f::translate(translate));
+        return true;
+      }
+      if (token->text == "ConcatTransform") {
+        addTransform(parseMatrix(*tokens));
+        return true;
+      }
+      if (token->text == "Rotate") {
+        const float angle = parseFloat(*tokens);
+        const vec3f axis  = parseVec3f(*tokens);
+        addTransform(affine3f::rotate(axis,angle*M_PI/180.f));
+        return true;
+      }
+      if (token->text == "Transform") {
+        tokens->next(); // '['
+        affine3f xfm;
+        xfm.l.vx = parseVec3f(*tokens); tokens->next();
+        xfm.l.vy = parseVec3f(*tokens); tokens->next();
+        xfm.l.vz = parseVec3f(*tokens); tokens->next();
+        xfm.p    = parseVec3f(*tokens); tokens->next();
+        tokens->next(); // ']'
+        addTransform(xfm);
+        return true;
+      }
+      if (token->text == "ActiveTransform") {
+        std::string time = tokens->next()->text;
+        std::cout << "'ActiveTransform' not implemented" << endl;
+        return true;
+      }
+      if (token->text == "Identity") {
+        setTransform(affine3f(embree::one));
+        return true;
+      }
+      if (token->text == "ReverseOrientation") {
+        /* according to the docs, 'ReverseOrientation' only flips the
+           normals, not the actual transform */
+        return true;
+      }
+      if (token->text == "CoordSysTransform") {
+        Ref<Token> nameOfObject = tokens->next();
+        cout << "ignoring 'CoordSysTransform'" << endl;
+        return true;
+      }
+      return false;
+    }
+
     void Parser::parseWorld()
     {
+      cout << "Parsing PBRT World" << endl;
       while (1) {
         Ref<Token> token = getNextToken();
+        assert(token);
         if (token->text == "WorldEnd") {
+          cout << "Parsing PBRT World - done!" << endl;
+          break;
+        }
+        // -------------------------------------------------------
+        // LightSource
+        // -------------------------------------------------------
+        if (token->text == "LightSource") {
+          Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
+          parseParams(lightSource->param,*tokens);
+          getCurrentObject()->lightSources.push_back(lightSource);
           continue;
         }
-        throw new ParserException("unexpected token '"+token->text
-                                  +"' at "+token->loc.toString());
+        if (token->text == "AreaLightSource") {
+          Ref<AreaLightSource> lightSource = new AreaLightSource(tokens->next()->text);
+          parseParams(lightSource->param,*tokens);
+          continue;
+        }
+        // -------------------------------------------------------
+        // Material
+        // -------------------------------------------------------
+        if (token->text == "Material") {
+          std::string name = tokens->next()->text;
+          Ref<Material> material = new Material(name);
+          parseParams(material->param,*tokens);
+          continue;
+        }
+        if (token->text == "Texture") {
+          std::string name = tokens->next()->text;
+          std::string texelType = tokens->next()->text;
+          std::string mapType = tokens->next()->text;
+          Ref<Texture> texture = new Texture(name,texelType,mapType);
+          namedTexture[name] = texture;
+          parseParams(texture->param,*tokens);
+          continue;
+        }
+        // -------------------------------------------------------
+        // Attributes
+        // -------------------------------------------------------
+        if (token->text == "AttributeBegin") {
+          pushAttributes();
+          continue;
+        }
+        if (token->text == "AttributeEnd") {
+          popAttributes();
+          continue;
+        }
+        // -------------------------------------------------------
+        // Shapes
+        // -------------------------------------------------------
+        if (token->text == "Shape") {
+          Ref<Shape> shape = new Shape(tokens->next()->text,
+                                       attributesStack.top()->clone(),
+                                       transformStack.top());
+          parseParams(shape->param,*tokens);
+          getCurrentObject()->shapes.push_back(shape);
+          continue;
+        }
+        // -------------------------------------------------------
+        // Volumes
+        // -------------------------------------------------------
+        if (token->text == "Volume") {
+          Ref<Volume> volume = new Volume(tokens->next()->text);
+          parseParams(volume->param,*tokens);
+          getCurrentObject()->volumes.push_back(volume);
+          continue;
+        }
+
+        // -------------------------------------------------------
+        // Transforms
+        // -------------------------------------------------------
+        if (parseTransforms(token))
+          continue;
+        
+        // -------------------------------------------------------
+        // ERROR - unrecognized token in worldbegin/end!!!
+        // -------------------------------------------------------
+        throw std::runtime_error("unexpected token '"+token->text
+                                 +"' at "+token->loc.toString());
       }
     }
 
     Ref<Token> Parser::getNextToken()
     {
       Ref<Token> token = tokens->next();
-      if (!token || token->type == Token::TOKEN_TYPE_EOF) {
+      while (!token) {
         if (tokenizerStack.empty())
-          return token;
+          return NULL; 
         tokens = tokenizerStack.top();
         tokenizerStack.pop();
-        token = getNextToken();
+        token = tokens->next();
       }
-
+      assert(token);
       if (token->text == "Include") {
         Ref<Token> fileNameToken = tokens->next();
         FileName includedFileName = fileNameToken->text;
         if (includedFileName.str()[0] != '/') {
-          /* iw, jul 29 2016: apparently, file names are always
-             relative to the ROOT file, not the last included file
-             (at least in ecosys that seems to be the case) */
           includedFileName = rootNamePath+includedFileName;
-          // includedFileName = tokens->file->name.path()+includedFileName;
         }
         cout << "... including file '" << includedFileName.str() << " ..." << endl;
         
         tokenizerStack.push(tokens);
+        tokens = new Tokenizer(includedFileName);
         return getNextToken();
       }
       else
@@ -481,101 +406,19 @@ namespace plib {
     {
       while (1) {
         Ref<Token> token = getNextToken();
+        if (!token)
+          break;
+
         if (dbg) 
           cout << token->toString() << endl;
-        // if (token->text == "Include") {
-        //   Ref<Token> fileNameToken = tokens->next();
-        //   FileName includedFileName = fileNameToken->text;
-        //   if (includedFileName.str()[0] != '/') {
-        //     /* iw, jul 29 2016: apparently, file names are always
-        //        relative to the ROOT file, not the last included file
-        //        (at least in ecosys that seems to be the case) */
-        //     includedFileName = rootNamePath+includedFileName;
-        //     // includedFileName = tokens->file->name.path()+includedFileName;
-        //   }
-        //   cout << "... including file '" << includedFileName.str() << " ..." << endl;
 
-        //   tokenizerStack.push(tokens);
-        //   tokens = new Tokenizer(includedFileName);
-        //   continue;
-        // }
+        // -------------------------------------------------------
+        // Transforms
+        // -------------------------------------------------------
+        if (parseTransforms(token))
+          continue;
+        
 
-        if (token->text == "Identity") {
-          setTransform(affine3f(embree::one));
-          continue;
-        }
-        if (token->text == "ReverseOrientation") {
-          // addTransform(affine3f::scale(vec3f(1.f,1.f,-1.f)));
-          continue;
-        }
-        if (token->text == "CoordSysTransform") {
-          Ref<Token> nameOfObject = tokens->next();
-          cout << "ignoring 'CoordSysTransform'" << endl;
-          continue;
-        }
-        if (token->text == "Scale") {
-          vec3f scale = parseVec3f(*tokens);
-          addTransform(affine3f::scale(scale));
-          continue;
-        }
-        if (token->text == "Translate") {
-          vec3f translate = parseVec3f(*tokens);
-          addTransform(affine3f::translate(translate));
-          continue;
-        }
-        if (token->text == "ConcatTransform") {
-          addTransform(parseMatrix(*tokens));
-          continue;
-        }
-        if (token->text == "Rotate") {
-          float angle = parseFloat(*tokens);
-          vec3f axis = parseVec3f(*tokens);
-          // cout << "=========== rotate ===========" << endl;
-          // PRINT(angle);
-          // PRINT(axis);
-          const affine3f rot = affine3f::rotate(axis,angle*M_PI/180.f);
-          // PRINT(rot);
-          addTransform(rot);
-          continue;
-        }
-        if (token->text == "Transform") {
-          tokens->next(); // '['
-          float mat[16];
-          for (int i=0;i<16;i++)
-            mat[i] = atof(tokens->next()->text.c_str());
-          tokens->next(); // ']'
-
-          affine3f xfm;
-          xfm.l.vx.x = mat[0];
-          xfm.l.vx.y = mat[1];
-          xfm.l.vx.z = mat[2];
-
-          xfm.l.vy.x = mat[4];
-          xfm.l.vy.y = mat[5];
-          xfm.l.vy.z = mat[6];
-
-          xfm.l.vz.x = mat[8];
-          xfm.l.vz.y = mat[9];
-          xfm.l.vz.z = mat[10];
-
-          xfm.p.x = mat[12];
-          xfm.p.y = mat[13];
-          xfm.p.z = mat[14];
-
-          addTransform(xfm);
-          continue;
-        }
-        if (token->text == "ActiveTransform") {
-          std::string time = tokens->next()->text;
-          std::cout << "'ActiveTransform' not implemented" << endl;
-          continue;
-        }
-        if (token->text == "Identity") {
-          continue;
-        }
-        if (token->text == "ReverseOrientation") {
-          continue;
-        }
         if (token->text == "ConcatTransform") {
           tokens->next(); // '['
           float mat[16];
@@ -653,39 +496,6 @@ namespace plib {
           parseParams(accelerator->param,*tokens);
           continue;
         }
-        if (token->text == "Shape") {
-          Ref<Shape> shape = new Shape(tokens->next()->text,
-                                       attributesStack.top()->clone(),
-                                       transformStack.top());
-
-          // std::stringstream name;
-          // name << "#" << getCurrentObject()->shapes.size() << "@" << getCurrentObject()->name << " (" << shape->toString() << ")";
-          // shape->name = name.str();
-
-          parseParams(shape->param,*tokens);
-          if (verbose)
-            cout << "adding shape " << shape->toString() 
-                 << " to object " << getCurrentObject()->toString() << endl;
-          getCurrentObject()->shapes.push_back(shape);
-          continue;
-        }
-        if (token->text == "Volume") {
-          Ref<Volume> volume = new Volume(tokens->next()->text);
-          parseParams(volume->param,*tokens);
-          getCurrentObject()->volumes.push_back(volume);
-          continue;
-        }
-        if (token->text == "LightSource") {
-          Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
-          parseParams(lightSource->param,*tokens);
-          cout << "'lightsource' not implemented" << endl;
-          continue;
-        }
-        if (token->text == "AreaLightSource") {
-          Ref<AreaLightSource> lightSource = new AreaLightSource(tokens->next()->text);
-          parseParams(lightSource->param,*tokens);
-          continue;
-        }
         if (token->text == "Film") {
           Ref<Film> film = new Film(tokens->next()->text);
           parseParams(film->param,*tokens);
@@ -709,46 +519,13 @@ namespace plib {
           parseParams(material->param,*tokens);
           continue;
         }
-        if (token->text == "Material") {
-          std::string name = tokens->next()->text;
-          Ref<Material> material = new Material(name);
-          parseParams(material->param,*tokens);
-          continue;
-        }
 
         if (token->text == "NamedMaterial") {
           // USE named material
           std::string which = tokens->next()->text;
           continue;
         }
-        if (token->text == "Texture") {
-          std::string name = tokens->next()->text;
-          std::string texelType = tokens->next()->text;
-          std::string mapType = tokens->next()->text;
-          Ref<Texture> texture = new Texture(name,texelType,mapType);
-          namedTexture[name] = texture;
-          parseParams(texture->param,*tokens);
-          continue;
-        }
 
-        if (token->text == "AttributeBegin") {
-          pushAttributes();
-          continue;
-        }
-        if (token->text == "AttributeEnd") {
-          popAttributes();
-          continue;
-        }
-
-        if (token->text == "TransformBegin") {
-          pushTransform();
-          continue;
-        }
-        if (token->text == "TransformEnd") {
-          popTransform();
-          continue;
-        }
-        
         if (token->text == "WorldBegin") {
           parseWorld();
           continue;
@@ -783,10 +560,10 @@ namespace plib {
         }
           
         
-        throw new ParserException("unexpected token '"+token->text
-                                  +"' at "+token->loc.toString());
+        throw std::runtime_error("unexpected token '"+token->text
+                                 +"' at "+token->loc.toString());
       }
-  }
+    }
 
     
     /*! parse given file, and add it to the scene we hold */

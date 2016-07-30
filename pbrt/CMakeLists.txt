@@ -1,5 +1,6 @@
 
 ADD_LIBRARY(plib_pbrt
+  Lexer.cpp
   Parser.cpp
   Scene.cpp
   parsePLY.cpp
