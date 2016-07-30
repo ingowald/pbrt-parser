@@ -64,7 +64,8 @@ namespace plib {
       //! pretty-print
       std::string toString() const;
       
-      inline operator std::string() const { return toString(); }
+      inline operator std::string() const { return text// toString()
+          ; }
       inline const char *c_str() const { return text.c_str(); }
 
       const Loc         loc;

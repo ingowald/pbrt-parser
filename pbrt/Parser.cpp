@@ -191,8 +191,8 @@ namespace plib {
     affine3f parseMatrix(Lexer &tokens)
     {
       const std::string open = *tokens.next();
-      assert(open == "[");
 
+      assert(open == "[");
       affine3f xfm;
       xfm.l.vx.x = atof(tokens.next()->c_str());
       xfm.l.vx.y = atof(tokens.next()->c_str());
@@ -219,7 +219,7 @@ namespace plib {
       assert(p_w == 1.f);
 
       const std::string close = *tokens.next();
-      assert(open == "=");
+      assert(close == "]");
 
       return xfm;
     }
@@ -329,6 +329,20 @@ namespace plib {
           parseParams(texture->param,*tokens);
           continue;
         }
+        if (token->text == "MakeNamedMaterial") {
+          std::string name = tokens->next()->text;
+          Ref<Material> material = new Material(name);
+          namedMaterial[name] = material;
+          parseParams(material->param,*tokens);
+          continue;
+        }
+
+        if (token->text == "NamedMaterial") {
+          // USE named material
+          std::string which = tokens->next()->text;
+          continue;
+        }
+
         // -------------------------------------------------------
         // Attributes
         // -------------------------------------------------------
@@ -367,6 +381,39 @@ namespace plib {
         if (parseTransforms(token))
           continue;
         
+
+        // -------------------------------------------------------
+        // Objects
+        // -------------------------------------------------------
+
+        if (token->text == "ObjectBegin") {
+          std::string name = tokens->next()->text;
+          Ref<Object> object = findNamedObject(name,1);
+
+          objectStack.push(object);
+          // if (verbose)
+          //   cout << "pushing object " << object->toString() << endl;
+          // transformStack.push(embree::one);
+          continue;
+        }
+          
+        if (token->text == "ObjectEnd") {
+          objectStack.pop();
+          // transformStack.pop();
+          continue;
+        }
+
+        if (token->text == "ObjectInstance") {
+          std::string name = tokens->next()->text;
+          Ref<Object> object = findNamedObject(name,1);
+          Ref<Object::Instance> inst = new Object::Instance(object,getCurrentXfm());
+          getCurrentObject()->objectInstances.push_back(inst);
+          if (verbose)
+            cout << "adding instance " << inst->toString()
+                 << " to object " << getCurrentObject()->toString() << endl;
+          continue;
+        }
+          
         // -------------------------------------------------------
         // ERROR - unrecognized token in worldbegin/end!!!
         // -------------------------------------------------------
@@ -512,53 +559,11 @@ namespace plib {
           continue;
         }
 
-        if (token->text == "MakeNamedMaterial") {
-          std::string name = tokens->next()->text;
-          Ref<Material> material = new Material(name);
-          namedMaterial[name] = material;
-          parseParams(material->param,*tokens);
-          continue;
-        }
-
-        if (token->text == "NamedMaterial") {
-          // USE named material
-          std::string which = tokens->next()->text;
-          continue;
-        }
-
         if (token->text == "WorldBegin") {
           parseWorld();
           continue;
         }
 
-        if (token->text == "ObjectBegin") {
-          std::string name = tokens->next()->text;
-          Ref<Object> object = findNamedObject(name,1);
-
-          objectStack.push(object);
-          // if (verbose)
-          //   cout << "pushing object " << object->toString() << endl;
-          // transformStack.push(embree::one);
-          continue;
-        }
-          
-        if (token->text == "ObjectEnd") {
-          objectStack.pop();
-          // transformStack.pop();
-          continue;
-        }
-
-        if (token->text == "ObjectInstance") {
-          std::string name = tokens->next()->text;
-          Ref<Object> object = findNamedObject(name,1);
-          Ref<Object::Instance> inst = new Object::Instance(object,getCurrentXfm());
-          getCurrentObject()->objectInstances.push_back(inst);
-          if (verbose)
-            cout << "adding instance " << inst->toString()
-                 << " to object " << getCurrentObject()->toString() << endl;
-          continue;
-        }
-          
         
         throw std::runtime_error("unexpected token '"+token->text
                                  +"' at "+token->loc.toString());

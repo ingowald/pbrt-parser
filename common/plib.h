@@ -19,6 +19,7 @@
 #include "embree-common/sys/ref.h"
 #include "embree-common/sys/filename.h"
 #include "embree-common/math/vec3.h"
+#include "embree-common/math/vec4.h"
 #include "embree-common/math/affinespace.h"
 
 namespace plib {
@@ -29,6 +30,7 @@ namespace plib {
 
   typedef embree::Vec2f vec2f;
   typedef embree::Vec3i vec3i;
+  typedef embree::Vec4i vec4i;
   typedef embree::Vec3f vec3f;
   typedef embree::AffineSpace3f affine3f;
 }
