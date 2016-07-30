@@ -9,8 +9,8 @@ read.
 I'll be working on this on and off in my spare time; right now this is
 little more than a few early steps to get a hang of the pbrt grammar.
 
-!(doc/jpg/ecosys.jpg "ecosys")
-!(doc/jpg/landscape.jpg "landscape")
+![ecosys.pbrt](doc/jpg/ecosys.jpg "ecosys")
+![landscape.pbrt](doc/jpg/landscape.jpg "landscape")
 
 LICENSE
 =======
