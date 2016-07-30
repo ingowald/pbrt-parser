@@ -23,7 +23,7 @@
 namespace plib {
   namespace pbrt {
 
-    struct Tokenizer;
+    struct Lexer;
     struct Token;
 
     /*! parser object that holds persistent state about the parsing
@@ -57,9 +57,9 @@ namespace plib {
       
     private:
       //! stack of parent files' token streams
-      std::stack<Tokenizer *> tokenizerStack;
+      std::stack<Lexer *> tokenizerStack;
       //! token stream of currently open file
-      Tokenizer *tokens;
+      Lexer *tokens;
       /*! get the next token to process (either from current file, or
         parent file(s) if current file is EOL!); return NULL if
         complete end of input */

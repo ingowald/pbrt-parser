@@ -30,7 +30,7 @@ namespace plib {
 
     int verbose = 1;
 
-    inline float parseFloat(Tokenizer &tokens)
+    inline float parseFloat(Lexer &tokens)
     {
       Ref<Token> token = tokens.next();
       // if (token == Token::TOKEN_EOF)
@@ -39,7 +39,7 @@ namespace plib {
       return atof(token->text.c_str());
     }
 
-    inline vec3f parseVec3f(Tokenizer &tokens)
+    inline vec3f parseVec3f(Lexer &tokens)
     {
       try {
         const float x = parseFloat(tokens);
@@ -53,7 +53,7 @@ namespace plib {
       }
     }
 
-    inline Ref<Param> parseParam(std::string &name, Tokenizer &tokens)
+    inline Ref<Param> parseParam(std::string &name, Lexer &tokens)
     {
       Ref<Token> token = tokens.peek();
       if (!token || token->type != Token::TOKEN_TYPE_STRING)
@@ -116,7 +116,7 @@ namespace plib {
       return ret;
     }
 
-    void parseParams(std::map<std::string, Ref<Param> > &params, Tokenizer &tokens)
+    void parseParams(std::map<std::string, Ref<Param> > &params, Lexer &tokens)
     {
       while (1) {
         std::string name;
@@ -188,7 +188,7 @@ namespace plib {
       transformStack.pop();
     }
     
-    affine3f parseMatrix(Tokenizer &tokens)
+    affine3f parseMatrix(Lexer &tokens)
     {
       const std::string open = *tokens.next();
       assert(open == "[");
@@ -395,7 +395,7 @@ namespace plib {
         cout << "... including file '" << includedFileName.str() << " ..." << endl;
         
         tokenizerStack.push(tokens);
-        tokens = new Tokenizer(includedFileName);
+        tokens = new Lexer(includedFileName);
         return getNextToken();
       }
       else
@@ -570,7 +570,7 @@ namespace plib {
     void Parser::parse(const FileName &fn)
     {
       rootNamePath = basePath==""?fn.path():FileName(basePath);
-      this->tokens = new Tokenizer(fn);
+      this->tokens = new Lexer(fn);
       parseScene();      
     }
 
