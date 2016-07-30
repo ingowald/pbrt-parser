@@ -28,15 +28,17 @@ namespace plib {
     using std::cout;
     using std::endl;
 
+    FileName basePath = "";
+
     // the output file we're writing.
     FILE *out = NULL;
 
     size_t numWritten = 0;
+    size_t numVerticesWritten = 0;
 
     void writeTriangleMesh(Ref<Shape> shape, const affine3f &instanceXfm)
     {
       const affine3f xfm = instanceXfm*shape->transform;
-      static size_t numVerticesWritten = 0;
       size_t firstVertexID = numVerticesWritten+1;
 
       { // parse "point P"
@@ -44,12 +46,12 @@ namespace plib {
         if (param_P) {
           const size_t numPoints = param_P->paramVec.size() / 3;
           for (int i=0;i<numPoints;i++) {
-          vec3f v(param_P->paramVec[3*i+0],
-                  param_P->paramVec[3*i+1],
-                  param_P->paramVec[3*i+2]);
-          v = xfmPoint(xfm,v);
-          fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
-          numVerticesWritten++;
+            vec3f v(param_P->paramVec[3*i+0],
+                    param_P->paramVec[3*i+1],
+                    param_P->paramVec[3*i+2]);
+            v = xfmPoint(xfm,v);
+            fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
+            numVerticesWritten++;
           }
         }
       }
@@ -67,17 +69,52 @@ namespace plib {
             numWritten++;
           }
         }
-      }
-        
+      }        
     }
 
-    void writeObject(Ref<Object> object, const affine3f &instanceXfm)
+    void parsePLY(const std::string &fileName,
+                  std::vector<vec3f> &v,
+                  std::vector<vec3f> &n,
+                  std::vector<vec3i> &idx);
+
+    void writePlyMesh(Ref<Shape> shape, const affine3f &instanceXfm)
+    {
+      std::vector<vec3f> p, n;
+      std::vector<vec3i> idx;
+      
+      Ref<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
+      FileName fn = FileName(basePath) + param_fileName->paramVec[0];
+      parsePLY(fn.str(),p,n,idx);
+
+      const affine3f xfm = instanceXfm*shape->transform;
+      size_t firstVertexID = numVerticesWritten+1;
+
+      for (int i=0;i<p.size();i++) {
+        vec3f v = xfmPoint(xfm,p[i]);
+        fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
+        numVerticesWritten++;
+      }
+
+      for (int i=0;i<idx.size();i++) {
+        vec3i v = idx[i];
+        fprintf(out,"f %lu %lu %lu\n",
+                firstVertexID+v.x,
+                firstVertexID+v.y,
+                firstVertexID+v.z);
+        numWritten++;
+      }
+    }
+
+    void writeObject(Ref<Object> object, 
+                     const affine3f &instanceXfm)
     {
       cout << "writing " << object->toString() << endl;
       for (int shapeID=0;shapeID<object->shapes.size();shapeID++) {
         Ref<Shape> shape = object->shapes[shapeID];
         if (shape->type == "trianglemesh") {
           writeTriangleMesh(shape,instanceXfm);
+        } else if (shape->type == "plymesh") {
+          writePlyMesh(shape,instanceXfm);
         } else 
           cout << "**** invalid shape #" << shapeID << " : " << shape->type << endl;
       }
@@ -93,7 +130,6 @@ namespace plib {
       std::vector<std::string> fileName;
       bool dbg = false;
       std::string outFileName = "a.obj";
-      std::string basePath = "";
       for (int i=1;i<ac;i++) {
         const std::string arg = av[i];
         if (arg[0] == '-') {
@@ -109,7 +145,6 @@ namespace plib {
           fileName.push_back(arg);
         }          
       }
-
       out = fopen(outFileName.c_str(),"w");
       assert(out);
   
@@ -118,6 +153,9 @@ namespace plib {
       for (int i=0;i<fileName.size();i++)
         std::cout << " " << fileName[i];
       std::cout << std::endl;
+
+      if (basePath.str() == "")
+        basePath = FileName(fileName[0]).path();
   
       plib::pbrt::Parser *parser = new plib::pbrt::Parser(dbg,basePath);
       try {
