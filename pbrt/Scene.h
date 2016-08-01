@@ -27,6 +27,7 @@ namespace plib {
     struct Param : public RefCounted {
       virtual std::string getType() const = 0;
       virtual size_t getSize() const = 0;
+      virtual std::string toString() const = 0;
 
       /*! used during parsing, to add a newly parsed parameter value
           to the list */
@@ -38,12 +39,29 @@ namespace plib {
       ParamT(const std::string &type) : type(type) {};
       virtual std::string getType() const { return type; };
       virtual size_t getSize() const { return paramVec.size(); }
+      virtual std::string toString() const;
+
       /*! used during parsing, to add a newly parsed parameter value
           to the list */
       virtual void add(const std::string &text);
       //    private:
       std::string type;
       std::vector<T> paramVec;
+    };
+
+    /*! any class that can store (and query) parameters */
+    struct Parameterized : public RefCounted {
+
+      vec3f getParam3f(const std::string &name, const vec3f &fallBack) const;
+
+      template<typename T>
+      Ref<ParamT<T> > findParam(const std::string &name) const {
+        std::map<std::string,Ref<Param> >::const_iterator it = param.find(name);
+        if (it == param.end()) return NULL;
+        return dynamic_cast<ParamT<T> *>(it->second.ptr);
+      }
+
+      std::map<std::string,Ref<Param> > param;
     };
 
     struct Attributes: public RefCounted {
@@ -53,10 +71,19 @@ namespace plib {
       virtual Attributes *clone() const { return new Attributes(*this); }
     };
 
-    struct Material : public RefCounted {
-      std::string name;
-      Material(const std::string &name) : name(name) {};
-      std::map<std::string,Ref<Param> > param;
+    struct Material : public Parameterized {
+      Material(const std::string &type) : type(type) {};
+
+      /*! pretty-print this material (for debugging) */
+      std::string toString() const;
+
+      /*! the 'type' of the material, such as 'uber'material, 'matte',
+          'mix' etc. Note that the PBRT format has two inconsistent
+          ways of specifying that type: for the 'Material' command it
+          specifies the type explicitly right after the 'matierla'
+          command; for the 'makenamedmaterial' it uses an implicit
+          'type' parameter */
+      std::string type;
     };
 
     struct Texture : public RefCounted {
@@ -72,19 +99,12 @@ namespace plib {
       std::map<std::string,Ref<Param> > param;
     };
 
-    struct Node : public RefCounted {
+    struct Node : public Parameterized {
       Node(const std::string &type) : type(type) {};
       virtual std::string toString() const { return type; }
 
-      template<typename T>
-      Ref<ParamT<T> > findParam(const std::string &name) const {
-        std::map<std::string,Ref<Param> >::const_iterator it = param.find(name);
-        if (it == param.end()) return NULL;
-        return dynamic_cast<ParamT<T> *>(it->second.ptr);
-      }
-
       const std::string type;
-      std::map<std::string,Ref<Param> > param;
+      //      std::map<std::string,Ref<Param> > param;
     };
 
     struct Camera : public Node {
@@ -107,16 +127,22 @@ namespace plib {
       PixelFilter(const std::string &type) : Node(type) {};
     };
 
+    /*! a PBRT 'geometric shape' (a geometry in ospray terms) - ie,
+        something that has primitives that together form some sort of
+        surface(s) that a ray can intersect*/
     struct Shape : public Node {
+      /*! constructor */
       Shape(const std::string &type,
+            Ref<Material>   material,
             Ref<Attributes> attributes,
-            affine3f &transform) 
-        : Node(type), 
-          attributes(attributes),
-          transform(transform)
-      {};
+            affine3f &transform);
 
+      /*! material active when the shape was generated - PBRT has only
+          one material per shape */
+      Ref<Material>   material;
       Ref<Attributes> attributes;
+      /*! the active transform stack that was active when then shape
+          was defined */
       affine3f        transform;
     };
 

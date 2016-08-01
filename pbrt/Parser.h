@@ -73,6 +73,7 @@ namespace plib {
       void setTransform(const affine3f &xfm)
       { transformStack.top() = xfm; }
 
+      std::stack<Ref<Material> >   materialStack;
       std::stack<Ref<Attributes> > attributesStack;
       std::stack<affine3f>         transformStack;
       std::stack<Ref<Object> >     objectStack;
@@ -87,6 +88,7 @@ namespace plib {
       Ref<Object> currentObject;
       const std::string basePath;
       FileName rootNamePath;
+      Ref<Material> currentMaterial;
       std::map<std::string,Ref<Object> > namedObjects;
       std::map<std::string,Ref<Material> > namedMaterial;
       std::map<std::string,Ref<Texture> > namedTexture;

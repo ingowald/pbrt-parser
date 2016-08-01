@@ -15,9 +15,14 @@
 // ======================================================================== //
 
 #include "Scene.h"
+// std
+#include <iostream>
+#include <sstream>
 
 namespace plib {
   namespace pbrt {
+
+    using std::endl;
 
     std::string Object::toString() const 
     { 
@@ -33,6 +38,9 @@ namespace plib {
       return ss.str();
     }
 
+    // ==================================================================
+    // Param
+    // ==================================================================
     template<> void ParamT<float>::add(const std::string &text)
     { paramVec.push_back(atof(text.c_str())); }
 
@@ -53,10 +61,101 @@ namespace plib {
     }
 
 
+    template<> std::string ParamT<float>::toString() const
+    { 
+      std::stringstream ss;
+      ss << getType() << " ";
+      ss << "[ ";
+      for (int i=0;i<paramVec.size();i++)
+        ss << paramVec[i] << " ";
+      ss << "]";
+      return ss.str();
+    }
+
+    template<> std::string ParamT<std::string>::toString() const
+    { 
+      std::stringstream ss;
+      ss << getType() << " ";
+      ss << "[ ";
+      for (int i=0;i<paramVec.size();i++)
+        ss << paramVec[i] << " ";
+      ss << "]";
+      return ss.str();
+    }
+
+    template<> std::string ParamT<int>::toString() const
+    { 
+      std::stringstream ss;
+      ss << getType() << " ";
+      ss << "[ ";
+      for (int i=0;i<paramVec.size();i++)
+        ss << paramVec[i] << " ";
+      ss << "]";
+      return ss.str();
+    }
+
+    template<> std::string ParamT<bool>::toString() const
+    { 
+      std::stringstream ss;
+      ss << getType() << " ";
+      ss << "[ ";
+      for (int i=0;i<paramVec.size();i++)
+        ss << paramVec[i] << " ";
+      ss << "]";
+      return ss.str();
+    }
+
     template struct ParamT<float>;
     template struct ParamT<int>;
     template struct ParamT<bool>;
-    // template struct ParamT<Color>;
+    template struct ParamT<std::string>;
+
+    // ==================================================================
+    // Shape
+    // ==================================================================
+    vec3f Parameterized::getParam3f(const std::string &name, const vec3f &fallBack) const
+    {
+      std::map<std::string,Ref<Param> >::const_iterator it=param.find(name);
+      if (it == param.end())
+        return fallBack;
+      Ref<Param> pr = it->second;
+      const ParamT<float> *p = dynamic_cast<ParamT<float> *>(pr.ptr);
+      if (!p)
+        throw std::runtime_error("Parameterized::getParam3f: found param of given name, but of wrong type!");
+      if (p->getSize() != 3)
+        throw std::runtime_error("Parameterized::getParam3f: found param of given name and type, but wrong number of components!");
+    return vec3f(p->paramVec[0],p->paramVec[1],p->paramVec[2]);
+    }
+
+    // ==================================================================
+    // Shape
+    // ==================================================================
+
+    /*! constructor */
+    Shape::Shape(const std::string &type,
+          Ref<Material>   material,
+          Ref<Attributes> attributes,
+          affine3f &transform) 
+      : Node(type), 
+        material(material),
+        attributes(attributes),
+        transform(transform)
+    {};
+
+    // ==================================================================
+    // Material
+    // ==================================================================
+    std::string Material::toString() const
+    {
+      std::stringstream ss;
+      ss << "Material type='"<< type << "' {" << endl;
+      for (std::map<std::string,Ref<Param> >::const_iterator it=param.begin(); 
+           it != param.end(); it++) {
+        ss << " - " << it->first << " : " << it->second->toString() << endl;
+      }
+      ss << "}" << endl;
+      return ss.str();
+    }
 
   }
 }
