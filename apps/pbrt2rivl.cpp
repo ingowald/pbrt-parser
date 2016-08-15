@@ -68,9 +68,43 @@ namespace plib {
 
     int nextNodeID = 0;
     
+    int exportMaterial(Ref<Material> material)
+    {
+      if (!material) 
+        // default material
+        return 0;
+
+      std::map<Ref<Material>,int> alreadyExported;
+      if (alreadyExported.find(material) != alreadyExported.end())
+        return alreadyExported[material];
+
+      const std::string type = material->type;
+
+      if (type == "uber") {
+        std::stringstream ss;
+        ss << "<Material name=\"doesntMatter\" type=\"OBJMaterial\">" << endl;
+        {
+          vec3f v = material->getParam3f("Kd",vec3f(0.f));
+          ss << "  <param name=\"kd\" type=\"float3\">" << v.x << " " << v.y << " " << v.z << "</param>" << endl;
+        }
+        ss << "</Material>" << endl;
+
+        int thisID = nextNodeID++;
+        alreadyExported[material] = thisID;
+        return thisID;
+      } else {
+        printf("WARNING: UNHANDLED MATERIAL TYPE '%s'!!!\n",type.c_str());
+        return 0;
+      }
+    }
+
     int writeTriangleMesh(Ref<Shape> shape, const affine3f &instanceXfm)
     {
       numUniqueObjects++;
+      Ref<Material> mat = shape->material;
+      cout << "writing shape " << shape->toString() << " w/ material " << (mat?mat->toString():"<null>") << endl;
+
+      int materialID = exportMaterial(shape->material);
 
       int thisID = nextNodeID++;
       const affine3f xfm = instanceXfm*shape->transform;
@@ -78,7 +112,7 @@ namespace plib {
       transformOfFirstInstance[thisID] = xfm;
 
       fprintf(out,"<Mesh id=\"%i\">\n",thisID);
-      fprintf(out,"  <materiallist>0</materiallist>\n");
+      fprintf(out,"  <materiallist>%i</materiallist>\n",materialID);
       { // parse "point P"
         Ref<ParamT<float> > param_P = shape->findParam<float>("P");
         if (param_P) {
@@ -132,6 +166,8 @@ namespace plib {
       std::vector<vec3i> idx;
       
       numUniqueObjects++;
+      Ref<Material> mat = shape->material;
+      cout << "writing shape " << shape->toString() << " w/ material " << (mat?mat->toString():"<null>") << endl;
 
       Ref<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
       FileName fn = FileName(basePath) + param_fileName->paramVec[0];
@@ -174,7 +210,8 @@ namespace plib {
     void writeObject(const Ref<Object> &object, 
                      const affine3f &instanceXfm)
     {
-      cout << "writing " << object->toString() << endl;
+      // cout << "writing " << object->toString() << endl;
+
       // std::vector<int> child;
 
       for (int shapeID=0;shapeID<object->shapes.size();shapeID++) {

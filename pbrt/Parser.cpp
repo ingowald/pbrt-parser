@@ -28,7 +28,7 @@ namespace plib {
   namespace pbrt {
     using namespace std;
 
-    int verbose = 1;
+    int verbose = 0;
 
     inline float parseFloat(Lexer &tokens)
     {
@@ -167,6 +167,7 @@ namespace plib {
     void Parser::pushAttributes() 
     {
       attributesStack.push(new Attributes(*attributesStack.top()));
+      materialStack.push(currentMaterial);
       pushTransform();
       // setTransform(embree::one);
 
@@ -176,6 +177,8 @@ namespace plib {
     {
       popTransform();
       attributesStack.pop();
+      currentMaterial = materialStack.top();
+      materialStack.pop();
     }
     
     void Parser::pushTransform() 
@@ -315,9 +318,12 @@ namespace plib {
         // Material
         // -------------------------------------------------------
         if (token->text == "Material") {
-          std::string name = tokens->next()->text;
-          Ref<Material> material = new Material(name);
+          std::string type = tokens->next()->text;
+          Ref<Material> material = new Material(type);
           parseParams(material->param,*tokens);
+          currentMaterial = material;
+          PING;
+          PRINT(currentMaterial);
           continue;
         }
         if (token->text == "Texture") {
@@ -331,15 +337,27 @@ namespace plib {
         }
         if (token->text == "MakeNamedMaterial") {
           std::string name = tokens->next()->text;
-          Ref<Material> material = new Material(name);
+          Ref<Material> material = new Material("<implicit>");
           namedMaterial[name] = material;
           parseParams(material->param,*tokens);
+
+          /* named material have the parameter type implicitly as a
+             parameter rather than explicitly on the
+             'makenamedmaterial' command; so let's parse this here */
+          Ref<Param> type = material->param["type"];
+          if (!type) throw std::runtime_error("named material that does not specify a 'type' parameter!?");
+          ParamT<std::string> *asString = dynamic_cast<ParamT<std::string> *>(type.ptr);
+          if (!asString)
+            throw std::runtime_error("named material has a type, but not a string!?");
+          assert(asString->getSize() == 1);
+          material->type = asString->paramVec[0];
           continue;
         }
 
         if (token->text == "NamedMaterial") {
           // USE named material
-          std::string which = tokens->next()->text;
+          std::string name = tokens->next()->text;
+          currentMaterial = namedMaterial[name];
           continue;
         }
 
@@ -359,6 +377,7 @@ namespace plib {
         // -------------------------------------------------------
         if (token->text == "Shape") {
           Ref<Shape> shape = new Shape(tokens->next()->text,
+                                       currentMaterial,
                                        attributesStack.top()->clone(),
                                        transformStack.top());
           parseParams(shape->param,*tokens);
