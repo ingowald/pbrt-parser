@@ -84,7 +84,12 @@ namespace plib {
         std::stringstream ss;
         ss << "<Material name=\"doesntMatter\" type=\"OBJMaterial\">" << endl;
         {
-          vec3f v = material->getParam3f("Kd",vec3f(0.f));
+          vec3f v;
+          try {
+            v = material->getParam3f("Kd",vec3f(0.0f));
+          } catch (std::runtime_error e) {
+            v = vec3f(.6f);
+          };
           ss << "  <param name=\"kd\" type=\"float3\">" << v.x << " " << v.y << " " << v.z << "</param>" << endl;
         }
         ss << "</Material>" << endl;
