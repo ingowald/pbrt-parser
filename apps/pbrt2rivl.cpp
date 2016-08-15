@@ -48,6 +48,23 @@ namespace plib {
 
     std::vector<int> rootObjects;
 
+  inline std::string prettyNumber(const size_t s) {
+    double val = s;
+    char result[100];
+    if (val >= 1e12f) {
+      sprintf(result,"%.1fT",val/1e12f);
+    } else if (val >= 1e9f) {
+      sprintf(result,"%.1fG",val/1e9f);
+    } else if (val >= 1e6f) {
+      sprintf(result,"%.1fM",val/1e6f);
+    } else if (val >= 1e3f) {
+      sprintf(result,"%.1fK",val/1e3f);
+    } else {
+      sprintf(result,"%lu",s);
+    }
+    return result;
+  }
+
 
     int nextNodeID = 0;
     
@@ -284,10 +301,10 @@ namespace plib {
         fclose(out);
         fclose(bin);
         cout << "Done exporting to OSP file" << endl;
-        cout << " - unique triangles written " << numUniqueTriangles << endl;
-        cout << " - instanced tris written   " << numInstancedTriangles << endl;
-        cout << " - unique objects/shapes    " << numUniqueObjects << endl;
-        cout << " - num instances (inc.1sts) " << numInstances << endl;
+        cout << " - unique objects/shapes    " << prettyNumber(numUniqueObjects) << endl;
+        cout << " - num instances (inc.1sts) " << prettyNumber(numInstances) << endl;
+        cout << " - unique triangles written " << prettyNumber(numUniqueTriangles) << endl;
+        cout << " - instanced tris written   " << prettyNumber(numUniqueTriangles+numInstancedTriangles) << endl;
       } catch (std::runtime_error e) {
         std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
         exit(1);
