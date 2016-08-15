@@ -36,6 +36,8 @@ namespace plib {
 
     size_t numUniqueTriangles = 0;
     size_t numInstancedTriangles = 0;
+    size_t numUniqueObjects = 0;
+    size_t numInstances = 0;
 
     std::map<Shape *,int> alreadyExported;
     //! transform used when original instance was emitted
@@ -51,6 +53,8 @@ namespace plib {
     
     int writeTriangleMesh(Ref<Shape> shape, const affine3f &instanceXfm)
     {
+      numUniqueObjects++;
+
       int thisID = nextNodeID++;
       const affine3f xfm = instanceXfm*shape->transform;
       alreadyExported[shape.ptr] = thisID;
@@ -110,6 +114,8 @@ namespace plib {
       std::vector<vec3f> p, n;
       std::vector<vec3i> idx;
       
+      numUniqueObjects++;
+
       Ref<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
       FileName fn = FileName(basePath) + param_fileName->paramVec[0];
       parsePLY(fn.str(),p,n,idx);
@@ -157,8 +163,11 @@ namespace plib {
       for (int shapeID=0;shapeID<object->shapes.size();shapeID++) {
         Ref<Shape> shape = object->shapes[shapeID];
 
+        numInstances++;
+
         if (alreadyExported.find(shape.ptr) != alreadyExported.end()) {
           
+
           int childID = alreadyExported[shape.ptr];
           affine3f xfm = instanceXfm * //shape->transform * 
             rcp(transformOfFirstInstance[childID]);
@@ -277,6 +286,8 @@ namespace plib {
         cout << "Done exporting to OSP file" << endl;
         cout << " - unique triangles written " << numUniqueTriangles << endl;
         cout << " - instanced tris written   " << numInstancedTriangles << endl;
+        cout << " - unique objects/shapes    " << numUniqueObjects << endl;
+        cout << " - num instances (inc.1sts) " << numInstances << endl;
       } catch (std::runtime_error e) {
         std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
         exit(1);
