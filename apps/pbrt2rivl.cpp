@@ -341,7 +341,7 @@ namespace plib {
 
         {
           int thisID = nextNodeID++;
-          fprintf(out,"<Group id=\"%i\" numChildren=\"%i\">\n",thisID,rootObjects.size());
+          fprintf(out,"<Group id=\"%i\" numChildren=\"%lu\">\n",thisID,rootObjects.size());
           for (int i=0;i<rootObjects.size();i++)
             fprintf(out,"%i ",rootObjects[i]);
           fprintf(out,"\n</Group>\n");
