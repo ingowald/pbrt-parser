@@ -32,7 +32,7 @@ namespace plib {
 
     inline float parseFloat(Lexer &tokens)
     {
-      Ref<Token> token = tokens.next();
+      std::shared_ptr<Token> token = tokens.next();
       // if (token == Token::TOKEN_EOF)
       if (!token)
         throw std::runtime_error("unexpected end of file\n@"+std::string(__PRETTY_FUNCTION__));
@@ -53,9 +53,9 @@ namespace plib {
       }
     }
 
-    inline Ref<Param> parseParam(std::string &name, Lexer &tokens)
+    inline std::shared_ptr<Param> parseParam(std::string &name, Lexer &tokens)
     {
-      Ref<Token> token = tokens.peek();
+      std::shared_ptr<Token> token = tokens.peek();
       if (!token || token->type != Token::TOKEN_TYPE_STRING)
         return NULL;
 
@@ -67,44 +67,42 @@ namespace plib {
         throw std::runtime_error("could not parse object parameter's type and name "
                                  +token->loc.toString()
                                  +std::string("\n@")+std::string(__PRETTY_FUNCTION__));
-      // throw new ParserException("could not parse object parameter's type and name "+token->loc.toString(),
-      //                           __PRETTY_FUNCTION__);
       string type = _type;
       name = _name;
       free(_name);
       free(_type);
 
-      Ref<Param> ret = NULL;
+      std::shared_ptr<Param> ret = NULL;
       if (type == "float") {
-        ret = new ParamT<float>(type);
+        ret = std::make_shared<ParamT<float>>(type);
       } else if (type == "color") {
-        ret = new ParamT<float>(type);
+        ret = std::make_shared<ParamT<float> >(type);
       } else if (type == "rgb") {
-        ret = new ParamT<float>(type);
+        ret = std::make_shared<ParamT<float> >(type);
       } else if (type == "spectrum") {
-        ret = new ParamT<std::string>(type);
+        ret = std::make_shared<ParamT<std::string>>(type);
       } else if (type == "integer") {
-        ret = new ParamT<int>(type);
+        ret = std::make_shared<ParamT<int>>(type);
       } else if (type == "bool") {
-        ret = new ParamT<bool>(type);
+        ret = std::make_shared<ParamT<bool>>(type);
       } else if (type == "texture") {
-        ret = new ParamT<std::string>(type);
+        ret = std::make_shared<ParamT<std::string>>(type);
       } else if (type == "normal") {
-        ret = new ParamT<float>(type);
+        ret = std::make_shared<ParamT<float> >(type);
       } else if (type == "point") {
-        ret = new ParamT<float>(type);
+        ret = std::make_shared<ParamT<float>>(type);
       } else if (type == "vector") {
-        ret = new ParamT<float>(type);
+        ret = std::make_shared<ParamT<float>>(type);
       } else if (type == "string") {
-        ret = new ParamT<std::string>(type);
+        ret = std::make_shared<ParamT<std::string>>(type);
       } else {
         throw std::runtime_error("unknown parameter type '"+type+"' "+token->loc.toString()
                                  +std::string("\n@")+std::string(__PRETTY_FUNCTION__));
       }
 
-      Ref<Token> value = tokens.next();
+      std::shared_ptr<Token> value = tokens.next();
       if (value->text == "[") {
-        Ref<Token> p = tokens.next();
+        std::shared_ptr<Token> p = tokens.next();
         
         while (p->text != "]") {
           ret->add(p->text);
@@ -116,11 +114,11 @@ namespace plib {
       return ret;
     }
 
-    void parseParams(std::map<std::string, Ref<Param> > &params, Lexer &tokens)
+    void parseParams(std::map<std::string, std::shared_ptr<Param> > &params, Lexer &tokens)
     {
       while (1) {
         std::string name;
-        Ref<Param> param = parseParam(name,tokens);
+        std::shared_ptr<Param> param = parseParam(name,tokens);
         if (!param) return;
         params[name] = param;
       }
@@ -135,26 +133,26 @@ namespace plib {
     }
 
     Parser::Parser(bool dbg, const std::string &basePath) 
-      : scene(new Scene), dbg(dbg), basePath(basePath) 
+      : scene(std::make_shared<Scene>()), dbg(dbg), basePath(basePath) 
     {
-      transformStack.push(affine3f(embree::one));
-      attributesStack.push(new Attributes);
+      transformStack.push(affine3f(ospcommon::one));
+      attributesStack.push(std::make_shared<Attributes>());
       objectStack.push(scene->world);//scene.cast<Object>());
     }
 
-    Ref<Object> Parser::getCurrentObject() 
+    std::shared_ptr<Object> Parser::getCurrentObject() 
     {
       if (objectStack.empty())
         throw std::runtime_error("no active object!?");
       return objectStack.top(); 
     }
 
-    Ref<Object> Parser::findNamedObject(const std::string &name, bool createIfNotExist)
+    std::shared_ptr<Object> Parser::findNamedObject(const std::string &name, bool createIfNotExist)
     {
       if (namedObjects.find(name) == namedObjects.end()) {
 
         if (createIfNotExist) {
-          Ref<Object> object = new Object(name);
+          std::shared_ptr<Object> object = std::make_shared<Object>(name);
           namedObjects[name] = object;
         } else {
           throw std::runtime_error("could not find object named '"+name+"'");
@@ -166,10 +164,10 @@ namespace plib {
 
     void Parser::pushAttributes() 
     {
-      attributesStack.push(new Attributes(*attributesStack.top()));
+      attributesStack.push(std::make_shared<Attributes>(*attributesStack.top()));
       materialStack.push(currentMaterial);
       pushTransform();
-      // setTransform(embree::one);
+      // setTransform(ospcommon::one);
 
     }
 
@@ -227,7 +225,7 @@ namespace plib {
       return xfm;
     }
 
-    bool Parser::parseTransforms(Ref<Token> token)
+    bool Parser::parseTransforms(std::shared_ptr<Token> token)
     {
       if (token->text == "TransformBegin") {
         pushTransform();
@@ -274,7 +272,7 @@ namespace plib {
         return true;
       }
       if (token->text == "Identity") {
-        setTransform(affine3f(embree::one));
+        setTransform(affine3f(ospcommon::one));
         return true;
       }
       if (token->text == "ReverseOrientation") {
@@ -283,7 +281,7 @@ namespace plib {
         return true;
       }
       if (token->text == "CoordSysTransform") {
-        Ref<Token> nameOfObject = tokens->next();
+        std::shared_ptr<Token> nameOfObject = tokens->next();
         cout << "ignoring 'CoordSysTransform'" << endl;
         return true;
       }
@@ -294,7 +292,7 @@ namespace plib {
     {
       cout << "Parsing PBRT World" << endl;
       while (1) {
-        Ref<Token> token = getNextToken();
+        std::shared_ptr<Token> token = getNextToken();
         assert(token);
         if (token->text == "WorldEnd") {
           cout << "Parsing PBRT World - done!" << endl;
@@ -304,13 +302,15 @@ namespace plib {
         // LightSource
         // -------------------------------------------------------
         if (token->text == "LightSource") {
-          Ref<LightSource> lightSource = new LightSource(tokens->next()->text);
+          std::shared_ptr<LightSource> lightSource
+            = std::make_shared<LightSource>(tokens->next()->text);
           parseParams(lightSource->param,*tokens);
           getCurrentObject()->lightSources.push_back(lightSource);
           continue;
         }
         if (token->text == "AreaLightSource") {
-          Ref<AreaLightSource> lightSource = new AreaLightSource(tokens->next()->text);
+          std::shared_ptr<AreaLightSource> lightSource
+            = std::make_shared<AreaLightSource>(tokens->next()->text);
           parseParams(lightSource->param,*tokens);
           continue;
         }
@@ -319,7 +319,8 @@ namespace plib {
         // -------------------------------------------------------
         if (token->text == "Material") {
           std::string type = tokens->next()->text;
-          Ref<Material> material = new Material(type);
+          std::shared_ptr<Material> material
+            = std::make_shared<Material>(type);
           parseParams(material->param,*tokens);
           currentMaterial = material;
           PING;
@@ -330,23 +331,26 @@ namespace plib {
           std::string name = tokens->next()->text;
           std::string texelType = tokens->next()->text;
           std::string mapType = tokens->next()->text;
-          Ref<Texture> texture = new Texture(name,texelType,mapType);
+          std::shared_ptr<Texture> texture
+            = std::make_shared<Texture>(name,texelType,mapType);
           namedTexture[name] = texture;
           parseParams(texture->param,*tokens);
           continue;
         }
         if (token->text == "MakeNamedMaterial") {
           std::string name = tokens->next()->text;
-          Ref<Material> material = new Material("<implicit>");
+          std::shared_ptr<Material> material
+            = std::make_shared<Material>("<implicit>");
           namedMaterial[name] = material;
           parseParams(material->param,*tokens);
 
           /* named material have the parameter type implicitly as a
              parameter rather than explicitly on the
              'makenamedmaterial' command; so let's parse this here */
-          Ref<Param> type = material->param["type"];
+          std::shared_ptr<Param> type = material->param["type"];
           if (!type) throw std::runtime_error("named material that does not specify a 'type' parameter!?");
-          ParamT<std::string> *asString = dynamic_cast<ParamT<std::string> *>(type.ptr);
+          std::shared_ptr<ParamT<std::string>> asString
+            = std::dynamic_pointer_cast<ParamT<std::string> >(type);
           if (!asString)
             throw std::runtime_error("named material has a type, but not a string!?");
           assert(asString->getSize() == 1);
@@ -376,10 +380,11 @@ namespace plib {
         // Shapes
         // -------------------------------------------------------
         if (token->text == "Shape") {
-          Ref<Shape> shape = new Shape(tokens->next()->text,
-                                       currentMaterial,
-                                       attributesStack.top()->clone(),
-                                       transformStack.top());
+          std::shared_ptr<Shape> shape
+            = std::make_shared<Shape>(tokens->next()->text,
+                                      currentMaterial,
+                                      attributesStack.top()->clone(),
+                                      transformStack.top());
           parseParams(shape->param,*tokens);
           getCurrentObject()->shapes.push_back(shape);
           continue;
@@ -388,7 +393,8 @@ namespace plib {
         // Volumes
         // -------------------------------------------------------
         if (token->text == "Volume") {
-          Ref<Volume> volume = new Volume(tokens->next()->text);
+          std::shared_ptr<Volume> volume
+            = std::make_shared<Volume>(tokens->next()->text);
           parseParams(volume->param,*tokens);
           getCurrentObject()->volumes.push_back(volume);
           continue;
@@ -407,12 +413,12 @@ namespace plib {
 
         if (token->text == "ObjectBegin") {
           std::string name = tokens->next()->text;
-          Ref<Object> object = findNamedObject(name,1);
+          std::shared_ptr<Object> object = findNamedObject(name,1);
 
           objectStack.push(object);
           // if (verbose)
           //   cout << "pushing object " << object->toString() << endl;
-          // transformStack.push(embree::one);
+          // transformStack.push(ospcommon::one);
           continue;
         }
           
@@ -424,8 +430,9 @@ namespace plib {
 
         if (token->text == "ObjectInstance") {
           std::string name = tokens->next()->text;
-          Ref<Object> object = findNamedObject(name,1);
-          Ref<Object::Instance> inst = new Object::Instance(object,getCurrentXfm());
+          std::shared_ptr<Object> object = findNamedObject(name,1);
+          std::shared_ptr<Object::Instance> inst
+            = std::make_shared<Object::Instance>(object,getCurrentXfm());
           getCurrentObject()->objectInstances.push_back(inst);
           if (verbose)
             cout << "adding instance " << inst->toString()
@@ -441,9 +448,9 @@ namespace plib {
       }
     }
 
-    Ref<Token> Parser::getNextToken()
+    std::shared_ptr<Token> Parser::getNextToken()
     {
-      Ref<Token> token = tokens->next();
+      std::shared_ptr<Token> token = tokens->next();
       while (!token) {
         if (tokenizerStack.empty())
           return NULL; 
@@ -453,7 +460,7 @@ namespace plib {
       }
       assert(token);
       if (token->text == "Include") {
-        Ref<Token> fileNameToken = tokens->next();
+        std::shared_ptr<Token> fileNameToken = tokens->next();
         FileName includedFileName = fileNameToken->text;
         if (includedFileName.str()[0] != '/') {
           includedFileName = rootNamePath+includedFileName;
@@ -461,7 +468,7 @@ namespace plib {
         cout << "... including file '" << includedFileName.str() << " ..." << endl;
         
         tokenizerStack.push(tokens);
-        tokens = new Lexer(includedFileName);
+        tokens = std::make_shared<Lexer>(includedFileName);
         return getNextToken();
       }
       else
@@ -471,7 +478,7 @@ namespace plib {
     void Parser::parseScene()
     {
       while (1) {
-        Ref<Token> token = getNextToken();
+        std::shared_ptr<Token> token = getNextToken();
         if (!token)
           break;
 
@@ -516,64 +523,64 @@ namespace plib {
           vec3f v0 = parseVec3f(*tokens);
           vec3f v1 = parseVec3f(*tokens);
           vec3f v2 = parseVec3f(*tokens);
-          scene->lookAt = new LookAt(v0,v1,v2);
+          scene->lookAt = std::make_shared<LookAt>(v0,v1,v2);
           continue;
         }
         if (token->text == "Camera") {
-          Ref<Camera> camera = new Camera(tokens->next()->text);
+          std::shared_ptr<Camera> camera = std::make_shared<Camera>(tokens->next()->text);
           parseParams(camera->param,*tokens);
           scene->cameras.push_back(camera);
           continue;
         }
         if (token->text == "Sampler") {
-          Ref<Sampler> sampler = new Sampler(tokens->next()->text);
+          std::shared_ptr<Sampler> sampler = std::make_shared<Sampler>(tokens->next()->text);
           parseParams(sampler->param,*tokens);
           scene->sampler = sampler;
           continue;
         }
         if (token->text == "Integrator") {
-          Ref<Integrator> integrator = new Integrator(tokens->next()->text);
+          std::shared_ptr<Integrator> integrator = std::make_shared<Integrator>(tokens->next()->text);
           parseParams(integrator->param,*tokens);
           scene->integrator = integrator;
           continue;
         }
         if (token->text == "SurfaceIntegrator") {
-          Ref<SurfaceIntegrator> surfaceIntegrator
-            = new SurfaceIntegrator(tokens->next()->text);
+          std::shared_ptr<SurfaceIntegrator> surfaceIntegrator
+            = std::make_shared<SurfaceIntegrator>(tokens->next()->text);
           parseParams(surfaceIntegrator->param,*tokens);
           scene->surfaceIntegrator = surfaceIntegrator;
           continue;
         }
         if (token->text == "VolumeIntegrator") {
-          Ref<VolumeIntegrator> volumeIntegrator
-            = new VolumeIntegrator(tokens->next()->text);
+          std::shared_ptr<VolumeIntegrator> volumeIntegrator
+            = std::make_shared<VolumeIntegrator>(tokens->next()->text);
           parseParams(volumeIntegrator->param,*tokens);
           scene->volumeIntegrator = volumeIntegrator;
           continue;
         }
         if (token->text == "PixelFilter") {
-          Ref<PixelFilter> pixelFilter = new PixelFilter(tokens->next()->text);
+          std::shared_ptr<PixelFilter> pixelFilter = std::make_shared<PixelFilter>(tokens->next()->text);
           parseParams(pixelFilter->param,*tokens);
           scene->pixelFilter = pixelFilter;
           continue;
         }
         if (token->text == "Accelerator") {
-          Ref<Accelerator> accelerator = new Accelerator(tokens->next()->text);
+          std::shared_ptr<Accelerator> accelerator = std::make_shared<Accelerator>(tokens->next()->text);
           parseParams(accelerator->param,*tokens);
           continue;
         }
         if (token->text == "Film") {
-          Ref<Film> film = new Film(tokens->next()->text);
+          std::shared_ptr<Film> film = std::make_shared<Film>(tokens->next()->text);
           parseParams(film->param,*tokens);
           continue;
         }
         if (token->text == "Accelerator") {
-          Ref<Accelerator> accelerator = new Accelerator(tokens->next()->text);
+          std::shared_ptr<Accelerator> accelerator = std::make_shared<Accelerator>(tokens->next()->text);
           parseParams(accelerator->param,*tokens);
           continue;
         }
         if (token->text == "Renderer") {
-          Ref<Renderer> renderer = new Renderer(tokens->next()->text);
+          std::shared_ptr<Renderer> renderer = std::make_shared<Renderer>(tokens->next()->text);
           parseParams(renderer->param,*tokens);
           continue;
         }
@@ -594,7 +601,7 @@ namespace plib {
     void Parser::parse(const FileName &fn)
     {
       rootNamePath = basePath==""?fn.path():FileName(basePath);
-      this->tokens = new Lexer(fn);
+      this->tokens = std::make_shared<Lexer>(fn);
       parseScene();      
     }
 

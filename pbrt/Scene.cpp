@@ -115,16 +115,16 @@ namespace plib {
     // ==================================================================
     vec3f Parameterized::getParam3f(const std::string &name, const vec3f &fallBack) const
     {
-      std::map<std::string,Ref<Param> >::const_iterator it=param.find(name);
+      std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
       if (it == param.end())
         return fallBack;
-      Ref<Param> pr = it->second;
-      const ParamT<float> *p = dynamic_cast<ParamT<float> *>(pr.ptr);
+      std::shared_ptr<Param> pr = it->second;
+      const std::shared_ptr<ParamT<float>> p = std::dynamic_pointer_cast<ParamT<float>>(pr);
       if (!p)
         throw std::runtime_error("Parameterized::getParam3f: found param of given name, but of wrong type!");
       if (p->getSize() != 3)
         throw std::runtime_error("Parameterized::getParam3f: found param of given name and type, but wrong number of components!");
-    return vec3f(p->paramVec[0],p->paramVec[1],p->paramVec[2]);
+      return vec3f(p->paramVec[0],p->paramVec[1],p->paramVec[2]);
     }
 
     // ==================================================================
@@ -133,8 +133,8 @@ namespace plib {
 
     /*! constructor */
     Shape::Shape(const std::string &type,
-          Ref<Material>   material,
-          Ref<Attributes> attributes,
+          std::shared_ptr<Material>   material,
+          std::shared_ptr<Attributes> attributes,
           affine3f &transform) 
       : Node(type), 
         material(material),
@@ -149,7 +149,7 @@ namespace plib {
     {
       std::stringstream ss;
       ss << "Material type='"<< type << "' {" << endl;
-      for (std::map<std::string,Ref<Param> >::const_iterator it=param.begin(); 
+      for (std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.begin(); 
            it != param.end(); it++) {
         ss << " - " << it->first << " : " << it->second->toString() << endl;
       }

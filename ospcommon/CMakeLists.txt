@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2009-2015 Ingo Wald                                            ##
+## Copyright 2009-2016 Intel Corporation                                    ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -14,35 +14,55 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-PROJECT(PBRTParser)
+SET(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+SET(THREADS_PREFER_PTHREAD_FLAG TRUE)
+FIND_PACKAGE(Threads REQUIRED)
+SET(LINK_LIBS ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-IF(COMMAND cmake_policy)
-  CMAKE_POLICY(SET CMP0003 NEW)
+IF (WIN32)
+  LIST(APPEND LINK_LIBS ws2_32)
+ENDIF()
 
-  IF(${CMAKE_MAJOR_VERSION} EQUAL 3)
-    CMAKE_POLICY(SET CMP0042 NEW)
-  ENDIF(${CMAKE_MAJOR_VERSION} EQUAL 3)
-ENDIF(COMMAND cmake_policy)
+OSPRAY_CREATE_LIBRARY(ospray_common
+  common.cpp
+  FileName.cpp
+  sysinfo.cpp
+  malloc.cpp
+  library.cpp
+  thread.cpp
+  vec.cpp
+  array3D/Array3D.cpp
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-SET(PLIB_BINARY_DIR ${PROJECT_BINARY_DIR})
-SET(LIBRARY_OUTPUT_PATH ${PLIB_BINARY_DIR})
-SET(EXECUTABLE_OUTPUT_PATH ${PLIB_BINARY_DIR})
+  AffineSpace.h
+  box.h
+  constants.h
+  intrinsics.h
+  LinearSpace.h
+  math.h
+  platform.h
+  Quaternion.h
+  RefCount.h
+  vec.h
+LINK
+  ${LINK_LIBS}
+)
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
-
-ADD_LIBRARY(plib_common
-  ospcommon/common.cpp
-  ospcommon/FileName.cpp
-  ospcommon/sysinfo.cpp
-  ospcommon/malloc.cpp
-  ospcommon/library.cpp
-  ospcommon/thread.cpp
-  ospcommon/vec.cpp
-  ospcommon/array3D/Array3D.cpp
-  )
-ADD_SUBDIRECTORY(pbrt)
-ADD_SUBDIRECTORY(apps)
-
-
+OSPRAY_INSTALL_SDK_HEADERS(
+  AffineSpace.h
+  box.h
+  common.h
+  constants.h
+  FileName.h
+  intrinsics.h
+  library.h
+  LinearSpace.h
+  malloc.h
+  math.h
+  platform.h
+  Quaternion.h
+  RefCount.h
+  sysinfo.h
+  thread.h
+  vec.h
+  DESTINATION ../ospcommon #NOTE: this is "next" to the SDK/ directory
+)

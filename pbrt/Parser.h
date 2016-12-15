@@ -47,23 +47,23 @@ namespace plib {
       
       /*! try parsing this token as some sort of transform token, and
           return true if successful, false if not recognized  */
-      bool parseTransforms(Ref<Token> token);
+      bool parseTransforms(std::shared_ptr<Token> token);
 
       void pushTransform();
       void popTransform();
 
       /*! return the scene we have parsed */
-      Ref<Scene> getScene() { return scene; }
+      std::shared_ptr<Scene> getScene() { return scene; }
       
     private:
       //! stack of parent files' token streams
-      std::stack<Lexer *> tokenizerStack;
+      std::stack<std::shared_ptr<Lexer> > tokenizerStack;
       //! token stream of currently open file
-      Lexer *tokens;
+      std::shared_ptr<Lexer> tokens;
       /*! get the next token to process (either from current file, or
         parent file(s) if current file is EOL!); return NULL if
         complete end of input */
-      Ref<Token> getNextToken();
+      std::shared_ptr<Token> getNextToken();
 
       // add additional transform to current transform
       void addTransform(const affine3f &add)
@@ -73,25 +73,25 @@ namespace plib {
       void setTransform(const affine3f &xfm)
       { transformStack.top() = xfm; }
 
-      std::stack<Ref<Material> >   materialStack;
-      std::stack<Ref<Attributes> > attributesStack;
-      std::stack<affine3f>         transformStack;
-      std::stack<Ref<Object> >     objectStack;
+      std::stack<std::shared_ptr<Material> >   materialStack;
+      std::stack<std::shared_ptr<Attributes> > attributesStack;
+      std::stack<affine3f>                     transformStack;
+      std::stack<std::shared_ptr<Object> >     objectStack;
 
-      Ref<Object> getCurrentObject();
-      affine3f    getCurrentXfm() { return transformStack.top(); }
-      Ref<Object> findNamedObject(const std::string &name, bool createIfNotExist=false);
+      affine3f                getCurrentXfm() { return transformStack.top(); }
+      std::shared_ptr<Object> getCurrentObject();
+      std::shared_ptr<Object> findNamedObject(const std::string &name, bool createIfNotExist=false);
 
       // emit debug status messages...
       bool dbg;
-      Ref<Scene> scene;
-      Ref<Object> currentObject;
       const std::string basePath;
       FileName rootNamePath;
-      Ref<Material> currentMaterial;
-      std::map<std::string,Ref<Object> > namedObjects;
-      std::map<std::string,Ref<Material> > namedMaterial;
-      std::map<std::string,Ref<Texture> > namedTexture;
+      std::shared_ptr<Scene>    scene;
+      std::shared_ptr<Object>   currentObject;
+      std::shared_ptr<Material> currentMaterial;
+      std::map<std::string,std::shared_ptr<Object> >   namedObjects;
+      std::map<std::string,std::shared_ptr<Material> > namedMaterial;
+      std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
     };
 
   }

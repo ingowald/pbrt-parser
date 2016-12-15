@@ -19,6 +19,7 @@
 // stl
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 using namespace plib::pbrt;
 
@@ -39,7 +40,7 @@ namespace plib {
     size_t numUniqueObjects = 0;
     size_t numInstances = 0;
 
-    std::map<Shape *,int> alreadyExported;
+    std::map<std::shared_ptr<Shape>,int> alreadyExported;
     //! transform used when original instance was emitted
     std::map<int,affine3f> transformOfFirstInstance;
     std::map<int,int> numTrisOfInstance;
@@ -68,13 +69,13 @@ namespace plib {
 
     int nextNodeID = 0;
     
-    int exportMaterial(Ref<Material> material)
+    int exportMaterial(std::shared_ptr<Material> material)
     {
       if (!material) 
         // default material
         return 0;
 
-      std::map<Ref<Material>,int> alreadyExported;
+      std::map<std::shared_ptr<Material>,int> alreadyExported;
       if (alreadyExported.find(material) != alreadyExported.end())
         return alreadyExported[material];
 
@@ -112,23 +113,23 @@ namespace plib {
       }
     }
 
-    int writeTriangleMesh(Ref<Shape> shape, const affine3f &instanceXfm)
+    int writeTriangleMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
     {
       numUniqueObjects++;
-      Ref<Material> mat = shape->material;
+      std::shared_ptr<Material> mat = shape->material;
       cout << "writing shape " << shape->toString() << " w/ material " << (mat?mat->toString():"<null>") << endl;
 
       int materialID = exportMaterial(shape->material);
 
       int thisID = nextNodeID++;
       const affine3f xfm = instanceXfm*shape->transform;
-      alreadyExported[shape.ptr] = thisID;
+      alreadyExported[shape] = thisID;
       transformOfFirstInstance[thisID] = xfm;
 
       fprintf(out,"<Mesh id=\"%i\">\n",thisID);
       fprintf(out,"  <materiallist>%i</materiallist>\n",materialID);
       { // parse "point P"
-        Ref<ParamT<float> > param_P = shape->findParam<float>("P");
+        std::shared_ptr<ParamT<float> > param_P = shape->findParam<float>("P");
         if (param_P) {
           size_t ofs = ftell(bin);
           const size_t numPoints = param_P->paramVec.size() / 3;
@@ -148,7 +149,7 @@ namespace plib {
       }
       
       { // parse "int indices"
-        Ref<ParamT<int> > param_indices = shape->findParam<int>("indices");
+        std::shared_ptr<ParamT<int> > param_indices = shape->findParam<int>("indices");
         if (param_indices) {
           size_t ofs = ftell(bin);
           const size_t numIndices = param_indices->paramVec.size() / 3;
@@ -174,22 +175,22 @@ namespace plib {
                   std::vector<vec3f> &n,
                   std::vector<vec3i> &idx);
 
-    int writePlyMesh(Ref<Shape> shape, const affine3f &instanceXfm)
+    int writePlyMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
     {
       std::vector<vec3f> p, n;
       std::vector<vec3i> idx;
       
       numUniqueObjects++;
-      Ref<Material> mat = shape->material;
+      std::shared_ptr<Material> mat = shape->material;
       cout << "writing shape " << shape->toString() << " w/ material " << (mat?mat->toString():"<null>") << endl;
 
-      Ref<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
+      std::shared_ptr<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
       FileName fn = FileName(basePath) + param_fileName->paramVec[0];
       parsePLY(fn.str(),p,n,idx);
 
       int thisID = nextNodeID++;
       const affine3f xfm = instanceXfm*shape->transform;
-      alreadyExported[shape.ptr] = thisID;
+      alreadyExported[shape] = thisID;
       transformOfFirstInstance[thisID] = xfm;
       
       // -------------------------------------------------------
@@ -221,7 +222,7 @@ namespace plib {
       return thisID;
     }
 
-    void writeObject(const Ref<Object> &object, 
+    void writeObject(const std::shared_ptr<Object> &object, 
                      const affine3f &instanceXfm)
     {
       // cout << "writing " << object->toString() << endl;
@@ -229,14 +230,14 @@ namespace plib {
       // std::vector<int> child;
 
       for (int shapeID=0;shapeID<object->shapes.size();shapeID++) {
-        Ref<Shape> shape = object->shapes[shapeID];
+        std::shared_ptr<Shape> shape = object->shapes[shapeID];
 
         numInstances++;
 
-        if (alreadyExported.find(shape.ptr) != alreadyExported.end()) {
+        if (alreadyExported.find(shape) != alreadyExported.end()) {
           
 
-          int childID = alreadyExported[shape.ptr];
+          int childID = alreadyExported[shape];
           affine3f xfm = instanceXfm * //shape->transform * 
             rcp(transformOfFirstInstance[childID]);
           numInstancedTriangles += numTrisOfInstance[childID];
@@ -329,15 +330,15 @@ namespace plib {
       if (basePath.str() == "")
         basePath = FileName(fileName[0]).path();
   
-      plib::pbrt::Parser *parser = new plib::pbrt::Parser(dbg,basePath);
+      std::shared_ptr<plib::pbrt::Parser> parser = std::make_shared<plib::pbrt::Parser>(dbg,basePath);
       try {
         for (int i=0;i<fileName.size();i++)
           parser->parse(fileName[i]);
     
         std::cout << "==> parsing successful (grammar only for now)" << std::endl;
     
-        embree::Ref<Scene> scene = parser->getScene();
-        writeObject(scene->world.ptr,embree::one);
+        std::shared_ptr<Scene> scene = parser->getScene();
+        writeObject(scene->world,ospcommon::one);
 
         {
           int thisID = nextNodeID++;

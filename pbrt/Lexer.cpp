@@ -15,6 +15,7 @@
 // ======================================================================== //
 
 #include "Lexer.h"
+#include <sstream>
 
 namespace plib {
   namespace pbrt {
@@ -33,7 +34,7 @@ namespace plib {
     // =======================================================
 
     //! constructor
-    Loc::Loc(Ref<File> file) : file(file), line(1), col(0) 
+    Loc::Loc(std::shared_ptr<File> file) : file(file), line(1), col(0) 
     {
       assert(file);
     }
@@ -84,7 +85,7 @@ namespace plib {
 
     /*! produce the next token from the input stream; return NULL if
       end of (all files) is reached */
-    inline Ref<Token> Lexer::produceNextToken() 
+    inline std::shared_ptr<Token> Lexer::produceNextToken() 
     {
       // skip all white space and comments
       int c;
@@ -130,7 +131,7 @@ namespace plib {
             break;
           ss << (char)c;
         } 
-        return new Token(startLoc,Token::TOKEN_TYPE_STRING,ss.str());
+        return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_STRING,ss.str());
       }
 
       // -------------------------------------------------------
@@ -138,7 +139,7 @@ namespace plib {
       // -------------------------------------------------------
       if (isSpecial(c)) {
         ss << (char)c;
-        return new Token(startLoc,Token::TOKEN_TYPE_SPECIAL,ss.str());
+        return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_SPECIAL,ss.str());
       }
 
       ss << (char)c;
@@ -147,17 +148,17 @@ namespace plib {
         lastLoc = loc;
         c = get_char();
         if (c < 0)
-          return new Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
+          return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
         if (c == '#' || isSpecial(c) || isWhite(c) || c=='"') {
           // cout << "END OF TOKEN AT " << lastLoc.toString() << endl;
           unget_char(c);
-          return new Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
+          return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
         }
         ss << (char)c;
       }
     }
 
-    Ref<Token> Lexer::peek(size_t i)
+    std::shared_ptr<Token> Lexer::peek(size_t i)
     {
       while (i >= peekedTokens.size())
         peekedTokens.push_back(produceNextToken());
@@ -203,12 +204,12 @@ namespace plib {
       return strchr("[,]",c)!=NULL;
     }
 
-    Ref<Token> Lexer::next() 
+    std::shared_ptr<Token> Lexer::next() 
     {
       if (peekedTokens.empty())
         return produceNextToken();
       
-      Ref<Token> token = peekedTokens.front();
+      std::shared_ptr<Token> token = peekedTokens.front();
       peekedTokens.pop_front();
       return token;
     }

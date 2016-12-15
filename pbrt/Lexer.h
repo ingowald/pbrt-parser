@@ -19,12 +19,13 @@
 #include "pbrt/common.h"
 // stl
 #include <queue>
+#include <memory>
 
 namespace plib {
   namespace pbrt {
 
     /*! file name and handle, to be used by tokenizer and loc */
-    struct File : public RefCounted {
+    struct File {
       File(const FileName &fn);
       /*! get name of the file */
       std::string getFileName() const { return name; }
@@ -40,7 +41,7 @@ namespace plib {
         file name and line number */
     struct Loc { 
       //! constructor
-      Loc(Ref<File> file);
+      Loc(std::shared_ptr<File> file);
       //! copy-constructor
       Loc(const Loc &loc);
       
@@ -49,11 +50,11 @@ namespace plib {
 
       friend class Lexer;
     private:
-      Ref<File> file;
+      std::shared_ptr<File> file;
       int line, col;
     };
 
-    struct Token : public RefCounted {
+    struct Token {
 
       typedef enum { TOKEN_TYPE_STRING, TOKEN_TYPE_LITERAL, TOKEN_TYPE_SPECIAL } Type;
 
@@ -81,8 +82,8 @@ namespace plib {
       //! constructor
       Lexer(const FileName &fn);
 
-      Ref<Token> next();
-      Ref<Token> peek(size_t i=0);
+      std::shared_ptr<Token> next();
+      std::shared_ptr<Token> peek(size_t i=0);
       
     private:
       Loc getLastLoc() { return loc; }
@@ -94,12 +95,12 @@ namespace plib {
 
       /*! produce the next token from the input stream; return NULL if
         end of (all files) is reached */
-      inline Ref<Token> produceNextToken();
+      inline std::shared_ptr<Token> produceNextToken();
 
 
 
-      std::deque<Ref<Token> > peekedTokens;
-      Ref<File> file;
+      std::deque<std::shared_ptr<Token> > peekedTokens;
+      std::shared_ptr<File> file;
       Loc loc;
       int peekedChar;
     };

@@ -36,13 +36,13 @@ namespace plib {
     size_t numWritten = 0;
     size_t numVerticesWritten = 0;
 
-    void writeTriangleMesh(Ref<Shape> shape, const affine3f &instanceXfm)
+    void writeTriangleMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
     {
       const affine3f xfm = instanceXfm*shape->transform;
       size_t firstVertexID = numVerticesWritten+1;
 
       { // parse "point P"
-        Ref<ParamT<float> > param_P = shape->findParam<float>("P");
+        std::shared_ptr<ParamT<float> > param_P = shape->findParam<float>("P");
         if (param_P) {
           const size_t numPoints = param_P->paramVec.size() / 3;
           for (int i=0;i<numPoints;i++) {
@@ -57,7 +57,7 @@ namespace plib {
       }
 
       { // parse "int indices"
-        Ref<ParamT<int> > param_indices = shape->findParam<int>("indices");
+        std::shared_ptr<ParamT<int> > param_indices = shape->findParam<int>("indices");
         if (param_indices) {
           
           const size_t numIndices = param_indices->paramVec.size() / 3;
@@ -77,12 +77,12 @@ namespace plib {
                   std::vector<vec3f> &n,
                   std::vector<vec3i> &idx);
 
-    void writePlyMesh(Ref<Shape> shape, const affine3f &instanceXfm)
+    void writePlyMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
     {
       std::vector<vec3f> p, n;
       std::vector<vec3i> idx;
       
-      Ref<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
+      std::shared_ptr<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
       FileName fn = FileName(basePath) + param_fileName->paramVec[0];
       parsePLY(fn.str(),p,n,idx);
 
@@ -105,12 +105,12 @@ namespace plib {
       }
     }
 
-    void writeObject(Ref<Object> object, 
+    void writeObject(std::shared_ptr<Object> object, 
                      const affine3f &instanceXfm)
     {
       cout << "writing " << object->toString() << endl;
       for (int shapeID=0;shapeID<object->shapes.size();shapeID++) {
-        Ref<Shape> shape = object->shapes[shapeID];
+        std::shared_ptr<Shape> shape = object->shapes[shapeID];
         if (shape->type == "trianglemesh") {
           writeTriangleMesh(shape,instanceXfm);
         } else if (shape->type == "plymesh") {
@@ -164,8 +164,8 @@ namespace plib {
     
         std::cout << "==> parsing successful (grammar only for now)" << std::endl;
     
-        embree::Ref<Scene> scene = parser->getScene();
-        writeObject(scene->world,embree::one);
+        std::shared_ptr<Scene> scene = parser->getScene();
+        writeObject(scene->world,ospcommon::one);
         fclose(out);
         cout << "Done exporting to OBJ; wrote a total of " << numWritten << " triangles" << endl;
       } catch (std::runtime_error e) {
