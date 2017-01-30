@@ -19,6 +19,7 @@
 // stl
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 namespace pbrt_parser {
 
@@ -33,8 +34,57 @@ namespace pbrt_parser {
   size_t numWritten = 0;
   size_t numVerticesWritten = 0;
 
+  std::string exportMaterial(std::shared_ptr<Material> material)
+  {
+    if (!material) 
+      // default material
+      return "usemtl pbrt_parser_default_material\n\n";
+
+    std::stringstream ss;
+
+    static std::map<std::shared_ptr<Material>,std::string> alreadyExported;
+    if (alreadyExported.find(material) != alreadyExported.end()) {
+      ss << "usemtl " << alreadyExported[material] << std::endl << std::endl;
+      return ss.str();
+    }
+
+    const std::string type = material->type;
+    if (type == "mix") {
+      std::string matName = "pbrt_parser_error_material";
+      alreadyExported[material] = matName;
+      return "usemtl pbrt_parser_error_material\n\n";
+      //      throw std::runtime_error("'mix' material ..."+material->toString());
+    } else if (type == "uber") {
+      std::string matName = std::string("uber_material__")+std::to_string(alreadyExported.size());
+      ss << "newmtl " << matName << std::endl;
+      { //----------- Kd -----------
+        vec3f v;
+        try {
+          v = material->getParam3f("Kd",vec3f(0.0f));
+        } catch (std::runtime_error e) {
+          v = vec3f(.6f);
+        };
+        ss << "Kd " << v.x << " " << v.y << " " << v.z << std::endl;
+      }
+      // ----------- done material -----------
+      ss << std::endl << "usemtl " << matName << std::endl << std::endl;
+      alreadyExported[material] = matName;
+      return ss.str();
+    } else {
+      std::string matName = "pbrt_parser_error_material";
+      alreadyExported[material] = matName;
+      return "usemtl pbrt_parser_error_material\n\n";
+    }
+  }
+
+  
   void writeTriangleMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
   {
+    /*! call 'exportMateiral, which will return a string that properly
+        defined and/or activates the given mateirla */
+    std::string materialString = exportMaterial(shape->material);
+    fprintf(out,"%s\n",materialString.c_str());
+
     const affine3f xfm = instanceXfm*shape->transform;
     size_t firstVertexID = numVerticesWritten+1;
 
@@ -76,6 +126,12 @@ namespace pbrt_parser {
 
   void writePlyMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
   {
+    /*! call 'exportMateiral, which will return a string that properly
+        defined and/or activates the given mateirla */
+    std::string materialString = exportMaterial(shape->material);
+    fprintf(out,"%s\n",materialString.c_str());
+
+
     std::vector<vec3f> p, n;
     std::vector<vec3i> idx;
       
@@ -100,8 +156,28 @@ namespace pbrt_parser {
               firstVertexID+v.z);
       numWritten++;
     }
+#if 0
+    static long numObjectsWritten = 0;
+    if (++numObjectsWritten > 100) {
+      std::cout << "written more than 100 objects .... exiting" << std::endl;
+      fflush(out); exit(0);
+    }
+#endif
+
   }
 
+  void defineDefaultMaterials(FILE *file)
+  {
+    fprintf(file,"newmtl pbrt_parser_error_material\n");
+    fprintf(file,"Kd 1 0 0\n");
+    fprintf(file,"\n");
+
+    fprintf(file,"newmtl pbrt_parser_default_material\n");
+    fprintf(file,"Kd .6 .6 .6\n");
+    fprintf(file,"Ka .1 .1 .1\n");
+    fprintf(file,"\n");
+  }
+  
   void writeObject(std::shared_ptr<Object> object, 
                    const affine3f &instanceXfm)
   {
@@ -144,6 +220,9 @@ namespace pbrt_parser {
     }
     out = fopen(outFileName.c_str(),"w");
     assert(out);
+
+    defineDefaultMaterials(out);
+    
   
     std::cout << "-------------------------------------------------------" << std::endl;
     std::cout << "parsing:";

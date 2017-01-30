@@ -72,7 +72,7 @@ namespace pbrt_parser {
       // default material
       return 0;
 
-    std::map<std::shared_ptr<Material>,int> alreadyExported;
+    static std::map<std::shared_ptr<Material>,int> alreadyExported;
     if (alreadyExported.find(material) != alreadyExported.end())
       return alreadyExported[material];
 
