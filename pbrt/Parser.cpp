@@ -33,7 +33,6 @@ namespace plib {
     inline float parseFloat(Lexer &tokens)
     {
       std::shared_ptr<Token> token = tokens.next();
-      // if (token == Token::TOKEN_EOF)
       if (!token)
         throw std::runtime_error("unexpected end of file\n@"+std::string(__PRETTY_FUNCTION__));
       return atof(token->text.c_str());
@@ -47,9 +46,7 @@ namespace plib {
         const float z = parseFloat(tokens);
         return vec3f(x,y,z);
       } catch (std::runtime_error e) {
-        // e->addBackTrace(__PRETTY_FUNCTION__);
         throw e.what()+std::string("\n@")+std::string(__PRETTY_FUNCTION__);
-        // throw e;
       }
     }
 
