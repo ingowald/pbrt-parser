@@ -319,8 +319,6 @@ namespace pbrt_parser {
             = std::make_shared<Material>(type);
           parseParams(material->param,*tokens);
           currentMaterial = material;
-          PING;
-          PRINT(currentMaterial);
           continue;
         }
         if (token->text == "Texture") {
