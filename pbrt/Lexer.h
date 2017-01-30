@@ -24,7 +24,7 @@
 namespace pbrt_parser {
 
   /*! file name and handle, to be used by tokenizer and loc */
-  struct pbrt_parser_INTERFACE File {
+  struct PBRT_PARSER_INTERFACE File {
     File(const FileName &fn);
     /*! get name of the file */
     std::string getFileName() const { return name; }
@@ -38,7 +38,7 @@ namespace pbrt_parser {
 
   /*! struct referring to a 'loc'ation in the input stream, given by
     file name and line number */
-  struct pbrt_parser_INTERFACE Loc { 
+  struct PBRT_PARSER_INTERFACE Loc { 
     //! constructor
     Loc(std::shared_ptr<File> file);
     //! copy-constructor
@@ -53,7 +53,7 @@ namespace pbrt_parser {
     int line, col;
   };
 
-  struct pbrt_parser_INTERFACE Token {
+  struct PBRT_PARSER_INTERFACE Token {
 
     typedef enum { TOKEN_TYPE_STRING, TOKEN_TYPE_LITERAL, TOKEN_TYPE_SPECIAL } Type;
 
@@ -76,7 +76,7 @@ namespace pbrt_parser {
 
   /*! class that does the lexing - ie, the breaking up of an input
     stream of chars into an input stream of tokens.  */
-  struct pbrt_parser_INTERFACE Lexer {
+  struct PBRT_PARSER_INTERFACE Lexer {
 
     //! constructor
     Lexer(const FileName &fn);

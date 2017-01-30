@@ -23,7 +23,7 @@
 
 namespace pbrt_parser {
     
-  struct pbrt_parser_INTERFACE Param {
+  struct PBRT_PARSER_INTERFACE Param {
     virtual std::string getType() const = 0;
     virtual size_t getSize() const = 0;
     virtual std::string toString() const = 0;
@@ -34,7 +34,7 @@ namespace pbrt_parser {
   };
 
   template<typename T>
-  struct pbrt_parser_INTERFACE ParamT : public Param {
+  struct PBRT_PARSER_INTERFACE ParamT : public Param {
     ParamT(const std::string &type) : type(type) {};
     virtual std::string getType() const { return type; };
     virtual size_t getSize() const { return paramVec.size(); }
@@ -49,7 +49,7 @@ namespace pbrt_parser {
   };
 
   /*! any class that can store (and query) parameters */
-  struct pbrt_parser_INTERFACE Parameterized {
+  struct PBRT_PARSER_INTERFACE Parameterized {
 
     vec3f getParam3f(const std::string &name, const vec3f &fallBack) const;
 
@@ -63,14 +63,14 @@ namespace pbrt_parser {
     std::map<std::string,std::shared_ptr<Param> > param;
   };
 
-  struct pbrt_parser_INTERFACE Attributes {
+  struct PBRT_PARSER_INTERFACE Attributes {
     Attributes();
     Attributes(const Attributes &other);
 
     virtual std::shared_ptr<Attributes> clone() const { return std::make_shared<Attributes>(*this); }
   };
 
-  struct pbrt_parser_INTERFACE Material : public Parameterized {
+  struct PBRT_PARSER_INTERFACE Material : public Parameterized {
     Material(const std::string &type) : type(type) {};
 
     /*! pretty-print this material (for debugging) */
@@ -85,7 +85,7 @@ namespace pbrt_parser {
     std::string type;
   };
 
-  struct pbrt_parser_INTERFACE Texture {
+  struct PBRT_PARSER_INTERFACE Texture {
     std::string name;
     std::string texelType;
     std::string mapType;
@@ -98,7 +98,7 @@ namespace pbrt_parser {
     std::map<std::string,std::shared_ptr<Param> > param;
   };
 
-  struct pbrt_parser_INTERFACE Node : public Parameterized {
+  struct PBRT_PARSER_INTERFACE Node : public Parameterized {
     Node(const std::string &type) : type(type) {};
     virtual std::string toString() const { return type; }
 
@@ -106,30 +106,30 @@ namespace pbrt_parser {
     //      std::map<std::string,std::shared_ptr<Param> > param;
   };
 
-  struct pbrt_parser_INTERFACE Camera : public Node {
+  struct PBRT_PARSER_INTERFACE Camera : public Node {
     Camera(const std::string &type) : Node(type) {};
   };
 
-  struct pbrt_parser_INTERFACE Sampler : public Node {
+  struct PBRT_PARSER_INTERFACE Sampler : public Node {
     Sampler(const std::string &type) : Node(type) {};
   };
-  struct pbrt_parser_INTERFACE Integrator : public Node {
+  struct PBRT_PARSER_INTERFACE Integrator : public Node {
     Integrator(const std::string &type) : Node(type) {};
   };
-  struct pbrt_parser_INTERFACE SurfaceIntegrator : public Node {
+  struct PBRT_PARSER_INTERFACE SurfaceIntegrator : public Node {
     SurfaceIntegrator(const std::string &type) : Node(type) {};
   };
-  struct pbrt_parser_INTERFACE VolumeIntegrator : public Node {
+  struct PBRT_PARSER_INTERFACE VolumeIntegrator : public Node {
     VolumeIntegrator(const std::string &type) : Node(type) {};
   };
-  struct pbrt_parser_INTERFACE PixelFilter : public Node {
+  struct PBRT_PARSER_INTERFACE PixelFilter : public Node {
     PixelFilter(const std::string &type) : Node(type) {};
   };
 
   /*! a PBRT 'geometric shape' (a geometry in ospray terms) - ie,
     something that has primitives that together form some sort of
     surface(s) that a ray can intersect*/
-  struct pbrt_parser_INTERFACE Shape : public Node {
+  struct PBRT_PARSER_INTERFACE Shape : public Node {
     /*! constructor */
     Shape(const std::string &type,
           std::shared_ptr<Material>   material,
@@ -145,33 +145,33 @@ namespace pbrt_parser {
     affine3f        transform;
   };
 
-  struct pbrt_parser_INTERFACE Volume : public Node {
+  struct PBRT_PARSER_INTERFACE Volume : public Node {
     Volume(const std::string &type) : Node(type) {};
   };
 
-  struct pbrt_parser_INTERFACE LightSource : public Node {
+  struct PBRT_PARSER_INTERFACE LightSource : public Node {
     LightSource(const std::string &type) : Node(type) {};
   };
 
-  struct pbrt_parser_INTERFACE AreaLightSource : public Node {
+  struct PBRT_PARSER_INTERFACE AreaLightSource : public Node {
     AreaLightSource(const std::string &type) : Node(type) {};
   };
 
-  struct pbrt_parser_INTERFACE Film : public Node {
+  struct PBRT_PARSER_INTERFACE Film : public Node {
     Film(const std::string &type) : Node(type) {};
   };
 
-  struct pbrt_parser_INTERFACE Accelerator : public Node {
+  struct PBRT_PARSER_INTERFACE Accelerator : public Node {
     Accelerator(const std::string &type) : Node(type) {};
   };
 
-  struct pbrt_parser_INTERFACE Renderer : public Node {
+  struct PBRT_PARSER_INTERFACE Renderer : public Node {
     Renderer(const std::string &type) : Node(type) {};
   };
 
   // a "LookAt" in the pbrt file has three vec3fs, no idea what for
   // right now - need to rename once we figure that out
-  struct pbrt_parser_INTERFACE LookAt {
+  struct PBRT_PARSER_INTERFACE LookAt {
     LookAt(const vec3f &v0, 
            const vec3f &v1, 
            const vec3f &v2)
@@ -182,16 +182,16 @@ namespace pbrt_parser {
   };
 
   //! what's in a objectbegin/objectned, as well as the root object
-  struct pbrt_parser_INTERFACE Object {
-    Object(const std::string &name) : name(name) {}
+  struct PBRT_PARSER_INTERFACE Object {
+    PBRT_PARSER_INTERFACE Object(const std::string &name) : name(name) {}
 
-    struct Instance {
-      Instance(const std::shared_ptr<Object> &object,
+    struct PBRT_PARSER_INTERFACE Instance {
+      PBRT_PARSER_INTERFACE Instance(const std::shared_ptr<Object> &object,
                const affine3f    &xfm)
         : object(object), xfm(xfm)
       {}
 
-      std::string toString() const;
+      PBRT_PARSER_INTERFACE std::string toString() const;
 
       std::shared_ptr<Object> object;
       affine3f    xfm;
@@ -212,9 +212,9 @@ namespace pbrt_parser {
   };
 
 
-  struct pbrt_parser_INTERFACE Scene {
+  struct PBRT_PARSER_INTERFACE Scene {
 
-    Scene()
+    PBRT_PARSER_INTERFACE Scene()
       {
         world = std::make_shared<Object>("<root>");
       };

@@ -29,17 +29,17 @@ namespace pbrt_parser {
     state (e.g., file paths, named objects, etc), even if they are
     split over multiple files. To parse different scenes, use
     different instances of this class. */
-  struct pbrt_parser_INTERFACE Parser {
+  struct PBRT_PARSER_INTERFACE Parser {
     /*! constructor */
-    Parser(bool dbg, const std::string &basePath="");
+    PBRT_PARSER_INTERFACE Parser(bool dbg, const std::string &basePath="");
 
     /*! parse given file, and add it to the scene we hold */
-    void parse(const FileName &fn);
+    PBRT_PARSER_INTERFACE void parse(const FileName &fn);
 
     /*! parse everything in WorldBegin/WorldEnd */
-    void parseWorld();
+    PBRT_PARSER_INTERFACE void parseWorld();
     /*! parse everything in the root scene file */
-    void parseScene();
+    PBRT_PARSER_INTERFACE void parseScene();
       
     void pushAttributes();
     void popAttributes();

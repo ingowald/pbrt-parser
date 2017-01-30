@@ -26,12 +26,12 @@ namespace pbrt_parser {
   
 #ifdef _WIN32
 #  ifdef pbrt_parser_EXPORTS
-#    define pbrt_parser_INTERFACE __declspec(dllexport)
+#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
 #  else
-#    define pbrt_parser_INTERFACE __declspec(dllimport)
+#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
 #  endif
 #else
-#  define pbrt_parser_INTERFACE /* ignore on linux */
+#  define PBRT_PARSER_INTERFACE /* ignore on linux */
 #endif
   
 } // ::pbrt_parser
