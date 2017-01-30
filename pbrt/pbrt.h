@@ -20,10 +20,19 @@
 #include "ospcommon/AffineSpace.h"
 #include "ospcommon/FileName.h"
 
-namespace plib {
+namespace pbrt_parser {
 
   using namespace ospcommon;
   
-  namespace pbrt {
-  }
-}
+#ifdef _WIN32
+#  ifdef pbrt_parser_EXPORTS
+#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
+#  else
+#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
+#  endif
+#else
+#  define PBRT_PARSER_INTERFACE
+#endif
+  
+} // ::pbrt_parser
+

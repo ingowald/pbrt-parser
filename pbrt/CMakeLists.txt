@@ -14,12 +14,12 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-ADD_LIBRARY(plib_pbrt
+ADD_LIBRARY(pbrt_parser
   Lexer.cpp
   Parser.cpp
   Scene.cpp
   parsePLY.cpp
   ../3rdParty/ply.cpp
   )
-TARGET_LINK_LIBRARIES(plib_pbrt plib_common)
+TARGET_LINK_LIBRARIES(pbrt_parser ospray_common)
 
