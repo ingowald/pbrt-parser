@@ -586,6 +586,14 @@ namespace pbrt_parser {
           continue;
         }
 
+        if (token->text == "Material") {
+          throw std::runtime_error("'Material' field not within a WorldBegin/End context. "
+                                   "Did you run the parser on the 'geometry.pbrt' file directly? "
+                                   "(you shouldn't - it should only be included from within a "
+                                   "pbrt scene file - typically '*.view')");
+          continue;
+        }
+
         
         throw std::runtime_error("unexpected token '"+token->text
                                  +"' at "+token->loc.toString());
