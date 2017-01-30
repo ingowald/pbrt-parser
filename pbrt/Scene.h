@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "pbrt/common.h"
+#include "pbrt/pbrt.h"
 // stl
 #include <map>
 #include <vector>

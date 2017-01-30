@@ -14,7 +14,16 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#pragma once
+
+#include "ospcommon/vec.h"
+#include "ospcommon/AffineSpace.h"
+#include "ospcommon/FileName.h"
+
 namespace plib {
+
+  using namespace ospcommon;
+  
   namespace pbrt {
   }
 }
