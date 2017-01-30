@@ -23,7 +23,7 @@ IF (WIN32)
   LIST(APPEND LINK_LIBS ws2_32)
 ENDIF()
 
-OSPRAY_CREATE_LIBRARY(ospray_common
+ADD_LIBRARY(ospcommon
   common.cpp
   FileName.cpp
   sysinfo.cpp
@@ -43,26 +43,8 @@ OSPRAY_CREATE_LIBRARY(ospray_common
   Quaternion.h
   RefCount.h
   vec.h
-LINK
-  ${LINK_LIBS}
-)
+  )
+TARGET_LINK_LIBRARIES(
+  ospcommon ${LINK_LIBS}
+  )
 
-OSPRAY_INSTALL_SDK_HEADERS(
-  AffineSpace.h
-  box.h
-  common.h
-  constants.h
-  FileName.h
-  intrinsics.h
-  library.h
-  LinearSpace.h
-  malloc.h
-  math.h
-  platform.h
-  Quaternion.h
-  RefCount.h
-  sysinfo.h
-  thread.h
-  vec.h
-  DESTINATION ../ospcommon #NOTE: this is "next" to the SDK/ directory
-)

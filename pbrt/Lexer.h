@@ -21,89 +21,87 @@
 #include <queue>
 #include <memory>
 
-namespace plib {
-  namespace pbrt {
+namespace pbrt_parser {
 
-    /*! file name and handle, to be used by tokenizer and loc */
-    struct File {
-      File(const FileName &fn);
-      /*! get name of the file */
-      std::string getFileName() const { return name; }
+  /*! file name and handle, to be used by tokenizer and loc */
+  struct pbrt_parser_INTERFACE File {
+    File(const FileName &fn);
+    /*! get name of the file */
+    std::string getFileName() const { return name; }
 
-      friend class Lexer;
+    friend class Lexer;
 
-    private:
-      FileName name;
-      FILE *file;
-    };
+  private:
+    FileName name;
+    FILE *file;
+  };
 
-    /*! struct referring to a 'loc'ation in the input stream, given by
-        file name and line number */
-    struct Loc { 
-      //! constructor
-      Loc(std::shared_ptr<File> file);
-      //! copy-constructor
-      Loc(const Loc &loc);
+  /*! struct referring to a 'loc'ation in the input stream, given by
+    file name and line number */
+  struct pbrt_parser_INTERFACE Loc { 
+    //! constructor
+    Loc(std::shared_ptr<File> file);
+    //! copy-constructor
+    Loc(const Loc &loc);
       
-      //! pretty-print
-      std::string toString() const;
+    //! pretty-print
+    std::string toString() const;
 
-      friend class Lexer;
-    private:
-      std::shared_ptr<File> file;
-      int line, col;
-    };
+    friend class Lexer;
+  private:
+    std::shared_ptr<File> file;
+    int line, col;
+  };
 
-    struct Token {
+  struct pbrt_parser_INTERFACE Token {
 
-      typedef enum { TOKEN_TYPE_STRING, TOKEN_TYPE_LITERAL, TOKEN_TYPE_SPECIAL } Type;
+    typedef enum { TOKEN_TYPE_STRING, TOKEN_TYPE_LITERAL, TOKEN_TYPE_SPECIAL } Type;
 
-      //! constructor
-      Token(const Loc &loc, 
-            const Type type,
-            const std::string &text);
-      //! pretty-print
-      std::string toString() const;
+    //! constructor
+    Token(const Loc &loc, 
+          const Type type,
+          const std::string &text);
+    //! pretty-print
+    std::string toString() const;
       
-      inline operator std::string() const { return text// toString()
-          ; }
-      inline const char *c_str() const { return text.c_str(); }
+    inline operator std::string() const { return text// toString()
+        ; }
+    inline const char *c_str() const { return text.c_str(); }
 
-      const Loc         loc;
-      const std::string text;
-      const Type        type;
-    };
+    const Loc         loc;
+    const std::string text;
+    const Type        type;
+  };
 
 
-    /*! class that does the lexing - ie, the breaking up of an input
-        stream of chars into an input stream of tokens.  */
-    struct Lexer {
+  /*! class that does the lexing - ie, the breaking up of an input
+    stream of chars into an input stream of tokens.  */
+  struct pbrt_parser_INTERFACE Lexer {
 
-      //! constructor
-      Lexer(const FileName &fn);
+    //! constructor
+    Lexer(const FileName &fn);
 
-      std::shared_ptr<Token> next();
-      std::shared_ptr<Token> peek(size_t i=0);
+    std::shared_ptr<Token> next();
+    std::shared_ptr<Token> peek(size_t i=0);
       
-    private:
-      Loc getLastLoc() { return loc; }
+  private:
+    Loc getLastLoc() { return loc; }
 
-      inline void unget_char(int c);
-      inline int get_char();
-      inline bool isWhite(const char c);
-      inline bool isSpecial(const char c);
+    inline void unget_char(int c);
+    inline int get_char();
+    inline bool isWhite(const char c);
+    inline bool isSpecial(const char c);
 
-      /*! produce the next token from the input stream; return NULL if
-        end of (all files) is reached */
-      inline std::shared_ptr<Token> produceNextToken();
+    /*! produce the next token from the input stream; return NULL if
+      end of (all files) is reached */
+    inline std::shared_ptr<Token> produceNextToken();
 
 
 
-      std::deque<std::shared_ptr<Token> > peekedTokens;
-      std::shared_ptr<File> file;
-      Loc loc;
-      int peekedChar;
-    };
+    std::deque<std::shared_ptr<Token> > peekedTokens;
+    std::shared_ptr<File> file;
+    Loc loc;
+    int peekedChar;
+  };
 
-  }
-}
+} // ::pbrt_parser

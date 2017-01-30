@@ -24,8 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 
-namespace plib {
-  namespace pbrt {
+namespace pbrt_parser {
     using namespace std;
 
     int verbose = 0;
@@ -602,5 +601,4 @@ namespace plib {
       parseScene();      
     }
 
-  }
-}
+} // ::pbrt_parser

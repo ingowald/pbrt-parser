@@ -32,16 +32,17 @@ SET(EXECUTABLE_OUTPUT_PATH ${PLIB_BINARY_DIR})
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
-ADD_LIBRARY(plib_common
-  ospcommon/common.cpp
-  ospcommon/FileName.cpp
-  ospcommon/sysinfo.cpp
-  ospcommon/malloc.cpp
-  ospcommon/library.cpp
-  ospcommon/thread.cpp
-  ospcommon/vec.cpp
-  ospcommon/array3D/Array3D.cpp
-  )
+ADD_SUBDIRECTORY(ospcommon)
+# ADD_LIBRARY(plib_common
+#   ospcommon/common.cpp
+#   ospcommon/FileName.cpp
+#   ospcommon/sysinfo.cpp
+#   ospcommon/malloc.cpp
+#   ospcommon/library.cpp
+#   ospcommon/thread.cpp
+#   ospcommon/vec.cpp
+#   ospcommon/array3D/Array3D.cpp
+#   )
 ADD_SUBDIRECTORY(pbrt)
 ADD_SUBDIRECTORY(apps)
 
