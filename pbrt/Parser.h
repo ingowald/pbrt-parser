@@ -93,4 +93,8 @@ namespace pbrt_parser {
     std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
   };
 
+  PBRT_PARSER_INTERFACE void parsePLY(const std::string &fileName,
+                                      std::vector<vec3f> &v,
+                                      std::vector<vec3f> &n,
+                                      std::vector<vec3i> &idx);
 }
