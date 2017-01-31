@@ -26,6 +26,8 @@ namespace pbrt_parser {
     : name(fn)
   {
     file = fopen(fn.str().c_str(),"r");
+    if (!file)
+      throw std::runtime_error("could not open file '"+fn+"'");
   }
 
   // =======================================================
