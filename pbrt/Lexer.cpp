@@ -96,7 +96,7 @@ namespace pbrt_parser {
     while (1) {
       c = get_char();
 
-      if (c < 0) return nullptr; //Token::TOKEN_EOF;
+      if (c < 0) return std::shared_ptr<Token>();
           
       if (isWhite(c)) {
         continue;
@@ -109,7 +109,7 @@ namespace pbrt_parser {
         while (c != '\n') {
           lastLoc = loc;
           c = get_char();
-          if (c < 0) return nullptr; //Token::TOKEN_EOF;
+          if (c < 0) return std::shared_ptr<Token>();
         }
         // std::cout << "END of comment at " << lastLoc.toString() << std::endl;
         continue;
