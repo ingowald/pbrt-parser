@@ -153,7 +153,7 @@ namespace pbrt_parser {
 
       if (strlen(filename) > 7 && !strcmp(filename+strlen(filename)-7,".ply.gz")) {
 #ifdef _WIN32
-        THROW_SG_ERROR("#osp:sg:ply: gzipped file not supported yet on Windows");
+        throw std::runtime_error("loading gzipped ply files not supported under windows");
 #else
         isPipe = true;
         char cmd[10000];

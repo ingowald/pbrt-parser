@@ -31,15 +31,15 @@ namespace pbrt_parser {
     different instances of this class. */
   struct PBRT_PARSER_INTERFACE Parser {
     /*! constructor */
-    PBRT_PARSER_INTERFACE Parser(bool dbg, const std::string &basePath="");
+    Parser(bool dbg, const std::string &basePath="");
 
     /*! parse given file, and add it to the scene we hold */
-    PBRT_PARSER_INTERFACE void parse(const FileName &fn);
+    void parse(const FileName &fn);
 
     /*! parse everything in WorldBegin/WorldEnd */
-    PBRT_PARSER_INTERFACE void parseWorld();
+    void parseWorld();
     /*! parse everything in the root scene file */
-    PBRT_PARSER_INTERFACE void parseScene();
+    void parseScene();
       
     void pushAttributes();
     void popAttributes();
