@@ -56,7 +56,7 @@ namespace pbrt_parser {
     template<typename T>
       std::shared_ptr<ParamT<T> > findParam(const std::string &name) const {
       auto it = param.find(name);
-      if (it == param.end()) return NULL;
+      if (it == param.end()) return nullptr;
       return std::dynamic_pointer_cast<ParamT<T> >(it->second);
     }
 
@@ -222,22 +222,22 @@ namespace pbrt_parser {
     //! list of cameras defined in this object
     std::vector<std::shared_ptr<Camera> > cameras;
 
-    //! last lookat specified in the scene, or NULL if none.
+    //! last lookat specified in the scene, or nullptr if none.
     std::shared_ptr<LookAt> lookAt;
 
-    //! last sampler specified in the scene, or NULL if none.
+    //! last sampler specified in the scene, or nullptr if none.
     std::shared_ptr<Sampler> sampler;
 
-    //! last integrator specified in the scene, or NULL if none.
+    //! last integrator specified in the scene, or nullptr if none.
     std::shared_ptr<Integrator> integrator;
 
-    //! last volume integrator specified in the scene, or NULL if none.
+    //! last volume integrator specified in the scene, or nullptr if none.
     std::shared_ptr<VolumeIntegrator> volumeIntegrator;
 
-    //! last surface integrator specified in the scene, or NULL if none.
+    //! last surface integrator specified in the scene, or nullptr if none.
     std::shared_ptr<SurfaceIntegrator> surfaceIntegrator;
 
-    //! last pixel filter specified in the scene, or NULL if none.
+    //! last pixel filter specified in the scene, or nullptr if none.
     std::shared_ptr<PixelFilter> pixelFilter;
 
     //! the 'world' scene geometry

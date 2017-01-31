@@ -82,7 +82,7 @@ namespace pbrt_parser {
   {
   }
 
-  /*! produce the next token from the input stream; return NULL if
+  /*! produce the next token from the input stream; return nullptr if
     end of (all files) is reached */
   inline std::shared_ptr<Token> Lexer::produceNextToken() 
   {
@@ -96,7 +96,7 @@ namespace pbrt_parser {
     while (1) {
       c = get_char();
 
-      if (c < 0) return NULL; //Token::TOKEN_EOF;
+      if (c < 0) return nullptr; //Token::TOKEN_EOF;
           
       if (isWhite(c)) {
         continue;
@@ -109,7 +109,7 @@ namespace pbrt_parser {
         while (c != '\n') {
           lastLoc = loc;
           c = get_char();
-          if (c < 0) return NULL; //Token::TOKEN_EOF;
+          if (c < 0) return nullptr; //Token::TOKEN_EOF;
         }
         // std::cout << "END of comment at " << lastLoc.toString() << std::endl;
         continue;
@@ -196,11 +196,11 @@ namespace pbrt_parser {
       
   inline bool Lexer::isWhite(const char c)
   {
-    return strchr(" \t\n\r",c)!=NULL;
+    return strchr(" \t\n\r",c)!=nullptr;
   }
   inline bool Lexer::isSpecial(const char c)
   {
-    return strchr("[,]",c)!=NULL;
+    return strchr("[,]",c)!=nullptr;
   }
 
   std::shared_ptr<Token> Lexer::next() 

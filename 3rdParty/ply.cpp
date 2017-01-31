@@ -1,10 +1,56 @@
-/* ************************************************************************* *\
-   INTEL CORPORATION PROPRIETARY INFORMATION
-   This software is supplied under the terms of a license agreement or 
-   nondisclosure agreement with Intel Corporation and may not be copied 
-   or disclosed except in accordance with the terms of that agreement. 
-   Copyright (C) 2009 Intel Corporation. All Rights Reserved.
-   ************************************************************************* */
+// ======================================================================== //
+// Copyright 2015-2017 Ingo Wald                                            //
+//                                                                          //
+// Licensed under the Apache License, Version 2.0 (the "License");          //
+// you may not use this file except in compliance with the License.         //
+// You may obtain a copy of the License at                                  //
+//                                                                          //
+//     http://www.apache.org/licenses/LICENSE-2.0                           //
+//                                                                          //
+// Unless required by applicable law or agreed to in writing, software      //
+// distributed under the License is distributed on an "AS IS" BASIS,        //
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. //
+// See the License for the specific language governing permissions and      //
+// limitations under the License.                                           //
+// ======================================================================== //
+
+// this file originally came from (and was then modified) from paul
+// burke's PLY library, under the following license:the PLY library
+  
+/*
+
+The interface routines for reading and writing PLY polygon files.
+
+Greg Turk, February 1994
+
+---------------------------------------------------------------
+
+A PLY file contains a single polygonal _object_.
+
+An object is composed of lists of _elements_.  Typical elements are
+vertices, faces, edges and materials.
+
+Each type of element for a given object has one or more _properties_
+associated with the element type.  For instance, a vertex element may
+have as properties the floating-point values x,y,z and the three unsigned
+chars representing red, green and blue.
+
+---------------------------------------------------------------
+
+Copyright (c) 1994 The Board of Trustees of The Leland Stanford
+Junior University.  All rights reserved.   
+  
+Permission to use, copy, modify and distribute this software and its   
+documentation for any purpose is hereby granted without fee, provided   
+that the above copyright notice and this permission notice appear in   
+all copies of this software and that you do not sell the software.   
+  
+THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,   
+EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY   
+WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.   
+
+*/
+
 
 // #include <map>
 #include "ply.h"
@@ -196,7 +242,7 @@
   // static int nverts,nfaces;
   // static Vertex **vlist;
   // static Face **flist;
-  static PlyOtherElems *other_elements = NULL;
+  static PlyOtherElems *other_elements = nullptr;
   static PlyOtherProp *vert_other,*face_other;//,*edge_other;
   static int nelems;
   static char **element_list;
@@ -260,17 +306,17 @@
   {
     int i,j;
     int nprops;
-    sg::Material *material = NULL;
+    sg::Material *material = nullptr;
 //    int num_elems;
     PlyProperty **plist;
     char *elem_name;
     float version;
-    PlyFile *ply = NULL;
+    PlyFile *ply = nullptr;
     int vertices = 0;
-    // sg::Mesh::Prim *triangle = NULL;
+    // sg::Mesh::Prim *triangle = nullptr;
     int triangles = 0;
-    common::vec3fa *pos = NULL;
-    common::vec3fa *nor = NULL;
+    common::vec3fa *pos = nullptr;
+    common::vec3fa *nor = nullptr;
 
     static int numFilesDone = 0;
     static long numTrisWritten = 0;
@@ -377,7 +423,7 @@
             if (has_nx && has_ny && has_nz)
               nor = new common::vec3fa[vertices];
             else
-              nor = NULL;
+              nor = nullptr;
             pos = new common::vec3fa[vertices];
 	  
             /* grab all the vertex elements */
@@ -444,8 +490,8 @@
           // triangle = new sg::Mesh::Prim[triangles];
           /* grab all the face elements */
           Face tmp;
-          tmp.verts = NULL;
-          tmp.other_props = NULL;
+          tmp.verts = nullptr;
+          tmp.other_props = nullptr;
           for (j = 0; j < num_elems; j++) 
             {
               ply_get_element (ply, (void *) &tmp);
@@ -754,7 +800,7 @@ Entry:
   file_type  - file type, either ascii or binary
 
 Exit:
-  returns a pointer to a PlyFile, used to refer to this file, or NULL if error
+  returns a pointer to a PlyFile, used to refer to this file, or nullptr if error
   ******************************************************************************/
 
   PlyFile *ply_write(
@@ -768,9 +814,9 @@ Exit:
     PlyFile *plyfile;
     PlyElement *elem;
 
-    /* check for NULL file pointer */
-    if (fp == NULL)
-      return (NULL);
+    /* check for nullptr file pointer */
+    if (fp == nullptr)
+      return (nullptr);
 
     if (native_binary_type == -1)
       get_native_binary_type();
@@ -789,7 +835,7 @@ Exit:
     plyfile->nelems = nelems;
     plyfile->version = 1.0;
     plyfile->fp = fp;
-    plyfile->other_elems = NULL;
+    plyfile->other_elems = nullptr;
 
     /* tuck aside the names of the elements */
 
@@ -818,7 +864,7 @@ Entry:
 
 Exit:
   version - version number of PLY file
-  returns a file identifier, used to refer to this file, or NULL if error
+  returns a file identifier, used to refer to this file, or nullptr if error
   ******************************************************************************/
 
   PlyFile *ply_open_for_writing(
@@ -844,15 +890,15 @@ Exit:
     /* open the file for writing */
 
     fp = fopen (name, "w");
-    if (fp == NULL) {
-      return (NULL);
+    if (fp == nullptr) {
+      return (nullptr);
     }
 
     /* create the actual PlyFile structure */
 
     plyfile = ply_write (fp, nelems, elem_names, file_type);
-    if (plyfile == NULL)
-      return (NULL);
+    if (plyfile == nullptr)
+      return (nullptr);
 
     /* say what PLY file version number we're writing */
     *version = plyfile->version;
@@ -888,7 +934,7 @@ Entry:
 
     /* look for appropriate element */
     elem = find_element (plyfile, elem_name);
-    if (elem == NULL) {
+    if (elem == nullptr) {
       fprintf(stderr,"ply_describe_element: can't find element '%s'\n",elem_name);
       exit (-1);
     }
@@ -930,7 +976,7 @@ Entry:
 
     /* look for appropriate element */
     elem = find_element (plyfile, elem_name);
-    if (elem == NULL) {
+    if (elem == nullptr) {
       fprintf(stderr, "ply_describe_property: can't find element '%s'\n",
               elem_name);
       return;
@@ -977,7 +1023,7 @@ they are in an element.
 
     /* look for appropriate element */
     elem = find_element (plyfile, other->name);
-    if (elem == NULL) {
+    if (elem == nullptr) {
       fprintf(stderr, "ply_describe_other_properties: can't find element '%s'\n",
               other->name);
       return;
@@ -1035,7 +1081,7 @@ Entry:
 
     /* look for appropriate element */
     elem = find_element (plyfile, elem_name);
-    if (elem == NULL) {
+    if (elem == nullptr) {
       fprintf(stderr,"ply_element_count: can't find element '%s'\n",elem_name);
       exit (-1);
     }
@@ -1129,7 +1175,7 @@ Entry:
     PlyElement *elem;
 
     elem = find_element (plyfile, elem_name);
-    if (elem == NULL) {
+    if (elem == nullptr) {
       fprintf(stderr, "ply_elements_setup: can't find element '%s'\n", elem_name);
       exit (-1);
     }
@@ -1320,7 +1366,7 @@ Entry:
 Exit:
   nelems     - number of elements in object
   elem_names - list of element names
-  returns a pointer to a PlyFile, used to refer to this file, or NULL if error
+  returns a pointer to a PlyFile, used to refer to this file, or nullptr if error
   ******************************************************************************/
 
   PlyFile *ply_read(FILE *fp, int *nelems, char ***elem_names)
@@ -1333,9 +1379,9 @@ Exit:
     PlyElement *elem;
     char *orig_line;
 
-    /* check for NULL file pointer */
-    if (fp == NULL)
-      return (NULL);
+    /* check for nullptr file pointer */
+    if (fp == nullptr)
+      return (nullptr);
 
     if (native_binary_type == -1)
       get_native_binary_type();
@@ -1346,12 +1392,12 @@ Exit:
 
     plyfile = (PlyFile *) myalloc (sizeof (PlyFile));
     plyfile->nelems = 0;
-    plyfile->comments = NULL;
+    plyfile->comments = nullptr;
     plyfile->num_comments = 0;
-    plyfile->obj_info = NULL;
+    plyfile->obj_info = nullptr;
     plyfile->num_obj_info = 0;
     plyfile->fp = fp;
-    plyfile->other_elems = NULL;
+    plyfile->other_elems = nullptr;
 
     /* read and parse the file's header */
 
@@ -1360,7 +1406,7 @@ Exit:
       {
         if (words)
           free(words);
-        return (NULL);
+        return (nullptr);
       }
   
     while (words) {
@@ -1369,7 +1415,7 @@ Exit:
       if (equal_strings (words[0], "format")) {
         if (nwords != 3) {
           free(words);
-          return (NULL);
+          return (nullptr);
         }
         if (equal_strings (words[1], "ascii"))
           plyfile->file_type = PLY_ASCII;
@@ -1379,7 +1425,7 @@ Exit:
           plyfile->file_type = PLY_BINARY_LE;
         else {
           free(words);
-          return (NULL);
+          return (nullptr);
         }
         plyfile->version = (float)atof (words[2]);
       }
@@ -1439,7 +1485,7 @@ Exit:
   elem_names - list of element names
   file_type  - file type, either ascii or binary
   version    - version number of PLY file
-  returns a file identifier, used to refer to this file, or NULL if error
+  returns a file identifier, used to refer to this file, or nullptr if error
   ******************************************************************************/
 
   PlyFile *ply_open_for_reading(
@@ -1465,8 +1511,8 @@ Exit:
     /* open the file for reading */
 
     fp = fopen (name, "r");
-    if (fp == NULL)
-      return (NULL);
+    if (fp == nullptr)
+      return (nullptr);
 
     /* create the PlyFile data structure */
 
@@ -1493,7 +1539,7 @@ Entry:
 Exit:
   nelems   - number of elements of this type in the file
   nprops   - number of properties
-  returns a list of properties, or NULL if the file doesn't contain that elem
+  returns a list of properties, or nullptr if the file doesn't contain that elem
   ******************************************************************************/
 
   PlyProperty **ply_get_element_description(
@@ -1510,8 +1556,8 @@ Exit:
 
     /* find information about the element */
     elem = find_element (plyfile, elem_name);
-    if (elem == NULL)
-      return (NULL);
+    if (elem == nullptr)
+      return (nullptr);
 
     *nelems = elem->num;
     *nprops = elem->nprops;
@@ -1561,7 +1607,7 @@ Entry:
 
       /* look for actual property */
       prop = find_property (elem, prop_list[i].name, &index);
-      if (prop == NULL) {
+      if (prop == nullptr) {
         fprintf (stderr, "Warning:  Can't find property '%s' in element '%s'\n",
                  prop_list[i].name, elem_name);
         continue;
@@ -1608,7 +1654,7 @@ Entry:
     /* deposit the property information into the element's description */
 
     prop_ptr = find_property (elem, prop->name, &index);
-    if (prop_ptr == NULL) {
+    if (prop_ptr == nullptr) {
       fprintf (stderr, "Warning:  Can't find property '%s' in element '%s'\n",
                prop->name, elem_name);
       return;
@@ -1775,10 +1821,10 @@ Exit:
 
     /* find information about the element */
     elem = find_element (plyfile, elem_name);
-    if (elem == NULL) {
+    if (elem == nullptr) {
       fprintf (stderr, "ply_get_other_properties: Can't find element '%s'\n",
                elem_name);
-      return (NULL);
+      return (nullptr);
     }
 
     /* remember that this is the "current" element */
@@ -1796,7 +1842,7 @@ Exit:
 #if 0
     if (elem->other_offset == NO_OTHER_PROPS) {
       other->size = 0;
-      other->props = NULL;
+      other->props = nullptr;
       other->nprops = 0;
       return (other);
     }
@@ -1863,7 +1909,7 @@ Exit:
 
     /* look for appropriate element */
     elem = find_element (plyfile, elem_name);
-    if (elem == NULL) {
+    if (elem == nullptr) {
       fprintf (stderr,
                "ply_get_other_element: can't find element '%s'\n", elem_name);
       exit (-1);
@@ -1872,7 +1918,7 @@ Exit:
     /* create room for the new "other" element, initializing the */
     /* other data structure if necessary */
 
-    if (plyfile->other_elems == NULL) {
+    if (plyfile->other_elems == nullptr) {
       plyfile->other_elems = (PlyOtherElems *) myalloc (sizeof (PlyOtherElems));
       other_elems = plyfile->other_elems;
       other_elems->other_list = (OtherElem *) myalloc (sizeof (OtherElem));
@@ -1932,7 +1978,7 @@ Entry:
     PlyElement *elem;
   
     /* ignore this call if there is no other element */
-    if (other_elems == NULL)
+    if (other_elems == nullptr)
       return;
 
     /* save pointer to this information */
@@ -1970,7 +2016,7 @@ Entry:
     OtherElem *other;
 
     /* make sure we have other elements to write */
-    if (plyfile->other_elems == NULL)
+    if (plyfile->other_elems == nullptr)
       return;
 
     /* write out the data for each "other" element */
@@ -2036,7 +2082,7 @@ Exit:
 
   void ply_get_info(PlyFile *ply, float *version, int *file_type)
   {
-    if (ply == NULL)
+    if (ply == nullptr)
       return;
 
     *version = ply->version;
@@ -2070,7 +2116,7 @@ Entry:
   element - name of element we're looking for
 
 Exit:
-  returns the element, or NULL if not found
+  returns the element, or nullptr if not found
   ******************************************************************************/
 
   PlyElement *find_element(PlyFile *plyfile, char *element)
@@ -2081,7 +2127,7 @@ Exit:
       if (equal_strings (element, plyfile->elems[i]->name))
         return (plyfile->elems[i]);
 
-    return (NULL);
+    return (nullptr);
   }
 
 
@@ -2094,7 +2140,7 @@ Entry:
 
 Exit:
   index - index to position in list
-  returns a pointer to the property, or NULL if not found
+  returns a pointer to the property, or nullptr if not found
   ******************************************************************************/
 
   PlyProperty *find_property(PlyElement *elem, char *prop_name, int *index)
@@ -2108,7 +2154,7 @@ Exit:
       }
 
     *index = -1;
-    return (NULL);
+    return (nullptr);
   }
 
 
@@ -2128,7 +2174,7 @@ Entry:
     char **words;
     int nwords;
     int which_word;
-    char *elem_data,*item=NULL;
+    char *elem_data,*item=nullptr;
     char *item_ptr;
     int item_size;
     int int_val;
@@ -2138,7 +2184,7 @@ Entry:
     int store_it;
     char **store_array;
     char *orig_line;
-    char *other_data=NULL;
+    char *other_data=nullptr;
     int other_flag;
 
     /* the kind of element we're reading currently */
@@ -2161,7 +2207,7 @@ Entry:
     /* read in the element */
 
     words = get_words (plyfile->fp, &nwords, &orig_line);
-    if (words == NULL) {
+    if (words == nullptr) {
       fprintf (stderr, "ply_get_element: unexpected end of file\n");
       exit (-1);
     }
@@ -2196,7 +2242,7 @@ Entry:
 
         if (list_count == 0) {
           if (store_it)
-            *store_array = NULL;
+            *store_array = nullptr;
         }
         else {
           if (store_it) {
@@ -2247,7 +2293,7 @@ Entry:
     PlyElement *elem;
     PlyProperty *prop;
     FILE *fp = plyfile->fp;
-    char *elem_data,*item=NULL;
+    char *elem_data,*item=nullptr;
     char *item_ptr;
     int item_size;
     int int_val;
@@ -2256,7 +2302,7 @@ Entry:
     int list_count;
     int store_it;
     char **store_array;
-    char *other_data=NULL;
+    char *other_data=nullptr;
     int other_flag;
 
     /* the kind of element we're reading currently */
@@ -2305,7 +2351,7 @@ Entry:
         store_array = (char **) (elem_data + prop->offset);
         if (list_count == 0) {
           if (store_it)
-            *store_array = NULL;
+            *store_array = nullptr;
         }
         else {
           if (store_it) {
@@ -2448,7 +2494,7 @@ Entry:
 Exit:
   nwords    - number of words returned
   orig_line - the original line of characters
-  returns a list of words from the line, or NULL if end-of-file
+  returns a list of words from the line, or nullptr if end-of-file
   ******************************************************************************/
 
   char **get_words(FILE *fp, int *nwords, char **orig_line)
@@ -2466,10 +2512,10 @@ Exit:
 
     /* read in a line */
     result = fgets (str, BIG_STRING, fp);
-    if (result == NULL) {
+    if (result == nullptr) {
       *nwords = 0;
-      *orig_line = NULL;
-      return (NULL);
+      *orig_line = nullptr;
+      return (nullptr);
     }
 
     /* convert line-feed and tabs into spaces */
@@ -2982,7 +3028,7 @@ Exit:
       break;
 
     case PLY_UINT:
-      *uint_val = strtol (word, (char **) NULL, 10);
+      *uint_val = strtol (word, (char **) nullptr, 10);
       *int_val = (int) *uint_val;
       *double_val = (double) *uint_val;
       break;

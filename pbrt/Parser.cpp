@@ -53,7 +53,7 @@ namespace pbrt_parser {
     {
       std::shared_ptr<Token> token = tokens.peek();
       if (!token || token->type != Token::TOKEN_TYPE_STRING)
-        return NULL;
+        return nullptr;
 
       token = tokens.next();
       char *_type = strdup(token->text.c_str());
@@ -68,7 +68,7 @@ namespace pbrt_parser {
       free(_name);
       free(_type);
 
-      std::shared_ptr<Param> ret = NULL;
+      std::shared_ptr<Param> ret = nullptr;
       if (type == "float") {
         ret = std::make_shared<ParamT<float>>(type);
       } else if (type == "color") {
@@ -447,7 +447,7 @@ namespace pbrt_parser {
       std::shared_ptr<Token> token = tokens->next();
       while (!token) {
         if (tokenizerStack.empty())
-          return NULL; 
+          return nullptr; 
         tokens = tokenizerStack.top();
         tokenizerStack.pop();
         token = tokens->next();

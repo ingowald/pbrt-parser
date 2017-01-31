@@ -135,10 +135,10 @@ namespace pbrt_parser {
       int has_nx=0, has_ny=0, has_nz=0;
       int has_fverts=0;
         
-      PlyOtherElems *other_elements = NULL;
+      PlyOtherElems *other_elements = nullptr;
       PlyOtherProp *vert_other,*face_other;//,*edge_other;
 
-      char **element_list = NULL;
+      char **element_list = nullptr;
       int file_type = 0;
 
 
@@ -282,8 +282,8 @@ namespace pbrt_parser {
             
           /* grab all the face elements */
           Face tmp;
-          tmp.verts = NULL;
-          tmp.other_props = NULL;
+          tmp.verts = nullptr;
+          tmp.other_props = nullptr;
           for (int j=0; j<num_elems; j++)  {
             ply_get_element (ply, (void *) &tmp);
             if (!has_face_blue) {
