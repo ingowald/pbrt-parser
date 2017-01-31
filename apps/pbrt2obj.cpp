@@ -55,7 +55,7 @@ namespace pbrt_parser {
       return "usemtl pbrt_parser_error_material\n\n";
       //      throw std::runtime_error("'mix' material ..."+material->toString());
     } else if (type == "uber") {
-      std::string matName = std::string("uber_material__")+std::to_string(alreadyExported.size());
+      std::string matName = std::string("uber_material__")+std::to_string((unsigned long long)alreadyExported.size());
       ss << "newmtl " << matName << std::endl;
       { //----------- Kd -----------
         vec3f v;

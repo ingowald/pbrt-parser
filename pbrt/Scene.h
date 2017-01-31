@@ -56,7 +56,7 @@ namespace pbrt_parser {
     template<typename T>
       std::shared_ptr<ParamT<T> > findParam(const std::string &name) const {
       auto it = param.find(name);
-      if (it == param.end()) return nullptr;
+      if (it == param.end()) return std::shared_ptr<ParamT<T>>();
       return std::dynamic_pointer_cast<ParamT<T> >(it->second);
     }
 
