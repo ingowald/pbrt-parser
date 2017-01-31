@@ -27,7 +27,7 @@ namespace pbrt_parser {
   {
     file = fopen(fn.str().c_str(),"r");
     if (!file)
-      throw std::runtime_error("could not open file '"+fn+"'");
+      throw std::runtime_error("could not open file '"+fn.str()+"'");
   }
 
   // =======================================================
