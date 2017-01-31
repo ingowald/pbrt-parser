@@ -97,7 +97,7 @@ namespace pbrt_parser {
       return thisID;
     } else {
       std::stringstream ss;
-      vec3f v = .3f;
+      vec3f v = vec3f(.3f);
       ss << "<Material name=\"doesntMatter\" type=\"OBJMaterial\">" << endl;
       ss << "  <param name=\"kd\" type=\"float3\">" << v.x << " " << v.y << " " << v.z << "</param>" << endl;
       printf("WARNING: UNHANDLED MATERIAL TYPE '%s'!!!\n",type.c_str());
