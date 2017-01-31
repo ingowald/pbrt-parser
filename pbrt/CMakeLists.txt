@@ -14,7 +14,7 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-ADD_LIBRARY(pbrt_parser
+ADD_LIBRARY(pbrt_parser SHARED
   Lexer.cpp
   Parser.cpp
   Scene.cpp
