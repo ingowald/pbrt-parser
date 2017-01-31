@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -19,7 +19,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <cstddef>
-#include <math.h>
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
@@ -226,14 +225,8 @@
 
 #define THROW_RUNTIME_ERROR(str) \
   throw std::runtime_error(std::string(__FILE__) + " (" + std::to_string((long long)__LINE__) + "): " + std::string(str));
-
-#if defined(__MIC__)
-#define FATAL(x) { std::cerr << "Error in " << __FUNCTION__ << " : " << x << std::endl << std::flush; exit(1); }
-#define WARNING(x) std::cerr << "Warning:" << std::string(x) << std::endl
-#else
 #define FATAL(x) THROW_RUNTIME_ERROR(x)
 #define WARNING(x) std::cerr << "Warning:" << std::string(x) << std::endl
-#endif
 
 #define NOT_IMPLEMENTED FATAL(std::string(__FUNCTION__) + " not implemented")
 

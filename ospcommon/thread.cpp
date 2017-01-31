@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,6 +16,8 @@
 
 #include "thread.h"
 #include "sysinfo.h"
+
+#include "intrinsics.h"
 
 #include <iostream>
 #include <xmmintrin.h>
@@ -252,10 +254,6 @@ namespace ospcommon
   /*! creates a hardware thread running on specific core */
   thread_t createThread(thread_func f, void* arg, size_t stack_size, ssize_t threadID)
   {
-#ifdef __MIC__
-    threadID++; // start counting at 1 on MIC
-#endif
-
     /* set stack size */
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -297,40 +295,34 @@ namespace ospcommon
     pthread_cancel(*(pthread_t*)tid);
     delete (pthread_t*)tid;
   }
-
-  // /*! creates thread local storage */
-  // tls_t createTls() {
-  //   static int cntr = 0;
-  //   pthread_key_t* key = new pthread_key_t;
-  //   if (pthread_key_create(key,NULL) != 0)
-  //     FATAL("pthread_key_create failed");
-
-  //   return tls_t(key);
-  // }
-
-  // /*! return the thread local storage pointer */
-  // void* getTls(tls_t tls) 
-  // {
-  //   assert(tls);
-  //   return pthread_getspecific(*(pthread_key_t*)tls);
-  // }
-
-  // /*! set the thread local storage pointer */
-  // void setTls(tls_t tls, void* const ptr) 
-  // {
-  //   assert(tls);
-  //   if (pthread_setspecific(*(pthread_key_t*)tls, ptr) != 0)
-  //     FATAL("pthread_setspecific failed");
-  // }
-
-  // /*! destroys thread local storage identifier */
-  // void destroyTls(tls_t tls) 
-  // {
-  //   assert(tls);
-  //   if (pthread_key_delete(*(pthread_key_t*)tls) != 0)
-  //     FATAL("pthread_key_delete failed");
-  //   delete (pthread_key_t*)tls;
-  // }
 }
 
 #endif
+
+namespace ospcommon {
+  void ospray_Thread_runThread(void *arg)
+  {
+    Thread *t = (Thread *)arg;
+    if (t->desiredThreadID >= 0) {
+      printf("pinning to thread %i\n",t->desiredThreadID);
+      ospcommon::setAffinity(t->desiredThreadID);
+    }
+
+    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+
+    t->run();
+  }
+
+  void Thread::join()
+  {
+    ospcommon::join(tid);
+  }
+
+  /*!  start thread execution */
+  void Thread::start(int threadID)
+  {
+    desiredThreadID = threadID;
+    this->tid = ospcommon::createThread(&ospray_Thread_runThread,this);
+  }
+}// namespace ospcommon
