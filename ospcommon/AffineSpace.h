@@ -31,71 +31,68 @@ namespace ospcommon {
   template<typename L>
   struct AffineSpaceT
   {
-    L l;           /*< linear part of affine space */
-    VectorT p;     /*< affine part of affine space */
-
     ////////////////////////////////////////////////////////////////////////////////
     // Constructors, Assignment, Cast, Copy Operations
     ////////////////////////////////////////////////////////////////////////////////
 
     /*! construct a new AffineSpace */
-    inline OSPCOMMON_INTERFACE
+    inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT           ( )                           { }
     
     /*! construct a new AffineSpace */
-    inline OSPCOMMON_INTERFACE
+    inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
     
     /*! construct a new AffineSpace */
-    inline OSPCOMMON_INTERFACE
+    inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(zero); }
     
     /*! construct a new AffineSpace */
-    inline OSPCOMMON_INTERFACE
+    inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }
 
     /*! construct a new AffineSpace */
-    inline OSPCOMMON_INTERFACE
+    inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT( const VectorT& vx, const VectorT& vy, const VectorT& vz, const VectorT& p ) : l(vx,vy,vz), p(p) {}
 
     /*! construct a new AffineSpace */
-    inline OSPCOMMON_INTERFACE
+    inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT( const L& l, const VectorT& p ) : l(l), p(p) {}
 
     /*! construct a new AffineSpace */
-    template<typename L1> inline OSPCOMMON_INTERFACE
+    template<typename L1> inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT( const AffineSpaceT<L1>& s ) : l(s.l), p(s.p) {}
 
     ////////////////////////////////////////////////////////////////////////////////
     // Constants
     ////////////////////////////////////////////////////////////////////////////////
 
-    inline OSPCOMMON_INTERFACE AffineSpaceT( ZeroTy ) : l(zero), p(zero) {}
-    inline OSPCOMMON_INTERFACE AffineSpaceT( OneTy )  : l(one),  p(zero) {}
+    inline/*  OSPCOMMON_INTERFACE */ AffineSpaceT( ZeroTy ) : l(zero), p(zero) {}
+    inline/*  OSPCOMMON_INTERFACE */ AffineSpaceT( OneTy )  : l(one),  p(zero) {}
 
     /*! return matrix for scaling */
-    static inline OSPCOMMON_INTERFACE
+    static inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT scale(const VectorT& s) { return L::scale(s); }
 
     /*! return matrix for translation */
-    static inline OSPCOMMON_INTERFACE
+    static inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT translate(const VectorT& p) { return AffineSpaceT(one,p); }
 
     /*! return matrix for rotation, only in 2D */
-    static inline OSPCOMMON_INTERFACE
+    static inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT rotate(const ScalarT& r) { return L::rotate(r); }
 
     /*! return matrix for rotation around arbitrary point (2D) or axis (3D) */
-    static inline OSPCOMMON_INTERFACE
+    static inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT rotate(const VectorT& u, const ScalarT& r) { return L::rotate(u,r); }
 
     /*! return matrix for rotation around arbitrary axis and point, only in 3D */
-    static inline OSPCOMMON_INTERFACE
+    static inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT rotate(const VectorT& p, const VectorT& u, const ScalarT& r)
     { return translate(+p) * rotate(u,r) * translate(-p);  }
 
     /*! return matrix for looking at given point, only in 3D */
-    static inline OSPCOMMON_INTERFACE
+    static inline/*  OSPCOMMON_INTERFACE */
     AffineSpaceT lookat(const VectorT& eye, const VectorT& point, const VectorT& up)
     {
       VectorT Z = normalize(point-eye);
@@ -104,6 +101,8 @@ namespace ospcommon {
       return AffineSpaceT(L(U,V,Z),eye);
     }
 
+    L       l;     /*< linear part of affine space */
+    VectorT p;     /*< affine part of affine space */
   };
 
   ////////////////////////////////////////////////////////////////////////////////
