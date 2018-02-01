@@ -88,6 +88,16 @@ namespace pbrt_parser {
     const affine3f xfm = instanceXfm*shape->transform;
     size_t firstVertexID = numVerticesWritten+1;
 
+    std::shared_ptr<ParamT<float> > param_st = shape->findParam<float>("st");
+    if (param_st) {
+      const size_t numPoints = param_st->paramVec.size() / 2;
+      for (int i=0;i<numPoints;i++) {
+        vec2f v(param_st->paramVec[2*i+0],
+                param_st->paramVec[2*i+1]);
+        fprintf(out,"vt %f %f\n",v.x,v.y);
+      }
+    }
+    
     { // parse "point P"
       std::shared_ptr<ParamT<float> > param_P = shape->findParam<float>("P");
       if (param_P) {
@@ -112,7 +122,17 @@ namespace pbrt_parser {
           vec3i v(param_indices->paramVec[3*i+0],
                   param_indices->paramVec[3*i+1],
                   param_indices->paramVec[3*i+2]);
-          fprintf(out,"f %lu %lu %lu\n",firstVertexID+v.x,firstVertexID+v.y,firstVertexID+v.z);
+          if (param_st) {
+            fprintf(out,"f %lu//%lu %lu//%lu %lu//%lu\n",
+                    firstVertexID+v.x,
+                    firstVertexID+v.x,
+                    firstVertexID+v.y,
+                    firstVertexID+v.y,
+                    firstVertexID+v.z,
+                    firstVertexID+v.z);
+          } else {
+            fprintf(out,"f %lu %lu %lu\n",firstVertexID+v.x,firstVertexID+v.y,firstVertexID+v.z);
+          }
           numWritten++;
         }
       }
