@@ -22,7 +22,7 @@
 #include <vector>
 
 namespace pbrt_parser {
-    
+  
   struct PBRT_PARSER_INTERFACE Param {
     virtual std::string getType() const = 0;
     virtual size_t getSize() const = 0;
@@ -54,6 +54,7 @@ namespace pbrt_parser {
     vec3f getParam3f(const std::string &name, const vec3f &fallBack) const;
     float getParam1f(const std::string &name, const float fallBack=0) const;
     bool getParamBool(const std::string &name, const bool fallBack=false) const;
+    std::string getParamString(const std::string &name) const;
 
     template<typename T>
       std::shared_ptr<ParamT<T> > findParam(const std::string &name) const {

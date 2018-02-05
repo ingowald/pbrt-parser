@@ -120,9 +120,9 @@ namespace pbrt_parser {
     std::shared_ptr<Param> pr = it->second;
     const std::shared_ptr<ParamT<float>> p = std::dynamic_pointer_cast<ParamT<float>>(pr);
     if (!p)
-      throw std::runtime_error("Parameterized::getParam3f: found param of given name, but of wrong type!");
+      throw std::runtime_error("found param of given name, but of wrong type!");
     if (p->getSize() != 3)
-      throw std::runtime_error("Parameterized::getParam3f: found param of given name and type, but wrong number of components!");
+      throw std::runtime_error("found param of given name and type, but wrong number of components!");
     return vec3f(p->paramVec[0],p->paramVec[1],p->paramVec[2]);
   }
 
@@ -134,9 +134,23 @@ namespace pbrt_parser {
     std::shared_ptr<Param> pr = it->second;
     const std::shared_ptr<ParamT<float>> p = std::dynamic_pointer_cast<ParamT<float>>(pr);
     if (!p)
-      throw std::runtime_error("Parameterized::getParam1f: found param of given name, but of wrong type!");
+      throw std::runtime_error("found param of given name, but of wrong type!");
     if (p->getSize() != 1)
-      throw std::runtime_error("Parameterized::getParam1f: found param of given name and type, but wrong number of components!");
+      throw std::runtime_error("found param of given name and type, but wrong number of components!");
+    return p->paramVec[0];
+  }
+
+  std::string Parameterized::getParamString(const std::string &name) const
+  {
+    std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+    if (it == param.end())
+      return "";
+    std::shared_ptr<Param> pr = it->second;
+    const std::shared_ptr<ParamT<std::string>> p = std::dynamic_pointer_cast<ParamT<std::string>>(pr);
+    if (!p)
+      throw std::runtime_error("found param of given name, but of wrong type!");
+    if (p->getSize() != 1)
+      throw std::runtime_error("found param of given name and type, but wrong number of components!");
     return p->paramVec[0];
   }
 
@@ -148,9 +162,9 @@ namespace pbrt_parser {
     std::shared_ptr<Param> pr = it->second;
     const std::shared_ptr<ParamT<bool>> p = std::dynamic_pointer_cast<ParamT<bool>>(pr);
     if (!p)
-      throw std::runtime_error("Parameterized::getParam1f: found param of given name, but of wrong type!");
+      throw std::runtime_error("found param of given name, but of wrong type!");
     if (p->getSize() != 1)
-      throw std::runtime_error("Parameterized::getParam1f: found param of given name and type, but wrong number of components!");
+      throw std::runtime_error("found param of given name and type, but wrong number of components!");
     return p->paramVec[0];
   }
 

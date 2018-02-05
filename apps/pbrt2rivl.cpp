@@ -97,15 +97,20 @@ namespace pbrt_parser {
   }
 
     
-  int exportMaterial(std::shared_ptr<Material> material)
+  int exportMaterial(std::shared_ptr<Material> material,
+                     const std::string colorTextureName,
+                     const std::string bumpmapTextureName)
   {
     if (!material) 
       // default material
       return 0;
 
-    static std::map<std::shared_ptr<Material>,int> alreadyExported;
-    if (alreadyExported.find(material) != alreadyExported.end())
-      return alreadyExported[material];
+    std::tuple<std::shared_ptr<Material>,std::string,std::string> texturedMaterial
+      = std::make_tuple(material,colorTextureName,bumpmapTextureName);
+    static std::map<std::tuple<std::shared_ptr<Material>,std::string,std::string>,int> 
+      alreadyExported;
+    if (alreadyExported.find(texturedMaterial) != alreadyExported.end())
+      return alreadyExported[texturedMaterial];
 
     const std::string type = material->type;
 
@@ -126,11 +131,15 @@ namespace pbrt_parser {
       ss << genMaterialParam<float>(material,"difftrans");
       ss << genMaterialParam<float>(material,"flatness");
       ss << genMaterialParam<bool>(material,"thin");
+      if (colorTextureName != "")
+        ss << "  <param name=\"color_texture\" type=\"string\">" << colorTextureName << "</param>" << endl;
+      if (bumpmapTextureName != "")
+        ss << "  <param name=\"bumpmap_texture\" type=\"string\">" << bumpmapTextureName << "</param>" << endl;
 
       ss << "</Material>" << endl;
       fprintf(out,"%s\n",ss.str().c_str());
       int thisID = nextNodeID++;
-      alreadyExported[material] = thisID;
+      alreadyExported[texturedMaterial] = thisID;
       return thisID;
     } else if (type == "uber") {
       std::stringstream ss;
@@ -147,7 +156,7 @@ namespace pbrt_parser {
       ss << "</Material>" << endl;
       fprintf(out,"%s\n",ss.str().c_str());
       int thisID = nextNodeID++;
-      alreadyExported[material] = thisID;
+      alreadyExported[texturedMaterial] = thisID;
       return thisID;
     } else {
       std::stringstream ss;
@@ -159,7 +168,7 @@ namespace pbrt_parser {
 
       fprintf(out,"%s\n",ss.str().c_str());
       int thisID = nextNodeID++;
-      alreadyExported[material] = thisID;
+      alreadyExported[texturedMaterial] = thisID;
       return thisID;
     }
   }
@@ -170,7 +179,9 @@ namespace pbrt_parser {
     std::shared_ptr<Material> mat = shape->material;
     cout << "writing shape " << shape->toString() << " w/ material " << (mat?mat->toString():"<null>") << endl;
 
-    int materialID = exportMaterial(shape->material);
+    std::string texture_color   = shape->getParamString("color");
+    std::string texture_bumpmap = shape->getParamString("bumpmap");
+    int materialID = exportMaterial(shape->material,texture_color,texture_bumpmap);
 
     int thisID = nextNodeID++;
     const affine3f xfm = instanceXfm*shape->transform;
@@ -183,6 +194,10 @@ namespace pbrt_parser {
 
     fprintf(out,"<Mesh id=\"%i\">\n",thisID);
     fprintf(out,"  <materiallist>%i</materiallist>\n",materialID);
+    {
+      if (texture_bumpmap != "")
+        fprintf(out,"  <displacement name=\"%s\"/>\n",texture_bumpmap.c_str());
+    }
     { // parse "point P"
       std::shared_ptr<ParamT<float> > param_P = shape->findParam<float>("P");
       if (param_P) {
@@ -197,6 +212,7 @@ namespace pbrt_parser {
           // fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
           // numVerticesWritten++;
         }
+          
         fprintf(out,"  <vertex num=\"%li\" ofs=\"%li\"/>\n",
                 numPoints,ofs);
       }
