@@ -26,6 +26,7 @@ namespace pbrt_parser {
   /*! file name and handle, to be used by tokenizer and loc */
   struct PBRT_PARSER_INTERFACE File {
     File(const FileName &fn);
+    void close() { fclose(file); file = NULL; }
     virtual ~File();
     /*! get name of the file */
     std::string getFileName() const { return name; }
