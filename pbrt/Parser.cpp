@@ -586,6 +586,7 @@ namespace pbrt_parser {
         }
 
         if (token->text == "WorldBegin") {
+          setTransform(affine3f(ospcommon::one));
           parseWorld();
           continue;
         }
