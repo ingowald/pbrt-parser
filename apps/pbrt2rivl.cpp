@@ -174,9 +174,9 @@ namespace pbrt_parser {
 
     int thisID = nextNodeID++;
     const affine3f xfm = instanceXfm*shape->transform;
-    PRINT(instanceXfm);
-    PRINT(shape->transform);
-    PRINT(xfm);
+    // PRINT(instanceXfm);
+    // PRINT(shape->transform);
+    // PRINT(xfm);
 
     alreadyExported[shape] = thisID;
     transformOfFirstInstance[thisID] = xfm;
