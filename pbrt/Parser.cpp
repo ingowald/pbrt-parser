@@ -89,6 +89,10 @@ namespace pbrt_parser {
         ret = std::make_shared<ParamT<float>>(type);
       } else if (type == "point2") {
         ret = std::make_shared<ParamT<float>>(type);
+      } else if (type == "point3") {
+        ret = std::make_shared<ParamT<float>>(type);
+      } else if (type == "point4") {
+        ret = std::make_shared<ParamT<float>>(type);
       } else if (type == "vector") {
         ret = std::make_shared<ParamT<float>>(type);
       } else if (type == "string") {
