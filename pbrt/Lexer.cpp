@@ -104,7 +104,7 @@ namespace pbrt_parser {
     while (1) {
       c = get_char();
 
-      if (c < 0) { PING; file->close(); return std::shared_ptr<Token>(); }
+      if (c < 0) { file->close(); return std::shared_ptr<Token>(); }
           
       if (isWhite(c)) {
         continue;
