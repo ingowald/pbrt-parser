@@ -110,7 +110,7 @@ namespace pbrt_parser {
   template struct ParamT<std::string>;
 
   // ==================================================================
-  // Shape
+  // Parameterized
   // ==================================================================
   vec3f Parameterized::getParam3f(const std::string &name, const vec3f &fallBack) const
   {
@@ -124,6 +124,34 @@ namespace pbrt_parser {
     if (p->getSize() != 3)
       throw std::runtime_error("Parameterized::getParam3f: found param of given name and type, but wrong number of components!");
     return vec3f(p->paramVec[0],p->paramVec[1],p->paramVec[2]);
+  }
+
+  float Parameterized::getParam1f(const std::string &name, const float fallBack) const
+  {
+    std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+    if (it == param.end())
+      return fallBack;
+    std::shared_ptr<Param> pr = it->second;
+    const std::shared_ptr<ParamT<float>> p = std::dynamic_pointer_cast<ParamT<float>>(pr);
+    if (!p)
+      throw std::runtime_error("Parameterized::getParam1f: found param of given name, but of wrong type!");
+    if (p->getSize() != 1)
+      throw std::runtime_error("Parameterized::getParam1f: found param of given name and type, but wrong number of components!");
+    return p->paramVec[0];
+  }
+
+  bool Parameterized::getParamBool(const std::string &name, const bool fallBack) const
+  {
+    std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+    if (it == param.end())
+      return fallBack;
+    std::shared_ptr<Param> pr = it->second;
+    const std::shared_ptr<ParamT<bool>> p = std::dynamic_pointer_cast<ParamT<bool>>(pr);
+    if (!p)
+      throw std::runtime_error("Parameterized::getParam1f: found param of given name, but of wrong type!");
+    if (p->getSize() != 1)
+      throw std::runtime_error("Parameterized::getParam1f: found param of given name and type, but wrong number of components!");
+    return p->paramVec[0];
   }
 
   // ==================================================================

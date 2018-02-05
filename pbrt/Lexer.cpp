@@ -30,6 +30,12 @@ namespace pbrt_parser {
       throw std::runtime_error("could not open file '"+fn.str()+"'");
   }
 
+  File::~File()
+  { 
+    fclose(file);
+  }
+
+
   // =======================================================
   // loc
   // =======================================================

@@ -65,6 +65,37 @@ namespace pbrt_parser {
 
 
   int nextNodeID = 0;
+
+  template<typename T>
+  std::string genMaterialParam(std::shared_ptr<Material> material, const char *name);
+  
+  template<>
+  std::string genMaterialParam<vec3f>(std::shared_ptr<Material> material, const char *name)
+  {
+    std::stringstream ss;
+    vec3f v = material->getParam3f(name,vec3f(0.0f));
+    ss << "  <param name=\"" << name << "\" type=\"float3\">" << v.x << " " << v.y << " " << v.z << "</param>" << endl;
+    return ss.str();
+  }
+
+  template<>
+  std::string genMaterialParam<bool>(std::shared_ptr<Material> material, const char *name)
+  {
+    std::stringstream ss;
+    bool v = material->getParamBool(name,false);
+    ss << "  <param name=\"" << name << "\" type=\"int\">" << (int)v << "</param>" << endl;
+    return ss.str();
+  }
+
+  template<>
+  std::string genMaterialParam<float>(std::shared_ptr<Material> material, const char *name)
+  {
+    std::stringstream ss;
+    float v = material->getParam1f(name,false);
+    ss << "  <param name=\"" << name << "\" type=\"float\">" << (int)v << "</param>" << endl;
+    return ss.str();
+  }
+
     
   int exportMaterial(std::shared_ptr<Material> material)
   {
@@ -78,7 +109,30 @@ namespace pbrt_parser {
 
     const std::string type = material->type;
 
-    if (type == "uber") {
+    if (type == "disney") {
+      std::stringstream ss;
+      ss << "<Material name=\"name\" type=\"DisneyMaterial\">" << endl;
+      ss << genMaterialParam<vec3f>(material,"color");
+      ss << genMaterialParam<float>(material,"spectrans");
+      ss << genMaterialParam<float>(material,"clearcoatgloss");
+      ss << genMaterialParam<float>(material,"speculartint");
+      ss << genMaterialParam<float>(material,"eta");
+      ss << genMaterialParam<float>(material,"sheentint");
+      ss << genMaterialParam<float>(material,"metallic");
+      ss << genMaterialParam<float>(material,"anisotropic");
+      ss << genMaterialParam<float>(material,"clearcoat");
+      ss << genMaterialParam<float>(material,"roughness");
+      ss << genMaterialParam<float>(material,"sheen");
+      ss << genMaterialParam<float>(material,"difftrans");
+      ss << genMaterialParam<float>(material,"flatness");
+      ss << genMaterialParam<bool>(material,"thin");
+
+      ss << "</Material>" << endl;
+      fprintf(out,"%s\n",ss.str().c_str());
+      int thisID = nextNodeID++;
+      alreadyExported[material] = thisID;
+      return thisID;
+    } else if (type == "uber") {
       std::stringstream ss;
       ss << "<Material name=\"doesntMatter\" type=\"OBJMaterial\">" << endl;
       {
@@ -120,6 +174,10 @@ namespace pbrt_parser {
 
     int thisID = nextNodeID++;
     const affine3f xfm = instanceXfm*shape->transform;
+    PRINT(instanceXfm);
+    PRINT(shape->transform);
+    PRINT(xfm);
+
     alreadyExported[shape] = thisID;
     transformOfFirstInstance[thisID] = xfm;
 
