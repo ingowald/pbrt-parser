@@ -4,9 +4,12 @@
 // for mkdir
 #include <sys/stat.h>
 #include <sys/types.h>
+// XML
+#include "XML.h"
 
 namespace biff {
-  
+  using namespace ospray;
+
   Writer::Writer(const std::string &outputPath)
   {
     mkdir(outputPath.c_str(),S_IRWXU);
@@ -16,33 +19,39 @@ namespace biff {
     texDataFile.open(outputPath+"/tex_data.bin");
     flatCurveFile.open(outputPath+"/flat_curves.bin");
     roundCurveFile.open(outputPath+"/round_curves.bin");
-    materialFile.open(outputPath+"/materials.xml");
+    sceneFile.open(outputPath+"/scene.xml");
 
-    materialFile << "<xml>" << std::endl;;
-    materialFile << "<biff version=\"0.1\"/>" << std::endl;;
+    sceneFile << "<xml version=\"1.0\">" << std::endl;;
+    sceneFile << " <biff version=\"0.1\">" << std::endl;
     // sceneFile.open(outputPath+"/scene.xml");
   }
 
   Writer::~Writer()
   {
-    materialFile << "</biff>" << std::endl;;
-    materialFile << "</xml>" << std::endl;;
+    sceneFile << "  <scene" << std::endl
+              << "   numTriMeshes=\"" << numTriMeshes << "\"" << std::endl
+              << "   numTextures=\"" << numTextures << "\"" << std::endl
+              << "   numInstances=\"" << numInstances << "\"" << std::endl
+              << "   />" << std::endl;
+    sceneFile << " </biff>" << std::endl;
+    sceneFile << "</xml>" << std::endl;
+    sceneFile.close();
   }
 
   int Writer::push(const Material &m)
   {
-    materialFile << "  <material type=\"" << m.type << "\">" << std::endl;
+    sceneFile << "  <material type=\"" << m.type << "\">" << std::endl;
     for (auto p : m.param_int) 
-      materialFile << "   <i name=\"" << p.first << "\">" << p.second << "</i>" << std::endl;
+      sceneFile << "   <i name=\"" << p.first << "\">" << p.second << "</i>" << std::endl;
     for (auto p : m.param_float) 
-      materialFile << "   <f name=\"" << p.first << "\">" << p.second << "</f>" << std::endl;
+      sceneFile << "   <f name=\"" << p.first << "\">" << p.second << "</f>" << std::endl;
     for (auto p : m.param_vec3f) 
-      materialFile << "   <f3 name=\"" << p.first << "\">" << p.second.x << " " << p.second.y << " " << p.second.z << "</f3>" << std::endl;
+      sceneFile << "   <f3 name=\"" << p.first << "\">" << p.second.x << " " << p.second.y << " " << p.second.z << "</f3>" << std::endl;
     for (auto p : m.param_string) 
-      materialFile << "   <s name=\"" << p.first << "\">" << p.second << "</s>" << std::endl;
+      sceneFile << "   <s name=\"" << p.first << "\">" << p.second << "</s>" << std::endl;
     for (auto p : m.param_texture) 
-      materialFile << "   <t name=\"" << p.first << "\">" << p.second << "</t>" << std::endl;
-    materialFile << "  </material>" << std::endl;
+      sceneFile << "   <t name=\"" << p.first << "\">" << p.second << "</t>" << std::endl;
+    sceneFile << "  </material>" << std::endl;
     return numMaterials++;
   }
 
@@ -95,6 +104,87 @@ namespace biff {
     write(triMeshFile,(int)mesh.txt.size());
     write(triMeshFile,&mesh.txt[0],mesh.txt.size());
     return numTriMeshes++;
+  }
+
+  std::shared_ptr<Material> parseMaterial(const xml::Node &node)
+  {
+    return std::shared_ptr<Material>();
+  }
+
+  template<typename T>
+  T read(std::ifstream &in)
+  { T t; in.read((char*)&t,sizeof(T)); return t; }
+  
+  template<typename T>
+  void read(std::ifstream &in, T &t)
+  { t = read<T>(in); }
+  
+
+  template<typename T>
+  void read(std::ifstream &i, T *t, size_t N)
+  { i.read((char *)t,N*sizeof(T)); }
+
+  template<typename T>
+  void read(std::ifstream &i, std::vector<T> &vt)
+  {
+    int num = read<int>(i);
+    vt.resize(num);
+    read(i,&vt[0],num);
+  }
+
+  void readTextures(std::shared_ptr<Scene> scene, size_t numTextures)
+  {
+    for (size_t i=0;i<numTextures;i++)
+      scene->textures.push_back(std::shared_ptr<Texture>());
+  }
+
+  void readInstances(std::shared_ptr<Scene> scene, size_t numInstances)
+  {
+    std::ifstream in(scene->baseName+"/instances.bin");
+    for (size_t i=0;i<numInstances;i++) {
+      biff::Instance inst;
+      inst.geomType = (Instance::GeomType)read<int>(in);
+      inst.geomID   = read<int>(in);
+      read(in,&inst.xfm,1);
+      scene->instances.push_back(inst);
+    }
+  }
+
+  void readTriMeshes(std::shared_ptr<Scene> scene, size_t num)
+  {
+    std::ifstream in(scene->baseName+"/tri_meshes.bin");
+    for (size_t i=0;i<num;i++) {
+      std::shared_ptr<TriMesh> mesh = std::make_shared<TriMesh>();
+      read(in,mesh->materialID);
+      read(in,mesh->texture.color);
+      read(in,mesh->texture.displacement);
+      read(in,mesh->vtx);
+      read(in,mesh->nor);
+      read(in,mesh->idx);
+      read(in,mesh->txt);
+      scene->triMeshes.push_back(mesh);
+    }
+  }
+
+  std::shared_ptr<Scene> Scene::read(const std::string &fileName)
+  {
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>(fileName);
+
+    std::shared_ptr<xml::XMLDoc> doc = xml::readXML(fileName+"/scene.xml");
+    std::shared_ptr<xml::Node> xmlNode = doc->child[0];
+    std::shared_ptr<xml::Node> biffNode = xmlNode->child[0];
+    xml::for_each_child_of(*biffNode,[&](const xml::Node &child){
+        if (child.name == "material")
+          scene->materials.push_back(parseMaterial(child));
+        else if (child.name == "scene") {
+          readTextures(scene,stoll(child.getProp("numTextures")));
+          readTriMeshes(scene,stoll(child.getProp("numTriMeshes")));
+          readInstances(scene,stoll(child.getProp("numInstances")));
+        }
+        else throw std::runtime_error("unknown xml node "+child.name);
+      });
+    
+    return scene;
   }
 
 }

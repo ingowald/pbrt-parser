@@ -30,7 +30,7 @@ namespace pbrt_parser {
 
   FileName basePath = "";
 
-  biff::Writer *writer = NULL;
+  std::shared_ptr<biff::Writer> writer;
   std::shared_ptr<pbrt_parser::Parser> parser;
 
   std::map<std::shared_ptr<Shape>,biff::Instance> exportedShape;
@@ -111,6 +111,8 @@ namespace pbrt_parser {
       if (pType == "float")
         biffTex.param_float[p.first] = texture->getParam1f(p.first);
       else if (pType == "color") 
+        biffTex.param_vec3f[p.first] = texture->getParam3f(p.first);
+      else if (pType == "rgb") 
         biffTex.param_vec3f[p.first] = texture->getParam3f(p.first);
       else if (pType == "string") 
         biffTex.param_string[p.first] = texture->getParamString(p.first);
@@ -208,6 +210,8 @@ namespace pbrt_parser {
       // else if (pType == "int")
       //   biffMat.param_int[p.first] = material->getParam1i(p.first);
       else if (pType == "color") 
+        biffMat.param_vec3f[p.first] = material->getParam3f(p.first);
+      else if (pType == "rgb") 
         biffMat.param_vec3f[p.first] = material->getParam3f(p.first);
       else if (pType == "string") 
         biffMat.param_string[p.first] = material->getParamString(p.first);
@@ -328,10 +332,10 @@ namespace pbrt_parser {
                                       const affine3f &xfm)
   {
     if (shape->type == "trianglemesh") 
-      return biff::Instance(biff::Instance::TRIANGLE_MESH,
+      return biff::Instance(biff::Instance::TRI_MESH,
                             writeTriangleMesh(shape,xfm),xfm);
     if (shape->type == "plymesh") 
-      return biff::Instance(biff::Instance::TRIANGLE_MESH,
+      return biff::Instance(biff::Instance::TRI_MESH,
                             writePlyMesh(shape,xfm),xfm);
     throw std::runtime_error("can't export shape " + shape->type);
   }
@@ -347,12 +351,13 @@ namespace pbrt_parser {
       std::shared_ptr<Shape> shape = object->shapes[shapeID];
 
       if (exportedShape.find(shape) != exportedShape.end()) {
+        // std::cout << "already exported shape " << shape->toString() << std::endl;
         biff::Instance existing = exportedShape[shape];
         
         affine3f xfm = instanceXfm * rcp(existing.xfm);
         writer->push(biff::Instance(existing.geomType,existing.geomID,xfm));
       } else {
-        writer->push(firstTimeExportShape(shape,instanceXfm));
+        writer->push(exportedShape[shape] = firstTimeExportShape(shape,instanceXfm));
       }
     }
     for (int instID=0;instID<object->objectInstances.size();instID++) {
@@ -383,7 +388,7 @@ namespace pbrt_parser {
     }
     if (outFileName == "")
       throw std::runtime_error("no output file name specified");
-    writer = new biff::Writer(outFileName);
+    writer = std::make_shared<biff::Writer>(outFileName);
 
     std::cout << "-------------------------------------------------------" << std::endl;
     std::cout << "parsing:";

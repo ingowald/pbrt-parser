@@ -63,7 +63,7 @@ namespace biff {
 
   /*! these go into instances.bin */
   struct Instance {
-    typedef enum { TRIANGLE_MESH, FLAT_CURVE, ROUND_CURVE } GeomType;
+    typedef enum { TRI_MESH, FLAT_CURVE, ROUND_CURVE } GeomType;
 
     Instance() = default;
     Instance(GeomType geomType, int geomID, const affine3f &xfm)
@@ -75,19 +75,21 @@ namespace biff {
     affine3f xfm;
   };
   
-  /*! this one goes to scene.xml */
   struct Scene {
-    std::vector<size_t> triMeshOffsets;    
-    std::vector<size_t> textureOffsets;
-    std::vector<size_t> roundCurveOffsets;
-    std::vector<size_t> flatCurveOffsets;
-    std::vector<size_t> instanceOffsets;
+    Scene(const std::string &baseName) : baseName(baseName) {}
+
+    std::vector<std::shared_ptr<TriMesh>>  triMeshes;
     std::vector<std::shared_ptr<Material>> materials;
+    std::vector<std::shared_ptr<Texture>>  textures;
+    std::vector<Instance> instances;
+    std::string baseName
+;
+    static std::shared_ptr<Scene> read(const std::string &fileName);
   };
-  
+
   struct Writer {
     Writer(const std::string &outputPath);
-    ~Writer();
+    virtual ~Writer();
 
     int push(const TriMesh &mesh);
     int push(const FlatCurve &curve);
@@ -111,10 +113,9 @@ namespace biff {
     std::ofstream flatCurveFile;
     std::ofstream roundCurveFile;
     std::ofstream instanceFile;
-    std::ofstream materialFile;
     std::ofstream textureFile;
     std::ofstream texDataFile;
-    // std::ofstream sceneFile;
+    std::ofstream sceneFile;
   };
 
 }
