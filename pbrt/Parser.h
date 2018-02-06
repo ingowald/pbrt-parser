@@ -53,7 +53,11 @@ namespace pbrt_parser {
 
     /*! return the scene we have parsed */
     std::shared_ptr<Scene> getScene() { return scene; }
-      
+    std::shared_ptr<Texture> getTexture(const std::string &name) { 
+      if (namedTexture.find(name) == namedTexture.end())
+        throw std::runtime_error("no texture named '"+name+"'");
+      return namedTexture[name]; 
+    }
   private:
     //! stack of parent files' token streams
     std::stack<std::shared_ptr<Lexer> > tokenizerStack;

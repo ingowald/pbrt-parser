@@ -88,7 +88,7 @@ namespace pbrt_parser {
     std::string type;
   };
 
-  struct PBRT_PARSER_INTERFACE Texture {
+  struct PBRT_PARSER_INTERFACE Texture : public Parameterized {
     std::string name;
     std::string texelType;
     std::string mapType;
@@ -98,7 +98,7 @@ namespace pbrt_parser {
             const std::string &mapType) 
       : name(name), texelType(texelType), mapType(mapType)
     {};
-    std::map<std::string,std::shared_ptr<Param> > param;
+    // std::map<std::string,std::shared_ptr<Param> > param;
   };
 
   struct PBRT_PARSER_INTERFACE Node : public Parameterized {
