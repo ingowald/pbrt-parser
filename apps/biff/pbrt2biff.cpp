@@ -438,7 +438,13 @@ namespace pbrt_parser {
         writer->push(biff::Instance(existing.geomType,existing.geomID,xfm));
 #endif
       } else {
-        writer->push(exportedShape[shape] = firstTimeExportShape(shape,instanceXfm));
+        biff::Instance exported = exportedShape[shape] = firstTimeExportShape(shape,instanceXfm);
+#if SIMPLE_INSTANCING
+#else
+        // now reset xfm, because that's already in the exported shape!
+        exported.xfm = AffineSpace3f(ospcommon::one);
+#endif
+        writer->push(exported);
       }
     }
     for (int instID=0;instID<object->objectInstances.size();instID++) {
