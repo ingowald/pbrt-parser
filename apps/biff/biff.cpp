@@ -30,6 +30,8 @@ namespace biff {
   {
     sceneFile << "  <scene" << std::endl
               << "   numTriMeshes=\"" << numTriMeshes << "\"" << std::endl
+              << "   numFlatCurves=\"" << numFlatCurves << "\"" << std::endl
+              << "   numRoundCurves=\"" << numRoundCurves << "\"" << std::endl
               << "   numTextures=\"" << numTextures << "\"" << std::endl
               << "   numInstances=\"" << numInstances << "\"" << std::endl
               << "   />" << std::endl;
@@ -106,6 +108,28 @@ namespace biff {
     return numTriMeshes++;
   }
 
+  int Writer::push(const FlatCurve &curve)
+  {
+    write(flatCurveFile,(int)curve.materialID);
+    write(flatCurveFile,(int)curve.degree);
+    write(flatCurveFile,(int)curve.vtx.size());
+    write(flatCurveFile,&curve.vtx[0],curve.vtx.size());
+    write(flatCurveFile,(float)curve.rad0);
+    write(flatCurveFile,(float)curve.rad1);
+    return numFlatCurves++;
+  }
+
+  int Writer::push(const RoundCurve &curve)
+  {
+    write(roundCurveFile,(int)curve.materialID);
+    write(roundCurveFile,(int)curve.degree);
+    write(roundCurveFile,(int)curve.vtx.size());
+    write(roundCurveFile,&curve.vtx[0],curve.vtx.size());
+    write(roundCurveFile,(float)curve.rad0);
+    write(roundCurveFile,(float)curve.rad1);
+    return numRoundCurves++;
+  }
+
   std::shared_ptr<Material> parseMaterial(const xml::Node &node)
   {
     return std::shared_ptr<Material>();
@@ -166,6 +190,34 @@ namespace biff {
     }
   }
 
+  void readRoundCurves(std::shared_ptr<Scene> scene, size_t num)
+  {
+    std::ifstream in(scene->baseName+"/round_curves.bin");
+    for (size_t i=0;i<num;i++) {
+      std::shared_ptr<RoundCurve> curve = std::make_shared<RoundCurve>();
+      read(in,curve->materialID);
+      read(in,curve->degree);
+      read(in,curve->vtx);
+      read(in,curve->rad0);
+      read(in,curve->rad1);
+      scene->roundCurves.push_back(curve);
+    }
+  }
+
+  void readFlatCurves(std::shared_ptr<Scene> scene, size_t num)
+  {
+    std::ifstream in(scene->baseName+"/flat_curves.bin");
+    for (size_t i=0;i<num;i++) {
+      std::shared_ptr<FlatCurve> curve = std::make_shared<FlatCurve>();
+      read(in,curve->materialID);
+      read(in,curve->degree);
+      read(in,curve->vtx);
+      read(in,curve->rad0);
+      read(in,curve->rad1);
+      scene->flatCurves.push_back(curve);
+    }
+  }
+
   std::shared_ptr<Scene> Scene::read(const std::string &fileName)
   {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(fileName);
@@ -179,6 +231,8 @@ namespace biff {
         else if (child.name == "scene") {
           readTextures(scene,stoll(child.getProp("numTextures")));
           readTriMeshes(scene,stoll(child.getProp("numTriMeshes")));
+          readFlatCurves(scene,stoll(child.getProp("numFlatCurves")));
+          readRoundCurves(scene,stoll(child.getProp("numRoundCurves")));
           readInstances(scene,stoll(child.getProp("numInstances")));
         }
         else throw std::runtime_error("unknown xml node "+child.name);

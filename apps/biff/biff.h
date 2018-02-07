@@ -46,19 +46,20 @@ namespace biff {
     std::vector<vec2f> txt;
   };
 
-  struct FlatCurve {
+  struct Curve {
+    typedef enum { BSPLINE } BasisType;
+    int materialID;
+    int basis;
+    int degree;
     std::vector<vec3f> vtx;
     float rad0;
     float rad1;
   };
 
-  struct RoundCurve {
-    void serialize(FILE *file);
-    void deserialize(FILE *file);
+  struct FlatCurve : public Curve {
+  };
 
-    std::vector<vec3f> vtx;
-    float rad0;
-    float rad1;
+  struct RoundCurve : public Curve {
   };
 
   /*! these go into instances.bin */
@@ -78,9 +79,11 @@ namespace biff {
   struct Scene {
     Scene(const std::string &baseName) : baseName(baseName) {}
 
-    std::vector<std::shared_ptr<TriMesh>>  triMeshes;
-    std::vector<std::shared_ptr<Material>> materials;
-    std::vector<std::shared_ptr<Texture>>  textures;
+    std::vector<std::shared_ptr<TriMesh>>    triMeshes;
+    std::vector<std::shared_ptr<Material>>   materials;
+    std::vector<std::shared_ptr<Texture>>    textures;
+    std::vector<std::shared_ptr<FlatCurve>>  flatCurves;
+    std::vector<std::shared_ptr<RoundCurve>> roundCurves;
     std::vector<Instance> instances;
     std::string baseName
 ;
@@ -93,14 +96,17 @@ namespace biff {
 
     int push(const TriMesh &mesh);
     int push(const FlatCurve &curve);
+    int push(const RoundCurve &curve);
     int push(const Instance &instance);
     int push(const Material &material);
     int push(const Texture &texture);
 
-    int numTriMeshes { 0 };
-    int numInstances { 0 };
-    int numMaterials { 0 };
-    int numTextures  { 0 };
+    int numTriMeshes    { 0 };
+    int numInstances    { 0 };
+    int numMaterials    { 0 };
+    int numTextures     { 0 };
+    int numRoundCurves  { 0 };
+    int numFlatCurves   { 0 };
   private:
     template<typename T>
     void write(std::ofstream &o, const T &t)

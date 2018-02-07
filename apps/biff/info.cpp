@@ -54,8 +54,26 @@ namespace biff {
     size_t numUniqueTriangles = 0;
     size_t numInstancedTriangles = 0;
 
+    size_t numUniqueFlatCurves = 0;
+    size_t numUniqueFlatCurveSegments = 0;
+    size_t numInstancedFlatCurves = 0;
+    size_t numInstancedFlatCurveSegments = 0;
+
+    size_t numUniqueRoundCurves = 0;
+    size_t numUniqueRoundCurveSegments = 0;
+    size_t numInstancedRoundCurves = 0;
+    size_t numInstancedRoundCurveSegments = 0;
+
     for (auto mesh : scene->triMeshes) {
       numUniqueTriangles += mesh->vtx.size();
+    }
+    for (auto curve : scene->flatCurves) {
+      numUniqueFlatCurves ++;
+      numUniqueFlatCurveSegments += (curve->vtx.size()-1);
+    }
+    for (auto curve : scene->roundCurves) {
+      numUniqueRoundCurves ++;
+      numUniqueRoundCurveSegments += (curve->vtx.size()-1);
     }
 
     for (auto inst : scene->instances) {
@@ -64,13 +82,32 @@ namespace biff {
       case Instance::TRI_MESH:
         numInstancedTriangles += scene->triMeshes[inst.geomID]->vtx.size();
         break;
+      case Instance::FLAT_CURVE:
+        numInstancedFlatCurves ++;
+        numInstancedFlatCurveSegments += (scene->flatCurves[inst.geomID]->vtx.size()-1);
+        break;
+      case Instance::ROUND_CURVE:
+        numInstancedRoundCurves ++;
+        numInstancedRoundCurveSegments += (scene->roundCurves[inst.geomID]->vtx.size()-1);
+        break;
       default:
         throw std::runtime_error("un-handled instance type "+std::to_string((int)inst.geomType));
       }
     }
 
     std::cout << " num instances          : " << prettyNumber(numInstances) << std::endl;
-    std::cout << " num *unique* triangles : " << prettyNumber(numUniqueTriangles) << std::endl;
-    std::cout << " num *instanced* tris   : " << prettyNumber(numInstancedTriangles) << std::endl;
+    std::cout << " *** triangles *** " << std::endl;
+    std::cout << " - num unique      : " << prettyNumber(numUniqueTriangles) << std::endl;
+    std::cout << " - num instanced   : " << prettyNumber(numInstancedTriangles) << std::endl;
+    std::cout << " *** flat curves *** " << std::endl;
+    std::cout << " - unique curves        : " << prettyNumber(numUniqueFlatCurves) << std::endl;
+    std::cout << " - unique segments      : " << prettyNumber(numUniqueFlatCurveSegments) << std::endl;
+    std::cout << " - instanced curves     : " << prettyNumber(numInstancedFlatCurves) << std::endl;
+    std::cout << " - instanced segments   : " << prettyNumber(numInstancedFlatCurveSegments) << std::endl;
+    std::cout << " *** round curves *** " << std::endl;
+    std::cout << " - unique curves        : " << prettyNumber(numUniqueRoundCurves) << std::endl;
+    std::cout << " - unique segments      : " << prettyNumber(numUniqueRoundCurveSegments) << std::endl;
+    std::cout << " - instanced curves     : " << prettyNumber(numInstancedRoundCurves) << std::endl;
+    std::cout << " - instanced segments   : " << prettyNumber(numInstancedRoundCurveSegments) << std::endl;
   }
 }

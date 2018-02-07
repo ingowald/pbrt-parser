@@ -53,6 +53,7 @@ namespace pbrt_parser {
 
     vec3f getParam3f(const std::string &name, const vec3f &fallBack=vec3f(0)) const;
     float getParam1f(const std::string &name, const float fallBack=0) const;
+    int getParam1i(const std::string &name, const int fallBack=0) const;
     bool getParamBool(const std::string &name, const bool fallBack=false) const;
     std::string getParamString(const std::string &name) const;
 

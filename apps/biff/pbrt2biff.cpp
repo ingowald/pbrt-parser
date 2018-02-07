@@ -25,6 +25,8 @@
 
 namespace pbrt_parser {
 
+  //#define SIMPLE_INSTANCING 1
+
   using std::cout;
   using std::endl;
 
@@ -114,6 +116,8 @@ namespace pbrt_parser {
         biffTex.param_vec3f[p.first] = texture->getParam3f(p.first);
       else if (pType == "rgb") 
         biffTex.param_vec3f[p.first] = texture->getParam3f(p.first);
+      else if (pType == "bool") 
+        biffTex.param_int[p.first] = texture->getParamBool(p.first);
       else if (pType == "string") 
         biffTex.param_string[p.first] = texture->getParamString(p.first);
       else if (pType == "texture") 
@@ -213,6 +217,8 @@ namespace pbrt_parser {
         biffMat.param_vec3f[p.first] = material->getParam3f(p.first);
       else if (pType == "rgb") 
         biffMat.param_vec3f[p.first] = material->getParam3f(p.first);
+      else if (pType == "bool") 
+        biffMat.param_int[p.first] = material->getParamBool(p.first);
       else if (pType == "string") 
         biffMat.param_string[p.first] = material->getParamString(p.first);
       else if (pType == "texture") 
@@ -225,7 +231,7 @@ namespace pbrt_parser {
 #endif
   }
 
-  int writeTriangleMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
+  biff::Instance writeTriangleMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
   {
     std::shared_ptr<Material> mat = shape->material;
     // cout << "writing shape " << shape->toString() << " w/ material " << (mat?mat->toString():"<null>") << endl;
@@ -241,7 +247,11 @@ namespace pbrt_parser {
     
     biffMesh.materialID = exportMaterial(shape->material,texture_color,texture_bumpMap);
 
+#if SIMPLE_INSTANCING
+    const affine3f xfm = shape->transform;
+#else
     const affine3f xfm = instanceXfm*shape->transform;
+#endif
 
     { // parse "point P"
       std::shared_ptr<ParamT<float> > param_P = shape->findParam<float>("P");
@@ -268,7 +278,74 @@ namespace pbrt_parser {
         }
       }
     }        
-    return writer->push(biffMesh);
+    return biff::Instance(biff::Instance::TRI_MESH,writer->push(biffMesh),
+#if SIMPLE_INSTANCING
+                          instanceXfm
+#else
+                          xfm
+#endif
+                          );
+  }
+
+
+  biff::Instance writeCurve(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
+  {
+    std::shared_ptr<Material> mat = shape->material;
+    biff::Curve bc;
+    
+    // std::string texture_color   = "";//shape->getParamString("color");
+    // std::string texture_bumpMap = shape->getParamString("bumpMap");
+    // if (texture_bumpMap != "")
+    //   bc.texture.color = exportTexture(texture_bumpMap);
+    // if (texture_color != "")
+    //   bc.texture.displacement = exportTexture(texture_color);
+    
+    bc.materialID = exportMaterial(shape->material,"","");//texture_color,texture_bumpMap);
+
+    const affine3f xfm = instanceXfm*shape->transform;
+
+    { // parse "point P"
+      std::shared_ptr<ParamT<float> > param_P = shape->findParam<float>("P");
+      if (param_P) {
+        const size_t numPoints = param_P->paramVec.size() / 3;
+        for (int i=0;i<numPoints;i++) {
+          vec3f v(param_P->paramVec[3*i+0],
+                  param_P->paramVec[3*i+1],
+                  param_P->paramVec[3*i+2]);
+          bc.vtx.push_back(xfmPoint(xfm,v));
+        }
+      }
+    }
+
+    std::string basis = shape->getParamString("basis");
+    if (basis == "bspline")
+      bc.basis = biff::Curve::BSPLINE;
+    else 
+      throw std::runtime_error("un-supported curve basis "+basis);
+    
+    bc.degree = shape->getParam1i("degree");
+
+    std::string type = shape->getParamString("type");
+    if (type == "flat")
+      return biff::Instance(biff::Instance::FLAT_CURVE,
+                            writer->push((const biff::FlatCurve&)bc),
+#if SIMPLE_INSTANCING
+                          instanceXfm
+#else
+                          xfm
+#endif
+                            );
+    else if (type == "cylinder")
+      return biff::Instance(biff::Instance::ROUND_CURVE,
+                            writer->push((const biff::RoundCurve&)bc),
+#if SIMPLE_INSTANCING
+                          instanceXfm
+#else
+                          xfm
+#endif
+);
+    else 
+      throw std::runtime_error("unknown curve type "+type);
   }
 
   void parsePLY(const std::string &fileName,
@@ -276,7 +353,7 @@ namespace pbrt_parser {
                 std::vector<vec3f> &n,
                 std::vector<vec3i> &idx);
 
-  int writePlyMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
+  biff::Instance writePlyMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
   {
     std::shared_ptr<Material> mat = shape->material;
     // cout << "writing shape " << shape->toString() << " w/ material " << (mat?mat->toString():"<null>") << endl;
@@ -324,7 +401,8 @@ namespace pbrt_parser {
         }
       }
     }        
-    return writer->push(biffMesh);
+    // return writer->push(biffMesh);
+    return biff::Instance(biff::Instance::TRI_MESH,writer->push(biffMesh),xfm);
   }
 
 
@@ -332,11 +410,11 @@ namespace pbrt_parser {
                                       const affine3f &xfm)
   {
     if (shape->type == "trianglemesh") 
-      return biff::Instance(biff::Instance::TRI_MESH,
-                            writeTriangleMesh(shape,xfm),xfm);
+      return writeTriangleMesh(shape,xfm);
     if (shape->type == "plymesh") 
-      return biff::Instance(biff::Instance::TRI_MESH,
-                            writePlyMesh(shape,xfm),xfm);
+      return writePlyMesh(shape,xfm);
+    if (shape->type == "curve") 
+      return writeCurve(shape,xfm);
     throw std::runtime_error("can't export shape " + shape->type);
   }
 
@@ -353,9 +431,12 @@ namespace pbrt_parser {
       if (exportedShape.find(shape) != exportedShape.end()) {
         // std::cout << "already exported shape " << shape->toString() << std::endl;
         biff::Instance existing = exportedShape[shape];
-        
+#if SIMPLE_INSTANCING
+        writer->push(biff::Instance(existing.geomType,existing.geomID,instanceXfm));
+#else
         affine3f xfm = instanceXfm * rcp(existing.xfm);
         writer->push(biff::Instance(existing.geomType,existing.geomID,xfm));
+#endif
       } else {
         writer->push(exportedShape[shape] = firstTimeExportShape(shape,instanceXfm));
       }

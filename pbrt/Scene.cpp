@@ -140,6 +140,20 @@ namespace pbrt_parser {
     return p->paramVec[0];
   }
 
+  int Parameterized::getParam1i(const std::string &name, const int fallBack) const
+  {
+    std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+    if (it == param.end())
+      return fallBack;
+    std::shared_ptr<Param> pr = it->second;
+    const std::shared_ptr<ParamT<int>> p = std::dynamic_pointer_cast<ParamT<int>>(pr);
+    if (!p)
+      throw std::runtime_error("found param of given name, but of wrong type!");
+    if (p->getSize() != 1)
+      throw std::runtime_error("found param of given name and type, but wrong number of components!");
+    return p->paramVec[0];
+  }
+
   std::string Parameterized::getParamString(const std::string &name) const
   {
     std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
