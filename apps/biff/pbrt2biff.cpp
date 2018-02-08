@@ -99,7 +99,6 @@ namespace pbrt_parser {
 
   int exportTexture(std::shared_ptr<Texture> texture)
   {
-    PING; 
     if (exportedTexture.find(texture) != exportedTexture.end())
       return exportedTexture[texture];
     
