@@ -99,6 +99,7 @@ namespace pbrt_parser {
 
   int exportTexture(std::shared_ptr<Texture> texture)
   {
+    PING; 
     if (exportedTexture.find(texture) != exportedTexture.end())
       return exportedTexture[texture];
     
@@ -106,7 +107,6 @@ namespace pbrt_parser {
     biffTex.name = texture->name;
     biffTex.texelType = texture->texelType;
     biffTex.mapType = texture->mapType;
-
 
     for (auto p : texture->param) {
       const std::string pType = p.second->getType();
@@ -143,6 +143,7 @@ namespace pbrt_parser {
       }
     }
     int thisID = exportedTexture[texture] = writer->push(biffTex);
+    PRINT(thisID);
     return thisID;
   }
 
@@ -241,9 +242,9 @@ namespace pbrt_parser {
     std::string texture_color   = shape->getParamString("color");
     std::string texture_bumpMap = shape->getParamString("bumpMap");
     if (texture_bumpMap != "")
-      biffMesh.texture.color = exportTexture(texture_bumpMap);
+      biffMesh.texture.displacement = exportTexture(texture_bumpMap);
     if (texture_color != "")
-      biffMesh.texture.displacement = exportTexture(texture_color);
+      biffMesh.texture.color = exportTexture(texture_color);
     
     biffMesh.materialID = exportMaterial(shape->material,texture_color,texture_bumpMap);
 

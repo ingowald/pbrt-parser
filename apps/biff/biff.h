@@ -129,6 +129,9 @@ namespace biff {
     /*! return material with given material ID, if valid, or NULL
         otherwise */
     std::shared_ptr<Material> getMaterial(int matID) const;
+    /*! return texture with given texture ID, if valid, or NULL
+        otherwise */
+    std::shared_ptr<Texture> getTexture(int matID) const;
 
     std::vector<std::shared_ptr<TriMesh>>    triMeshes;
     std::vector<std::shared_ptr<Material>>   materials;

@@ -333,4 +333,12 @@ namespace biff {
     return materials[matID];
   }
 
+  /*! return texture with given texture ID, if valid, or NULL
+    otherwise */
+  std::shared_ptr<Texture> Scene::getTexture(int matID) const
+  {
+    if (matID < 0) return std::shared_ptr<Texture> ();
+    return textures[matID];
+  }
+
 }
