@@ -145,11 +145,13 @@ namespace biff {
 
   void readTextures(std::shared_ptr<Scene> scene, size_t numTextures)
   {
-    assert(numTextures == scene->texture.size());
+    assert(numTextures == scene->textures.size());
     if (skip_texture_data)
       std::cout << "#biff: requested to skip reading binary texture data, so skipping this ..." << std::endl;
     std::ifstream in(scene->baseName+"/tex_data.bin");
     for (auto tex : scene->textures) {
+      if (!tex) continue;
+
       if (tex->rawDataSize == 0) 
         continue;
       tex->rawData.resize(tex->rawDataSize);
