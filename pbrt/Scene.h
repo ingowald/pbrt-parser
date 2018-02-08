@@ -51,8 +51,9 @@ namespace pbrt_parser {
   /*! any class that can store (and query) parameters */
   struct PBRT_PARSER_INTERFACE Parameterized {
 
-    vec3f getParam3f(const std::string &name, const vec3f &fallBack) const;
+    vec3f getParam3f(const std::string &name, const vec3f &fallBack=vec3f(0)) const;
     float getParam1f(const std::string &name, const float fallBack=0) const;
+    int getParam1i(const std::string &name, const int fallBack=0) const;
     bool getParamBool(const std::string &name, const bool fallBack=false) const;
     std::string getParamString(const std::string &name) const;
 
@@ -88,7 +89,7 @@ namespace pbrt_parser {
     std::string type;
   };
 
-  struct PBRT_PARSER_INTERFACE Texture {
+  struct PBRT_PARSER_INTERFACE Texture : public Parameterized {
     std::string name;
     std::string texelType;
     std::string mapType;
@@ -98,7 +99,7 @@ namespace pbrt_parser {
             const std::string &mapType) 
       : name(name), texelType(texelType), mapType(mapType)
     {};
-    std::map<std::string,std::shared_ptr<Param> > param;
+    // std::map<std::string,std::shared_ptr<Param> > param;
   };
 
   struct PBRT_PARSER_INTERFACE Node : public Parameterized {

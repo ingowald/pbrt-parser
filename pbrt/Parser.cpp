@@ -331,6 +331,11 @@ namespace pbrt_parser {
           std::string name = tokens->next()->text;
           std::string texelType = tokens->next()->text;
           std::string mapType = tokens->next()->text;
+          // if (mapType == "imagemap") {
+          //   /* ok, everythng else are params */
+          // } else if (mapType == "scale") {
+          //   // scale texture: two more parameters
+          // }
           std::shared_ptr<Texture> texture
             = std::make_shared<Texture>(name,texelType,mapType);
           namedTexture[name] = texture;
