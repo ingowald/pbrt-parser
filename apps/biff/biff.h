@@ -126,6 +126,10 @@ namespace biff {
   struct Scene {
     Scene(const std::string &baseName) : baseName(baseName) {}
 
+    /*! return material with given material ID, if valid, or NULL
+        otherwise */
+    std::shared_ptr<Material> getMaterial(int matID) const;
+
     std::vector<std::shared_ptr<TriMesh>>    triMeshes;
     std::vector<std::shared_ptr<Material>>   materials;
     std::vector<std::shared_ptr<Texture>>    textures;

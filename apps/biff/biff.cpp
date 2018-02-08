@@ -325,4 +325,12 @@ namespace biff {
     return scene;
   }
 
+  /*! return material with given material ID, if valid, or NULL
+    otherwise */
+  std::shared_ptr<Material> Scene::getMaterial(int matID) const
+  {
+    if (matID < 0) return std::shared_ptr<Material> ();
+    return materials[matID];
+  }
+
 }
