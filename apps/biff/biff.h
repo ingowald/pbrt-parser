@@ -1,4 +1,18 @@
-/* mit license here ... */
+// ======================================================================== //
+// Copyright 2015-2018 Ingo Wald                                            //
+//                                                                          //
+// Licensed under the Apache License, Version 2.0 (the "License");          //
+// you may not use this file except in compliance with the License.         //
+// You may obtain a copy of the License at                                  //
+//                                                                          //
+//     http://www.apache.org/licenses/LICENSE-2.0                           //
+//                                                                          //
+// Unless required by applicable law or agreed to in writing, software      //
+// distributed under the License is distributed on an "AS IS" BASIS,        //
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. //
+// See the License for the specific language governing permissions and      //
+// limitations under the License.                                           //
+// ======================================================================== //
 
 // ospcommon
 #include "ospcommon/vec.h"
@@ -11,11 +25,29 @@
 namespace biff {
   using namespace ospcommon;
 
+  /*! if set, we will, for each texture, create the texture class
+      itself, but will *not* read the actual texture binary data; this
+      means there's still the 'fileName' parameter to the texture
+      class itself, but the Texture::rawData will be left in the
+      file */
+  extern bool skip_texture_data;
+
   struct Params {
+    /*! convert the list of parameters to an XML string that can be
+      inserted into an XML node */
+    std::string toXML() const;
+
+    /*! name:value mapping of all parameters that have 'string' type */
     std::map<std::string,std::string> param_string;
+    /*! name:value mapping of all parameters that have 'int' type */
     std::map<std::string,int>         param_int;
+    /*! name:value mapping of all parameters that have 'float' type */
     std::map<std::string,float>       param_float;
+    /*! name:value mapping of all parameters that have 'vec3f' type */
     std::map<std::string,vec3f>       param_vec3f;
+    /*! name:value mapping of all parameters that have 'texture' type
+        (the resulting value is a texture ID that poitns into the
+        Scene::textures array */
     std::map<std::string,int>         param_texture;
   };
 
@@ -28,7 +60,21 @@ namespace biff {
     std::string name;
     std::string texelType;
     std::string mapType;
-
+    /*! the offset of that particular texture's pixel data in the
+        binary file - will always be set by the reader, even if
+        'biff::skip_texture_data' is set durign Scene::read */
+    size_t rawDataOffset;
+    /*! the size of that particular texture's pixel data in the binary
+        file - will always be set by the reader, even if
+        'biff::skip_texture_data' is set durign Scene::read. If that
+        size is 0, the texture didn't _have_ binary data, as, for
+        example, in the case of a scale texture */
+    size_t rawDataSize;
+    /*! binary data associated with this texture (could be in EXR or
+        PTEX format, depending on what the input data that this was
+        converted from has been using. If biff::skip_texture_data is
+        set to true, the reader will _not_ read this data even if it
+        is present in the file! */
     std::vector<uint8_t> rawData;
   };
 
@@ -75,7 +121,8 @@ namespace biff {
     int geomID; /*! id _inside_ the respective geometry */
     affine3f xfm;
   };
-  
+
+  /*! a scene as it is read in by Scene::read() */
   struct Scene {
     Scene(const std::string &baseName) : baseName(baseName) {}
 
@@ -85,8 +132,8 @@ namespace biff {
     std::vector<std::shared_ptr<FlatCurve>>  flatCurves;
     std::vector<std::shared_ptr<RoundCurve>> roundCurves;
     std::vector<Instance> instances;
-    std::string baseName
-;
+    std::string baseName;
+
     static std::shared_ptr<Scene> read(const std::string &fileName);
   };
 
@@ -119,7 +166,7 @@ namespace biff {
     std::ofstream flatCurveFile;
     std::ofstream roundCurveFile;
     std::ofstream instanceFile;
-    std::ofstream textureFile;
+    // std::ofstream textureFile;
     std::ofstream texDataFile;
     std::ofstream sceneFile;
   };

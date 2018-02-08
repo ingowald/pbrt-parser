@@ -1,4 +1,18 @@
-/* mit license here ... */
+// ======================================================================== //
+// Copyright 2015-2018 Ingo Wald                                            //
+//                                                                          //
+// Licensed under the Apache License, Version 2.0 (the "License");          //
+// you may not use this file except in compliance with the License.         //
+// You may obtain a copy of the License at                                  //
+//                                                                          //
+//     http://www.apache.org/licenses/LICENSE-2.0                           //
+//                                                                          //
+// Unless required by applicable law or agreed to in writing, software      //
+// distributed under the License is distributed on an "AS IS" BASIS,        //
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. //
+// See the License for the specific language governing permissions and      //
+// limitations under the License.                                           //
+// ======================================================================== //
 
 #include "biff.h"
 // for mkdir
@@ -6,16 +20,72 @@
 #include <sys/types.h>
 // XML
 #include "XML.h"
+// std
+#include <sstream>
 
 namespace biff {
   using namespace ospray;
+
+  bool skip_texture_data = false;
+
+  /*! convert the list of parameters to an XML string that can be
+      inserted into an XML node */
+  std::string Params::toXML() const
+  {
+    std::stringstream ss;
+    for (auto p : this->param_int) 
+      ss << "   <i name=\"" << p.first << "\">" << p.second << "</i>" << std::endl;
+    for (auto p : this->param_float) 
+      ss << "   <f name=\"" << p.first << "\">" << p.second << "</f>" << std::endl;
+    for (auto p : this->param_vec3f) 
+      ss << "   <f3 name=\"" << p.first << "\">" << p.second.x << " " << p.second.y << " " << p.second.z << "</f3>" << std::endl;
+    for (auto p : this->param_string) 
+      ss << "   <s name=\"" << p.first << "\">" << p.second << "</s>" << std::endl;
+    for (auto p : this->param_texture) 
+      ss << "   <t name=\"" << p.first << "\">" << p.second << "</t>" << std::endl;
+    return ss.str();
+  }
+
+  vec3f stovec3f(const std::string &s)
+  {
+    vec3f v;
+    int numRead = sscanf(s.c_str(),"%f %f %f",&v.x,&v.y,&v.z);
+    if (numRead != 3)
+      throw std::runtime_error("could not parse vec3f from string");
+    return v;
+  }
+
+  /*! given an XML node, set these parameters from the node's children */
+  void parseParamsFromXML(Params &p, const ospray::xml::Node &node)
+  {
+    xml::for_each_child_of(node,[&](const xml::Node &child){
+        const std::string  type  = child.name;
+        const std::string  name  = child.getProp("name");
+        const std::string &value = child.content;
+        if (type == "i") 
+          p.param_int[name] = std::stoll(value);
+        else if (type == "t")
+          p.param_texture[name] = std::stoll(value);
+        else if (type == "f")
+          p.param_float[name] = atof(value.c_str());
+        else if (type == "f3")
+          p.param_vec3f[name] = stovec3f(value);
+        else if (type == "s")
+          p.param_string[name] = value;
+        else 
+          throw std::runtime_error("un-regocnized parameter type "+type);
+          
+      });
+  }
+
+
 
   Writer::Writer(const std::string &outputPath)
   {
     mkdir(outputPath.c_str(),S_IRWXU);
     triMeshFile.open(outputPath+"/tri_meshes.bin");
     instanceFile.open(outputPath+"/instances.bin");
-    textureFile.open(outputPath+"/textures.xml");
+    // textureFile.open(outputPath+"/textures.xml");
     texDataFile.open(outputPath+"/tex_data.bin");
     flatCurveFile.open(outputPath+"/flat_curves.bin");
     roundCurveFile.open(outputPath+"/round_curves.bin");
@@ -23,7 +93,6 @@ namespace biff {
 
     sceneFile << "<xml version=\"1.0\">" << std::endl;;
     sceneFile << " <biff version=\"0.1\">" << std::endl;
-    // sceneFile.open(outputPath+"/scene.xml");
   }
 
   Writer::~Writer()
@@ -43,18 +112,17 @@ namespace biff {
   int Writer::push(const Material &m)
   {
     sceneFile << "  <material type=\"" << m.type << "\">" << std::endl;
-    for (auto p : m.param_int) 
-      sceneFile << "   <i name=\"" << p.first << "\">" << p.second << "</i>" << std::endl;
-    for (auto p : m.param_float) 
-      sceneFile << "   <f name=\"" << p.first << "\">" << p.second << "</f>" << std::endl;
-    for (auto p : m.param_vec3f) 
-      sceneFile << "   <f3 name=\"" << p.first << "\">" << p.second.x << " " << p.second.y << " " << p.second.z << "</f3>" << std::endl;
-    for (auto p : m.param_string) 
-      sceneFile << "   <s name=\"" << p.first << "\">" << p.second << "</s>" << std::endl;
-    for (auto p : m.param_texture) 
-      sceneFile << "   <t name=\"" << p.first << "\">" << p.second << "</t>" << std::endl;
+    sceneFile << m.toXML();
     sceneFile << "  </material>" << std::endl;
     return numMaterials++;
+  }
+
+  std::shared_ptr<Material> parseMaterial(const xml::Node &node)
+  {
+    std::shared_ptr<Material> mat = std::make_shared<Material>();
+    mat->type = node.getProp("type");
+    parseParamsFromXML(*mat,node);
+    return mat;
   }
 
   int Writer::push(const Texture &m)
@@ -63,26 +131,49 @@ namespace biff {
     size_t ofs  = texDataFile.tellp();
     texDataFile.write((char*)&m.rawData[0],size);
     
-    textureFile << "  <texture "
+    sceneFile << "  <texture "
                 << "name=\"" << m.name << "\" "
                 << "texelType=\"" << m.texelType << "\" "
                 << "mapType=\"" << m.mapType << "\" "
                 << "ofs=\"" << ofs << "\" "
                 << "size=\"" << size << "\" >" 
                 << std::endl;
-    for (auto p : m.param_int) 
-      textureFile << "   <i name=\"" << p.first << "\">" << p.second << "</i>" << std::endl;
-    for (auto p : m.param_float) 
-      textureFile << "   <f name=\"" << p.first << "\">" << p.second << "</f>" << std::endl;
-    for (auto p : m.param_vec3f) 
-      textureFile << "   <f3 name=\"" << p.first << "\">" << p.second.x << " " << p.second.y << " " << p.second.z << "</f3>" << std::endl;
-    for (auto p : m.param_string) 
-      textureFile << "   <s name=\"" << p.first << "\">" << p.second << "</s>" << std::endl;
-    for (auto p : m.param_texture) 
-      textureFile << "   <t name=\"" << p.first << "\">" << p.second << "</t>" << std::endl;
-    textureFile << "  </texture>" << std::endl;
+    sceneFile << m.toXML();
+    sceneFile << "  </texture>" << std::endl;
     return numTextures++;
   }
+
+  void readTextures(std::shared_ptr<Scene> scene, size_t numTextures)
+  {
+    assert(numTextures == scene->texture.size());
+    if (skip_texture_data)
+      std::cout << "#biff: requested to skip reading binary texture data, so skipping this ..." << std::endl;
+    std::ifstream in(scene->baseName+"/tex_data.bin");
+    for (auto tex : scene->textures) {
+      if (tex->rawDataSize == 0) 
+        continue;
+      tex->rawData.resize(tex->rawDataSize);
+      in.read((char*)&tex->rawData[0],tex->rawDataSize);
+    }
+  }
+
+  std::shared_ptr<Texture> parseTexture(const xml::Node &node)
+  {
+    std::shared_ptr<Texture> tex = std::make_shared<Texture>();
+    tex->name = node.getProp("name");
+    tex->texelType = node.getProp("texelType");
+    tex->mapType = node.getProp("mapType");
+    tex->rawDataOffset = std::stoll(node.getProp("ofs"));
+    tex->rawDataSize = std::stoll(node.getProp("size"));
+    parseParamsFromXML(*tex,node);
+    return tex;
+  }
+
+
+
+
+
+
 
   int Writer::push(const Instance &inst)
   {
@@ -130,10 +221,6 @@ namespace biff {
     return numRoundCurves++;
   }
 
-  std::shared_ptr<Material> parseMaterial(const xml::Node &node)
-  {
-    return std::shared_ptr<Material>();
-  }
 
   template<typename T>
   T read(std::ifstream &in)
@@ -155,13 +242,7 @@ namespace biff {
     vt.resize(num);
     read(i,&vt[0],num);
   }
-
-  void readTextures(std::shared_ptr<Scene> scene, size_t numTextures)
-  {
-    for (size_t i=0;i<numTextures;i++)
-      scene->textures.push_back(std::shared_ptr<Texture>());
-  }
-
+ 
   void readInstances(std::shared_ptr<Scene> scene, size_t numInstances)
   {
     std::ifstream in(scene->baseName+"/instances.bin");
@@ -218,6 +299,7 @@ namespace biff {
     }
   }
 
+
   std::shared_ptr<Scene> Scene::read(const std::string &fileName)
   {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(fileName);
@@ -228,6 +310,8 @@ namespace biff {
     xml::for_each_child_of(*biffNode,[&](const xml::Node &child){
         if (child.name == "material")
           scene->materials.push_back(parseMaterial(child));
+        else if (child.name == "texture")
+          scene->textures.push_back(parseTexture(child));
         else if (child.name == "scene") {
           readTextures(scene,stoll(child.getProp("numTextures")));
           readTriMeshes(scene,stoll(child.getProp("numTriMeshes")));

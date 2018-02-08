@@ -1,18 +1,23 @@
-ADD_EXECUTABLE(pbrt2biff 
+ADD_LIBRARY(biff SHARED
   biff.cpp
-  pbrt2biff.cpp
   XML.cpp
+  )
+TARGET_LINK_LIBRARIES(biff
+  ospray_common
+  )
+
+ADD_EXECUTABLE(pbrt2biff 
+  pbrt2biff.cpp
   )
 TARGET_LINK_LIBRARIES(pbrt2biff
   pbrt_parser
+  biff
   )
 
 ADD_EXECUTABLE(biffInfo
-  biff.cpp
   info.cpp
-  XML.cpp
   )
 TARGET_LINK_LIBRARIES(biffInfo
-  ospray_common
+  biff
   )
 
