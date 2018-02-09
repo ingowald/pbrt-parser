@@ -112,7 +112,6 @@ namespace pbrt_parser {
 
     for (auto p : texture->param) {
       const std::string pType = p.second->getType();
-      PRINT(pType);
       if (pType == "float")
         biffTex.param_float[p.first] = texture->getParam1f(p.first);
       else if (pType == "color") 
@@ -213,7 +212,6 @@ namespace pbrt_parser {
 // #else
     for (auto p : material->param) {
       const std::string pType = p.second->getType();
-      PRINT(pType);
       // if (pType == "string" && p.second == "type") continue;
 
       if (pType == "float")
