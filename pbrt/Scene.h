@@ -22,7 +22,11 @@
 #include <vector>
 
 namespace pbrt_parser {
-  
+
+  struct Object;
+  struct Material;
+  struct Texture;
+
   struct PBRT_PARSER_INTERFACE Param {
     virtual std::string getType() const = 0;
     virtual size_t getSize() const = 0;
@@ -48,6 +52,23 @@ namespace pbrt_parser {
     std::vector<T> paramVec;
   };
 
+  struct Texture;
+
+  template<>
+  struct PBRT_PARSER_INTERFACE ParamT<Texture> : public Param {
+    ParamT(const std::string &type) : type(type) {};
+    virtual std::string getType() const { return type; };
+    virtual size_t getSize() const { return 1; }
+    virtual std::string toString() const;
+    
+    /*! used during parsing, to add a newly parsed parameter value
+      to the list */
+    virtual void add(const std::string &text) { throw std::runtime_error("should never get called.."); }
+    //    private:
+    std::string type;
+    std::shared_ptr<Texture> texture;
+  };
+
   /*! any class that can store (and query) parameters */
   struct PBRT_PARSER_INTERFACE Parameterized {
 
@@ -56,6 +77,7 @@ namespace pbrt_parser {
     int getParam1i(const std::string &name, const int fallBack=0) const;
     bool getParamBool(const std::string &name, const bool fallBack=false) const;
     std::string getParamString(const std::string &name) const;
+    std::shared_ptr<Texture> getParamTexture(const std::string &name) const;
 
     template<typename T>
       std::shared_ptr<ParamT<T> > findParam(const std::string &name) const {
@@ -69,9 +91,13 @@ namespace pbrt_parser {
 
   struct PBRT_PARSER_INTERFACE Attributes {
     Attributes();
-    Attributes(const Attributes &other);
+    Attributes(Attributes &&other) = default;
+    Attributes(const Attributes &other) = default;
 
     virtual std::shared_ptr<Attributes> clone() const { return std::make_shared<Attributes>(*this); }
+
+    std::map<std::string,std::shared_ptr<Material> > namedMaterial;
+    std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
   };
 
   struct PBRT_PARSER_INTERFACE Material : public Parameterized {

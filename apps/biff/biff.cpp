@@ -129,7 +129,8 @@ namespace biff {
   {
     size_t size = m.rawData.size();
     size_t ofs  = texDataFile.tellp();
-    texDataFile.write((char*)&m.rawData[0],size);
+    if (size)
+      texDataFile.write((char*)&m.rawData[0],size);
     
     sceneFile << "  <texture "
                 << "name=\"" << m.name << "\" "

@@ -36,8 +36,11 @@ namespace pbrt_parser {
   std::shared_ptr<pbrt_parser::Parser> parser;
 
   std::map<std::shared_ptr<Shape>,biff::Instance> exportedShape;
-  std::map<std::shared_ptr<Texture>,int> exportedTexture;
-  std::map<std::tuple<std::shared_ptr<Material>,std::string,std::string>,int> exportedMaterial;
+  std::map<const Texture*,int> exportedTexture;
+  std::map<std::tuple<std::shared_ptr<Material>,
+                      std::shared_ptr<Texture>,
+                      std::shared_ptr<Texture>>,
+           int> exportedMaterial;
 
   //! transform used when original instance was emitted
 
@@ -95,9 +98,9 @@ namespace pbrt_parser {
   // }
 
     
-  int exportTexture(const std::string &name);
+  // int exportTexture(const std::string &name);
 
-  int exportTexture(std::shared_ptr<Texture> texture)
+  int exportTexture(const Texture *texture)
   {
     if (exportedTexture.find(texture) != exportedTexture.end())
       return exportedTexture[texture];
@@ -109,6 +112,7 @@ namespace pbrt_parser {
 
     for (auto p : texture->param) {
       const std::string pType = p.second->getType();
+      PRINT(pType);
       if (pType == "float")
         biffTex.param_float[p.first] = texture->getParam1f(p.first);
       else if (pType == "color") 
@@ -120,7 +124,7 @@ namespace pbrt_parser {
       else if (pType == "string") 
         biffTex.param_string[p.first] = texture->getParamString(p.first);
       else if (pType == "texture") 
-        biffTex.param_texture[p.first] = exportTexture(texture->getParamString(p.first));
+        biffTex.param_texture[p.first] = exportTexture(texture->getParamTexture(p.first).get());
       else
         throw std::runtime_error("un-handled parameter type "+pType);
     }
@@ -142,71 +146,74 @@ namespace pbrt_parser {
       }
     }
     int thisID = exportedTexture[texture] = writer->push(biffTex);
-    PRINT(thisID);
     return thisID;
   }
 
-  int exportTexture(const std::string &name)
-  {
-    return exportTexture(parser->getTexture(name));
-  }
+  // int exportTexture(const std::string &name)
+  // {
+  //   return exportTexture(parser->getTexture(name).get());
+  // }
 
 
   int exportMaterial(std::shared_ptr<Material> material,
-                     const std::string colorTextureName,
-                     const std::string bumpMapTextureName)
+                     std::shared_ptr<Texture> colorTexture,
+                     std::shared_ptr<Texture> bumpMapTexture)
   {
     if (!material) 
       // default material
       return 0;
 
-    std::tuple<std::shared_ptr<Material>,std::string,std::string> texturedMaterial
-      = std::make_tuple(material,colorTextureName,bumpMapTextureName);
+    std::tuple<std::shared_ptr<Material>,
+               std::shared_ptr<Texture>,
+               std::shared_ptr<Texture>> 
+      texturedMaterial
+      = std::make_tuple(material,colorTexture,bumpMapTexture);
     if (exportedMaterial.find(texturedMaterial) != exportedMaterial.end()) {
       return exportedMaterial[texturedMaterial];
     }
 
     biff::Material biffMat;
     biffMat.type = material->type;
-#if 0
-    const std::string type = material->type;
-    if (type == "disney") {
-      biffMat.type = type;
-      biffMat.param_vec3f["color"] = material->getParam3f("color");
-      biffMat.param_float["spectrans"] = material->getParam1f("spectrans");
-      biffMat.param_float["clearcoatgloss"] = material->getParam1f("clearcoatgloss");
-      biffMat.param_float["speculartint"] = material->getParam1f("speculartint");
-      biffMat.param_float["eta"] = material->getParam1f("eta");
-      biffMat.param_float["sheentint"] = material->getParam1f("sheentint");
-      biffMat.param_float["metallic"] = material->getParam1f("metallic");
-      biffMat.param_float["anisotropic"] = material->getParam1f("anisotropic");
-      biffMat.param_float["clearcoat"] = material->getParam1f("clearcoat");
-      biffMat.param_float["clearcoat"] = material->getParam1f("clearcoat");
-      biffMat.param_float["roughness"] = material->getParam1f("roughness");
-      biffMat.param_float["sheen"] = material->getParam1f("sheen");
-      biffMat.param_float["difftrans"] = material->getParam1f("difftrans");
-      biffMat.param_float["flatness"] = material->getParam1f("flatness");
-      biffMat.param_int["thin"] = material->getParamBool("flatness");
-      if (colorTextureName != "")
-        biffMat.param_texture["map_color"] = exportTexture(colorTextureName);
-      if (bumpMapTextureName != "")
-        biffMat.param_texture["map_bump"] = exportTexture(bumpMapTextureName);
-      int thisID = exportedMaterial[texturedMaterial] = writer->push(biffMat);
-      return thisID;
-    } else {
-      for (auto p : material->param) {
-        const std::string pType = p.second->getType();
-        if (pType == "float")
-          material->param_float[p.first] = ((ParamT<float>*)p.second)->paramVec[0];
-        else
-          throw std::runtime_error("un-handled parameter type "+pType);
-      }
-      int thisID = exportedMaterial[texturedMaterial] = writer->push(biffMat);
-      return thisID;
-    }
-#else
+// #if 0
+//     const std::string type = material->type;
+//     if (type == "disney") {
+//       biffMat.type = type;
+//       biffMat.param_vec3f["color"] = material->getParam3f("color");
+//       biffMat.param_float["spectrans"] = material->getParam1f("spectrans");
+//       biffMat.param_float["clearcoatgloss"] = material->getParam1f("clearcoatgloss");
+//       biffMat.param_float["speculartint"] = material->getParam1f("speculartint");
+//       biffMat.param_float["eta"] = material->getParam1f("eta");
+//       biffMat.param_float["sheentint"] = material->getParam1f("sheentint");
+//       biffMat.param_float["metallic"] = material->getParam1f("metallic");
+//       biffMat.param_float["anisotropic"] = material->getParam1f("anisotropic");
+//       biffMat.param_float["clearcoat"] = material->getParam1f("clearcoat");
+//       biffMat.param_float["clearcoat"] = material->getParam1f("clearcoat");
+//       biffMat.param_float["roughness"] = material->getParam1f("roughness");
+//       biffMat.param_float["sheen"] = material->getParam1f("sheen");
+//       biffMat.param_float["difftrans"] = material->getParam1f("difftrans");
+//       biffMat.param_float["flatness"] = material->getParam1f("flatness");
+//       biffMat.param_int["thin"] = material->getParamBool("flatness");
+//       if (colorTextureName != "")
+//         biffMat.param_texture["map_color"] = exportTexture(colorTextureName);
+//       if (bumpMapTextureName != "")
+//         biffMat.param_texture["map_bump"] = exportTexture(bumpMapTextureName);
+//       int thisID = exportedMaterial[texturedMaterial] = writer->push(biffMat);
+//       return thisID;
+//     } else {
+//       for (auto p : material->param) {
+//         const std::string pType = p.second->getType();
+//         if (pType == "float")
+//           material->param_float[p.first] = ((ParamT<float>*)p.second)->paramVec[0];
+//         else
+//           throw std::runtime_error("un-handled parameter type "+pType);
+//       }
+//       int thisID = exportedMaterial[texturedMaterial] = writer->push(biffMat);
+//       return thisID;
+//     }
+// #else
     for (auto p : material->param) {
       const std::string pType = p.second->getType();
+      PRINT(pType);
       // if (pType == "string" && p.second == "type") continue;
 
       if (pType == "float")
@@ -222,13 +229,14 @@ namespace pbrt_parser {
       else if (pType == "string") 
         biffMat.param_string[p.first] = material->getParamString(p.first);
       else if (pType == "texture") 
-        biffMat.param_texture[p.first] = exportTexture(material->getParamString(p.first));
+        biffMat.param_texture[p.first] = exportTexture(material->getParamTexture(p.first).get());
+        // biffMat.param_texture[p.first] = exportTexture(material->getParamString(p.first));
       else
         throw std::runtime_error("un-handled parameter type "+pType);
       }
     int thisID = exportedMaterial[texturedMaterial] = writer->push(biffMat);
     return thisID;
-#endif
+// #endif
   }
 
   biff::Instance writeTriangleMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
@@ -238,12 +246,15 @@ namespace pbrt_parser {
 
     biff::TriMesh biffMesh;
     
-    std::string texture_color   = shape->getParamString("color");
-    std::string texture_bumpMap = shape->getParamString("bumpMap");
-    if (texture_bumpMap != "")
-      biffMesh.texture.displacement = exportTexture(texture_bumpMap);
-    if (texture_color != "")
-      biffMesh.texture.color = exportTexture(texture_color);
+    std::shared_ptr<Texture> texture_color = shape->getParamTexture("color");
+    std::shared_ptr<Texture> texture_bumpMap = shape->getParamTexture("bumpMap");
+    // std::string texture_color   = shape->getParamString("color");
+    if (texture_color)
+      biffMesh.texture.color = exportTexture(texture_color.get());
+    
+    // std::string texture_bumpMap = shape->getParamString("bumpMap");
+    if (texture_bumpMap)
+      biffMesh.texture.displacement = exportTexture(texture_bumpMap.get());
     
     biffMesh.materialID = exportMaterial(shape->material,texture_color,texture_bumpMap);
 
@@ -300,7 +311,9 @@ namespace pbrt_parser {
     // if (texture_color != "")
     //   bc.texture.displacement = exportTexture(texture_color);
     
-    bc.materialID = exportMaterial(shape->material,"","");//texture_color,texture_bumpMap);
+    bc.materialID = exportMaterial(shape->material,
+                                   std::shared_ptr<Texture>(),
+                                   std::shared_ptr<Texture>());
 
     const affine3f xfm = instanceXfm*shape->transform;
 
@@ -360,12 +373,22 @@ namespace pbrt_parser {
 
     biff::TriMesh biffMesh;
 
-    std::string texture_color   = shape->getParamString("color");
-    std::string texture_bumpMap = shape->getParamString("bumpMap");
-    if (texture_bumpMap != "")
-      biffMesh.texture.color = exportTexture(texture_bumpMap);
-    if (texture_color != "")
-      biffMesh.texture.displacement = exportTexture(texture_color);
+    std::shared_ptr<Texture> texture_color = shape->getParamTexture("color");
+    std::shared_ptr<Texture> texture_bumpMap = shape->getParamTexture("bumpMap");
+    // std::string texture_color   = shape->getParamString("color");
+    if (texture_color)
+      biffMesh.texture.color = exportTexture(texture_color.get());
+    
+    // std::string texture_bumpMap = shape->getParamString("bumpMap");
+    if (texture_bumpMap)
+      biffMesh.texture.displacement = exportTexture(texture_bumpMap.get());
+    
+    // std::string texture_color   = shape->getParamString("color");
+    // std::string texture_bumpMap = shape->getParamString("bumpMap");
+    // if (texture_bumpMap != "")
+    //   biffMesh.texture.color = exportTexture(texture_bumpMap.get());
+    // if (texture_color != "")
+    //   biffMesh.texture.displacement = exportTexture(texture_color.get());
     
     biffMesh.materialID = exportMaterial(shape->material,texture_color,texture_bumpMap);
 
@@ -499,7 +522,7 @@ namespace pbrt_parser {
       cout << "Done exporting to BIFF file" << endl;
     } catch (std::runtime_error e) {
       std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
-      exit(1);
+      throw e;
     }
   }
 

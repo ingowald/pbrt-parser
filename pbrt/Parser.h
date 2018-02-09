@@ -51,13 +51,14 @@ namespace pbrt_parser {
     void pushTransform();
     void popTransform();
 
+    std::map<std::string,std::shared_ptr<Object> >   namedObjects;
+
+    inline std::shared_ptr<Param> parseParam(std::string &name, Lexer &tokens);
+    void parseParams(std::map<std::string, std::shared_ptr<Param> > &params, Lexer &tokens);
+
     /*! return the scene we have parsed */
     std::shared_ptr<Scene> getScene() { return scene; }
-    std::shared_ptr<Texture> getTexture(const std::string &name) { 
-      if (namedTexture.find(name) == namedTexture.end())
-        throw std::runtime_error("no texture named '"+name+"'");
-      return namedTexture[name]; 
-    }
+    std::shared_ptr<Texture> getTexture(const std::string &name);
   private:
     //! stack of parent files' token streams
     std::stack<std::shared_ptr<Lexer> > tokenizerStack;
@@ -92,9 +93,6 @@ namespace pbrt_parser {
     std::shared_ptr<Scene>    scene;
     std::shared_ptr<Object>   currentObject;
     std::shared_ptr<Material> currentMaterial;
-    std::map<std::string,std::shared_ptr<Object> >   namedObjects;
-    std::map<std::string,std::shared_ptr<Material> > namedMaterial;
-    std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
   };
 
   PBRT_PARSER_INTERFACE void parsePLY(const std::string &fileName,
