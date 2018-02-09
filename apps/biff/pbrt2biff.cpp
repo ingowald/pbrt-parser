@@ -129,7 +129,6 @@ namespace pbrt_parser {
     }
     std::string fileName = texture->getParamString("filename");
     if (fileName != "") {
-      std::cout << "IMPORTING TEXTURE DATA " << fileName << std::endl;
       FileName fn = FileName(basePath) + fileName;
       FILE *file = fopen(fn.str().c_str(),"rb");
       if (!file)
