@@ -109,5 +109,6 @@ namespace biff {
     std::cout << " - unique segments      : " << prettyNumber(numUniqueRoundCurveSegments) << std::endl;
     std::cout << " - instanced curves     : " << prettyNumber(numInstancedRoundCurves) << std::endl;
     std::cout << " - instanced segments   : " << prettyNumber(numInstancedRoundCurveSegments) << std::endl;
+    return 0;
   }
 }
