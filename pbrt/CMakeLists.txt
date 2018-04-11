@@ -21,5 +21,7 @@ ADD_LIBRARY(pbrt_parser SHARED
   parsePLY.cpp
   ../3rdParty/ply.cpp
   )
-TARGET_LINK_LIBRARIES(pbrt_parser ospray_common)
+TARGET_LINK_LIBRARIES(pbrt_parser 
+  ospray_common
+  )
 
