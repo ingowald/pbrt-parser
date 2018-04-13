@@ -72,6 +72,10 @@ namespace pbrt_parser {
   /*! any class that can store (and query) parameters */
   struct PBRT_PARSER_INTERFACE Parameterized {
 
+    Parameterized() = default;
+    Parameterized(Parameterized &&) = default;
+    Parameterized(const Parameterized &) = default;
+    
     vec3f getParam3f(const std::string &name, const vec3f &fallBack=vec3f(0)) const;
     float getParam1f(const std::string &name, const float fallBack=0) const;
     int getParam1i(const std::string &name, const int fallBack=0) const;
@@ -129,6 +133,8 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Node : public Parameterized {
+    Node(const Node &node) = default;
+    Node(Node &&node) = default;
     Node(const std::string &type, 
          const affine3f &transform=affine3f(one)) 
       : type(type), 
@@ -173,6 +179,8 @@ namespace pbrt_parser {
           std::shared_ptr<Material>   material,
           std::shared_ptr<Attributes> attributes,
           affine3f &transform);
+    Shape(const Shape &shape) = default;
+    Shape(Shape &&shape) = default;
 
     /*! material active when the shape was generated - PBRT has only
       one material per shape */
