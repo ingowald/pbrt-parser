@@ -71,6 +71,16 @@ namespace pbrt_parser {
     return ss.str();
   }
 
+  std::string ParamT<Texture>::toString() const
+  { 
+    std::stringstream ss;
+    ss << getType() << " ";
+    ss << "[ ";
+    ss << "<TODO>";
+    ss << "]";
+    return ss.str();
+  }
+
   template<> std::string ParamT<std::string>::toString() const
   { 
     std::stringstream ss;
@@ -168,6 +178,20 @@ namespace pbrt_parser {
     return p->paramVec[0];
   }
 
+  std::shared_ptr<Texture> Parameterized::getParamTexture(const std::string &name) const
+  {
+    std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+    if (it == param.end())
+      return std::shared_ptr<Texture>();
+    std::shared_ptr<Param> pr = it->second;
+    const std::shared_ptr<ParamT<Texture>> p = std::dynamic_pointer_cast<ParamT<Texture>>(pr);
+    if (!p)
+      throw std::runtime_error("found param of given name, but of wrong type!");
+    if (p->getSize() != 1)
+      throw std::runtime_error("found param of given name and type, but wrong number of components!");
+    return p->texture;
+  }
+
   bool Parameterized::getParamBool(const std::string &name, const bool fallBack) const
   {
     std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
@@ -191,10 +215,9 @@ namespace pbrt_parser {
                std::shared_ptr<Material>   material,
                std::shared_ptr<Attributes> attributes,
                affine3f &transform) 
-    : Node(type), 
+    : Node(type,transform), 
       material(material),
-      attributes(attributes),
-      transform(transform)
+      attributes(attributes)
   {};
 
   // ==================================================================

@@ -49,7 +49,7 @@ namespace pbrt_parser {
       }
     }
 
-    inline std::shared_ptr<Param> parseParam(std::string &name, Lexer &tokens)
+  inline std::shared_ptr<Param> Parser::parseParam(std::string &name, Lexer &tokens)
     {
       std::shared_ptr<Token> token = tokens.peek();
       if (!token || token->type != Token::TOKEN_TYPE_STRING)
@@ -82,7 +82,7 @@ namespace pbrt_parser {
       } else if (type == "bool") {
         ret = std::make_shared<ParamT<bool>>(type);
       } else if (type == "texture") {
-        ret = std::make_shared<ParamT<std::string>>(type);
+        ret = std::make_shared<ParamT<Texture>>(type);
       } else if (type == "normal") {
         ret = std::make_shared<ParamT<float> >(type);
       } else if (type == "point") {
@@ -107,16 +107,26 @@ namespace pbrt_parser {
         std::shared_ptr<Token> p = tokens.next();
         
         while (p->text != "]") {
-          ret->add(p->text);
+          if (type == "texture") {
+            std::dynamic_pointer_cast<ParamT<Texture>>(ret)->texture 
+              = getTexture(p->text);
+          } else {
+            ret->add(p->text);
+          }
           p = tokens.next();
         }
       } else {
-        ret->add(value->text);
+        if (type == "texture") {
+          std::dynamic_pointer_cast<ParamT<Texture>>(ret)->texture 
+            = getTexture(value->text);
+        } else {
+          ret->add(value->text);
+        }
       }
       return ret;
     }
 
-    void parseParams(std::map<std::string, std::shared_ptr<Param> > &params, Lexer &tokens)
+  void Parser::parseParams(std::map<std::string, std::shared_ptr<Param> > &params, Lexer &tokens)
     {
       while (1) {
         std::string name;
@@ -130,9 +140,18 @@ namespace pbrt_parser {
     {
     }
 
-    Attributes::Attributes(const Attributes &other)
-    {
-    }
+  // Attributes::Attributes(const Attributes &other)
+  //   {
+  //   }
+
+
+  std::shared_ptr<Texture> Parser::getTexture(const std::string &name) 
+  {
+    // PING; PRINT(attributesStack.top()->namedTexture.size());
+    if (attributesStack.top()->namedTexture.find(name) == attributesStack.top()->namedTexture.end())
+      throw std::runtime_error("no texture named '"+name+"'");
+    return attributesStack.top()->namedTexture[name]; 
+  }
 
     Parser::Parser(bool dbg, const std::string &basePath) 
       : scene(std::make_shared<Scene>()), dbg(dbg), basePath(basePath) 
@@ -338,7 +357,7 @@ namespace pbrt_parser {
           // }
           std::shared_ptr<Texture> texture
             = std::make_shared<Texture>(name,texelType,mapType);
-          namedTexture[name] = texture;
+          attributesStack.top()->namedTexture[name] = texture;
           parseParams(texture->param,*tokens);
           continue;
         }
@@ -346,7 +365,7 @@ namespace pbrt_parser {
           std::string name = tokens->next()->text;
           std::shared_ptr<Material> material
             = std::make_shared<Material>("<implicit>");
-          namedMaterial[name] = material;
+          attributesStack.top()->namedMaterial[name] = material;
           parseParams(material->param,*tokens);
 
           /* named material have the parameter type implicitly as a
@@ -366,7 +385,7 @@ namespace pbrt_parser {
         if (token->text == "NamedMaterial") {
           // USE named material
           std::string name = tokens->next()->text;
-          currentMaterial = namedMaterial[name];
+          currentMaterial = attributesStack.top()->namedMaterial[name];
           continue;
         }
 
@@ -614,7 +633,10 @@ namespace pbrt_parser {
     /*! parse given file, and add it to the scene we hold */
     void Parser::parse(const FileName &fn)
     {
-      rootNamePath = basePath==""?fn.path():FileName(basePath);
+      rootNamePath
+        = basePath==""
+        ? (std::string)fn.path()
+        : (std::string)FileName(basePath);
       this->tokens = std::make_shared<Lexer>(fn);
       parseScene();      
     }
