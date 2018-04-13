@@ -129,11 +129,19 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Node : public Parameterized {
-    Node(const std::string &type) : type(type) {};
+    Node(const std::string &type, 
+         const affine3f &transform=affine3f(one)) 
+      : type(type), 
+      transform(transform)
+      {};
     virtual std::string toString() const { return type; }
 
     const std::string type;
     //      std::map<std::string,std::shared_ptr<Param> > param;
+
+    /*! the active transform stack that was active when then shape
+      was defined */
+    affine3f        transform;
   };
 
   struct PBRT_PARSER_INTERFACE Camera : public Node {
@@ -170,9 +178,6 @@ namespace pbrt_parser {
       one material per shape */
     std::shared_ptr<Material>   material;
     std::shared_ptr<Attributes> attributes;
-    /*! the active transform stack that was active when then shape
-      was defined */
-    affine3f        transform;
   };
 
   struct PBRT_PARSER_INTERFACE Volume : public Node {

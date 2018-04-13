@@ -215,10 +215,9 @@ namespace pbrt_parser {
                std::shared_ptr<Material>   material,
                std::shared_ptr<Attributes> attributes,
                affine3f &transform) 
-    : Node(type), 
+    : Node(type,transform), 
       material(material),
-      attributes(attributes),
-      transform(transform)
+      attributes(attributes)
   {};
 
   // ==================================================================
