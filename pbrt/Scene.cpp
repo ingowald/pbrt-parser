@@ -23,10 +23,18 @@ namespace pbrt_parser {
 
   using std::endl;
 
-  std::string Object::toString() const 
+  std::string Object::toString(int depth) const 
   { 
     std::stringstream ss;
     ss << "Object '"<<name<<"' : "<<shapes.size()<<"shps, " << objectInstances.size() << "insts";
+    if (depth > 0) {
+      ss << " shapes:" << std::endl;
+      for (auto &shape : shapes)
+        ss << " - " << shape->type << std::endl;
+      ss << " insts:" << std::endl;
+      for (auto &inst : objectInstances)
+        ss << " - " << inst->object->toString(depth-1) << std::endl;
+    }
     return ss.str();
   }
 

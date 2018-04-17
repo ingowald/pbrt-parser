@@ -240,7 +240,8 @@ namespace pbrt_parser {
       affine3f    xfm;
     };
 
-    virtual std::string toString() const;
+    //! pretty-print scene info into a std::string 
+    virtual std::string toString(const int depth = 0) const;
 
     std::string name;
 
@@ -260,6 +261,9 @@ namespace pbrt_parser {
     Scene() {
       world = std::make_shared<Object>("<root>");
     };
+
+    //! pretty-print scene info into a std::string 
+    std::string toString(const int depth = 0) { return world->toString(depth); }
 
     //! list of cameras defined in this object
     std::vector<std::shared_ptr<Camera> > cameras;
