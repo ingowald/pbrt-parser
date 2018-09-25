@@ -600,7 +600,7 @@ namespace plib {
     /*! parse given file, and add it to the scene we hold */
     void Parser::parse(const FileName &fn)
     {
-      rootNamePath = basePath==""?fn.path():FileName(basePath);
+      rootNamePath = (basePath=="")?FileName(fn.path()):FileName(basePath);
       this->tokens = std::make_shared<Lexer>(fn);
       parseScene();      
     }
