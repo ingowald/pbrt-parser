@@ -355,10 +355,15 @@ namespace pbrt_parser {
       TokenHandle token = getNextToken();
       assert(token);
       if (dbg) std::cout << "World token : " << token->toString() << std::endl;
+
+      // ------------------------------------------------------------------
+      // WorldEnd - go back to regular parseScene
+      // ------------------------------------------------------------------
       if (token == "WorldEnd") {
         if (dbg) cout << "Parsing PBRT World - done!" << endl;
         break;
       }
+      
       // -------------------------------------------------------
       // LightSource
       // -------------------------------------------------------
@@ -369,12 +374,17 @@ namespace pbrt_parser {
         getCurrentObject()->lightSources.push_back(lightSource);
         continue;
       }
+
+      // ------------------------------------------------------------------
+      // AreaLightSource
+      // ------------------------------------------------------------------
       if (token == "AreaLightSource") {
         std::shared_ptr<AreaLightSource> lightSource
           = std::make_shared<AreaLightSource>(next());
         parseParams(lightSource->param);
         continue;
       }
+
       // -------------------------------------------------------
       // Material
       // -------------------------------------------------------
@@ -386,21 +396,24 @@ namespace pbrt_parser {
         currentMaterial = material;
         continue;
       }
+
+      // ------------------------------------------------------------------
+      // Texture
+      // ------------------------------------------------------------------
       if (token == "Texture") {
         std::string name = *next();
         std::string texelType = *next();
         std::string mapType = *next();
-        // if (mapType == "imagemap") {
-        //   /* ok, everythng else are params */
-        // } else if (mapType == "scale") {
-        //   // scale texture: two more parameters
-        // }
         std::shared_ptr<Texture> texture
           = std::make_shared<Texture>(name,texelType,mapType);
         attributesStack.top()->namedTexture[name] = texture;
         parseParams(texture->param);
         continue;
       }
+
+      // ------------------------------------------------------------------
+      // MakeNamedMaterial
+      // ------------------------------------------------------------------
       if (token == "MakeNamedMaterial") {
         std::string name = *next();
         std::shared_ptr<Material> material
@@ -422,14 +435,18 @@ namespace pbrt_parser {
         continue;
       }
 
+      // ------------------------------------------------------------------
+      // NamedMaterial
+      // ------------------------------------------------------------------
       if (token == "NamedMaterial") {
-        // USE named material
         std::string name = *next();
         currentMaterial = attributesStack.top()->namedMaterial[name];
         continue;
       }
 
-
+      // ------------------------------------------------------------------
+      // MakeNamedMedium
+      // ------------------------------------------------------------------
       if (token == "MakeNamedMedium") {
         std::string name = *next();
         std::shared_ptr<Medium> medium
@@ -443,7 +460,7 @@ namespace pbrt_parser {
         std::shared_ptr<Param> type = medium->param["type"];
         if (!type) throw std::runtime_error("named medium that does not specify a 'type' parameter!?");
         std::shared_ptr<ParamT<std::string>> asString
-          = std::dynamic_pointer_cast<ParamT<std::string> >(type);
+          = std::dynamic_pointer_cast<ParamT<std::string>>(type);
         if (!asString)
           throw std::runtime_error("named medium has a type, but not a string!?");
         assert(asString->getSize() == 1);
@@ -451,26 +468,33 @@ namespace pbrt_parser {
         continue;
       }
 
+      // ------------------------------------------------------------------
+      // MediumInterface
+      // ------------------------------------------------------------------
       if (token == "MediumInterface") {
         attributesStack.top()->mediumInterface.first = *next();
         attributesStack.top()->mediumInterface.second = *next();
         continue;
       }
 
-        
       // -------------------------------------------------------
-      // Attributes
+      // AttributeBegin
       // -------------------------------------------------------
       if (token == "AttributeBegin") {
         pushAttributes();
         continue;
       }
+
+      // -------------------------------------------------------
+      // AttributeEnd
+      // -------------------------------------------------------
       if (token == "AttributeEnd") {
         popAttributes();
         continue;
       }
+
       // -------------------------------------------------------
-      // Shapes
+      // Shape
       // -------------------------------------------------------
       if (token == "Shape") {
         std::shared_ptr<Shape> shape
@@ -482,6 +506,7 @@ namespace pbrt_parser {
         getCurrentObject()->shapes.push_back(shape);
         continue;
       }
+      
       // -------------------------------------------------------
       // Volumes
       // -------------------------------------------------------
@@ -499,11 +524,9 @@ namespace pbrt_parser {
       if (parseTransforms(token))
         continue;
         
-
       // -------------------------------------------------------
-      // Objects
+      // ObjectBegin
       // -------------------------------------------------------
-
       if (token == "ObjectBegin") {
         std::string name = *next();
         std::shared_ptr<Object> object = findNamedObject(name,1);
@@ -512,11 +535,17 @@ namespace pbrt_parser {
         continue;
       }
           
+      // -------------------------------------------------------
+      // ObjectEnd
+      // -------------------------------------------------------
       if (token == "ObjectEnd") {
         objectStack.pop();
         continue;
       }
 
+      // -------------------------------------------------------
+      // ObjectInstance
+      // -------------------------------------------------------
       if (token == "ObjectInstance") {
         std::string name = *next();
         std::shared_ptr<Object> object = findNamedObject(name,1);
