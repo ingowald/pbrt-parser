@@ -16,6 +16,10 @@
 
 #pragma once
 
+/*! \file pbrt/Scene.h Defines the root pbrt scene to be
+    created/parsed by this parser */
+
+
 #include "pbrt/pbrt.h"
 // stl
 #include <map>
@@ -136,12 +140,7 @@ namespace pbrt_parser {
     /*! pretty-print this medium (for debugging) */
     std::string toString() const;
 
-    /*! the 'type' of the medium, such as 'uber'medium, 'matte',
-      'mix' etc. Note that the PBRT format has two inconsistent
-      ways of specifying that type: for the 'Medium' command it
-      specifies the type explicitly right after the 'matierla'
-      command; for the 'makenamedmedium' it uses an implicit
-      'type' parameter */
+    /*! the 'type' of the medium */
     std::string type;
   };
 
@@ -155,7 +154,6 @@ namespace pbrt_parser {
             const std::string &mapType) 
       : name(name), texelType(texelType), mapType(mapType)
     {};
-    // std::map<std::string,std::shared_ptr<Param> > param;
   };
 
   struct PBRT_PARSER_INTERFACE Node : public Parameterized {
@@ -228,8 +226,6 @@ namespace pbrt_parser {
           std::shared_ptr<Material>   material,
           std::shared_ptr<Attributes> attributes,
           const Transforms &transform);
-    // Shape(const Shape &shape) = default;
-    // Shape(Shape &&shape) = default;
 
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Shape<"+type+">"; }
@@ -276,6 +272,7 @@ namespace pbrt_parser {
     virtual std::string toString() const override { return "Accelerator<"+type+">"; }
   };
 
+  /*! the type of renderer to be used for rendering the given scene */
   struct PBRT_PARSER_INTERFACE Renderer : public Node {
     Renderer(const std::string &type) : Node(type) {};
 
@@ -314,6 +311,7 @@ namespace pbrt_parser {
     //! pretty-print scene info into a std::string 
     virtual std::string toString(const int depth = 0) const;
 
+    /*! logical name of this object */
     std::string name;
 
     //! list of all shapes defined in this object
@@ -326,13 +324,20 @@ namespace pbrt_parser {
     std::vector<std::shared_ptr<LightSource> > lightSources;
   };
 
-
+  /*! The main object defined by each pbrt (root) file is a scene - a
+      scene contains all kind of global settings (such as integrator
+      to use, cameras defined in this scene, which pixel filter to
+      use, etc, plus some geometry. */
   struct PBRT_PARSER_INTERFACE Scene {
 
-    Scene() {
-      world = std::make_shared<Object>("<root>");
-    };
+    /*! default constructor - creates a new (and at first, empty) scene */
+    Scene()
+      : world(std::make_shared<Object>("<root>"))
+      {}
 
+    /*! parse the given file name, return parsed scene */
+    static std::shared_ptr<Scene> parseFromFile(const std::string &fileName, bool dbg=false);
+    
     //! pretty-print scene info into a std::string 
     std::string toString(const int depth = 0) { return world->toString(depth); }
 
@@ -357,7 +362,8 @@ namespace pbrt_parser {
     //! last pixel filter specified in the scene, or nullptr if none.
     std::shared_ptr<PixelFilter> pixelFilter;
 
-    //! the 'world' scene geometry
+    /*! the root scene geometry, defined in the
+      'WorldBegin'/'WorldEnd' statements */
     std::shared_ptr<Object> world;
   };
 

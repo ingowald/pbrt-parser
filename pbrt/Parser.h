@@ -16,6 +16,11 @@
 
 #pragma once
 
+/*! \file pbrt/Parser.h *Internal* parser class used by \see
+    pbrt_parser::Scene::parseFromFile() - as end user, you should
+    never have to look into this file directly, and only use \see
+    pbrt_parser::Scene::parseFromFile() */
+
 #include "pbrt/Scene.h"
 #include "Lexer.h"
 // std
@@ -41,8 +46,14 @@ namespace pbrt_parser {
   
   /*! parser object that holds persistent state about the parsing
     state (e.g., file paths, named objects, etc), even if they are
-    split over multiple files. To parse different scenes, use
-    different instances of this class. */
+    split over multiple files. 
+
+    \note End users should not have to use this class directly; it
+    should only ever be used by Scene::parseFromFile()
+
+    \warning Each scene should be parsed with its own instanc of this
+    parser class, otherwise left-over state from previous passes may
+    mess with the state of later pbrt file parse's */
   struct PBRT_PARSER_INTERFACE Parser {
     /*! constructor */
     Parser(bool dbg, const std::string &basePath="");

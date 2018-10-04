@@ -28,44 +28,7 @@ namespace pbrt_parser {
 
   FileName basePath = "";
 
-  std::string exportMaterial(std::shared_ptr<Material> material)
-  {
-  }
-
-  
-  void writeTriangleMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
-  {
-  }
-
-  void parsePLY(const std::string &fileName,
-                std::vector<vec3f> &v,
-                std::vector<vec3f> &n,
-                std::vector<vec3i> &idx);
-
-  void writePlyMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
-  {
-  }
-
-  void writeObject(std::shared_ptr<Object> object, 
-                   const affine3f &instanceXfm)
-  {
-    for (int shapeID=0;shapeID<object->shapes.size();shapeID++) {
-      std::shared_ptr<Shape> shape = object->shapes[shapeID];
-      if (shape->type == "trianglemesh") {
-        writeTriangleMesh(shape,instanceXfm);
-      } else if (shape->type == "plymesh") {
-        writePlyMesh(shape,instanceXfm);
-      } else {
-      }
-    }
-    for (int instID=0;instID<object->objectInstances.size();instID++) {
-      writeObject(object->objectInstances[instID]->object,
-                  instanceXfm*object->objectInstances[instID]->xfm.atStart);
-    }
-  }
-
-
-  void pbrtInfo(int ac, char **av)
+  void pbrtLint(int ac, char **av)
   {
     std::vector<std::string> fileName;
     bool dbg = false;
@@ -91,15 +54,9 @@ namespace pbrt_parser {
     if (basePath.str() == "")
       basePath = FileName(fileName[0]).path();
   
-    pbrt_parser::Parser *parser = new pbrt_parser::Parser(dbg,basePath);
     try {
-      for (int i=0;i<fileName.size();i++)
-        parser->parse(fileName[i]);
-    
+      std::shared_ptr<Scene> scene = pbrt_parser::Scene::parseFromFile(basePath,dbg);
       std::cout << " => yay! parsing successful..." << std::endl;
-    
-      std::shared_ptr<Scene> scene = parser->getScene();
-      writeObject(scene->world,ospcommon::one);
     } catch (std::runtime_error e) {
       std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
       std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
@@ -111,6 +68,6 @@ namespace pbrt_parser {
 
 int main(int ac, char **av)
 {
-  pbrt_parser::pbrtInfo(ac,av);
+  pbrt_parser::pbrtLint(ac,av);
   return 0;
 }

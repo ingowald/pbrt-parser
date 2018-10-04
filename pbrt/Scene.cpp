@@ -15,13 +15,22 @@
 // ======================================================================== //
 
 #include "Scene.h"
+#include "Parser.h"
 // std
 #include <iostream>
 #include <sstream>
 
 namespace pbrt_parser {
-
-  using std::endl;
+ 
+  /*! parse the given file name, return parsed scene */
+  std::shared_ptr<Scene> Scene::parseFromFile(const std::string &fileName,
+                                              bool dbg)
+  {
+    std::shared_ptr<Parser> parser = std::make_shared<Parser>(dbg);
+    parser->parse(FileName(fileName));
+    return parser->getScene();
+  }
+    
 
   std::string Object::toString(int depth) const 
   { 
@@ -235,12 +244,12 @@ namespace pbrt_parser {
   std::string Material::toString() const
   {
     std::stringstream ss;
-    ss << "Material type='"<< type << "' {" << endl;
+    ss << "Material type='"<< type << "' {" << std::endl;
     for (std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.begin(); 
          it != param.end(); it++) {
-      ss << " - " << it->first << " : " << it->second->toString() << endl;
+      ss << " - " << it->first << " : " << it->second->toString() << std::endl;
     }
-    ss << "}" << endl;
+    ss << "}" << std::endl;
     return ss.str();
   }
 
