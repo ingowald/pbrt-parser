@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -23,16 +23,11 @@
 #endif
 
 #define MAX_THREADS 512
-#define MAX_MIC_CORES (MAX_THREADS/4)
 
 #include "common.h"
 
 /* define isa namespace and ISA bitvector */
-#if defined(__MIC__)
-#  define isa knc
-#  define ISA KNC
-#  define ISA_STR "KNC"
-#elif defined (__AVX512F__)
+#if defined (__AVX512F__)
 #  define isa avx512
 #  define ISA AVX512KNL
 #  define ISA_STR "AVX512KNL"

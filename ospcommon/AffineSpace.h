@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -31,53 +31,78 @@ namespace ospcommon {
   template<typename L>
   struct AffineSpaceT
   {
-    L l;           /*< linear part of affine space */
-    VectorT p;     /*< affine part of affine space */
-
     ////////////////////////////////////////////////////////////////////////////////
     // Constructors, Assignment, Cast, Copy Operations
     ////////////////////////////////////////////////////////////////////////////////
 
-    inline AffineSpaceT           ( )                           { }
-    inline AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
-    inline AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(zero); }
-    inline AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }
+    /*! construct a new AffineSpace */
+    inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT           ( )                           { }
+    
+    /*! construct a new AffineSpace */
+    inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
+    
+    /*! construct a new AffineSpace */
+    inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(zero); }
+    
+    /*! construct a new AffineSpace */
+    inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }
 
-    inline AffineSpaceT( const VectorT& vx, const VectorT& vy, const VectorT& vz, const VectorT& p ) : l(vx,vy,vz), p(p) {}
-    inline AffineSpaceT( const L& l, const VectorT& p ) : l(l), p(p) {}
+    /*! construct a new AffineSpace */
+    inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT( const VectorT& vx, const VectorT& vy, const VectorT& vz, const VectorT& p ) : l(vx,vy,vz), p(p) {}
 
-    template<typename L1> inline AffineSpaceT( const AffineSpaceT<L1>& s ) : l(s.l), p(s.p) {}
+    /*! construct a new AffineSpace */
+    inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT( const L& l, const VectorT& p ) : l(l), p(p) {}
+
+    /*! construct a new AffineSpace */
+    template<typename L1> inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT( const AffineSpaceT<L1>& s ) : l(s.l), p(s.p) {}
 
     ////////////////////////////////////////////////////////////////////////////////
     // Constants
     ////////////////////////////////////////////////////////////////////////////////
 
-    inline AffineSpaceT( ZeroTy ) : l(zero), p(zero) {}
-    inline AffineSpaceT( OneTy )  : l(one),  p(zero) {}
+    inline/*  OSPCOMMON_INTERFACE */ AffineSpaceT( ZeroTy ) : l(zero), p(zero) {}
+    inline/*  OSPCOMMON_INTERFACE */ AffineSpaceT( OneTy )  : l(one),  p(zero) {}
 
     /*! return matrix for scaling */
-    static inline AffineSpaceT scale(const VectorT& s) { return L::scale(s); }
+    static inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT scale(const VectorT& s) { return L::scale(s); }
 
     /*! return matrix for translation */
-    static inline AffineSpaceT translate(const VectorT& p) { return AffineSpaceT(one,p); }
+    static inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT translate(const VectorT& p) { return AffineSpaceT(one,p); }
 
     /*! return matrix for rotation, only in 2D */
-    static inline AffineSpaceT rotate(const ScalarT& r) { return L::rotate(r); }
+    static inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT rotate(const ScalarT& r) { return L::rotate(r); }
 
     /*! return matrix for rotation around arbitrary point (2D) or axis (3D) */
-    static inline AffineSpaceT rotate(const VectorT& u, const ScalarT& r) { return L::rotate(u,r); }
+    static inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT rotate(const VectorT& u, const ScalarT& r) { return L::rotate(u,r); }
 
     /*! return matrix for rotation around arbitrary axis and point, only in 3D */
-    static inline AffineSpaceT rotate(const VectorT& p, const VectorT& u, const ScalarT& r) { return translate(+p) * rotate(u,r) * translate(-p);  }
+    static inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT rotate(const VectorT& p, const VectorT& u, const ScalarT& r)
+    { return translate(+p) * rotate(u,r) * translate(-p);  }
 
     /*! return matrix for looking at given point, only in 3D */
-    static inline AffineSpaceT lookat(const VectorT& eye, const VectorT& point, const VectorT& up) {
+    static inline/*  OSPCOMMON_INTERFACE */
+    AffineSpaceT lookat(const VectorT& eye, const VectorT& point, const VectorT& up)
+    {
       VectorT Z = normalize(point-eye);
       VectorT U = normalize(cross(up,Z));
       VectorT V = normalize(cross(Z,U));
       return AffineSpaceT(L(U,V,Z),eye);
     }
 
+    L       l;     /*< linear part of affine space */
+    VectorT p;     /*< affine part of affine space */
   };
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -92,13 +117,13 @@ namespace ospcommon {
   // Binary Operators
   ////////////////////////////////////////////////////////////////////////////////
 
-  template<typename L> inline const AffineSpaceT<L> operator +( const AffineSpaceT<L>& a, const AffineSpaceT<L>& b ) { return AffineSpaceT<L>(a.l+b.l,a.p+b.p); }
-  template<typename L> inline const AffineSpaceT<L> operator -( const AffineSpaceT<L>& a, const AffineSpaceT<L>& b ) { return AffineSpaceT<L>(a.l-b.l,a.p-b.p); }
+  template<typename L> inline AffineSpaceT<L> operator +( const AffineSpaceT<L>& a, const AffineSpaceT<L>& b ) { return AffineSpaceT<L>(a.l+b.l,a.p+b.p); }
+  template<typename L> inline AffineSpaceT<L> operator -( const AffineSpaceT<L>& a, const AffineSpaceT<L>& b ) { return AffineSpaceT<L>(a.l-b.l,a.p-b.p); }
 
-  template<typename L> inline const AffineSpaceT<L> operator *( const ScalarT        & a, const AffineSpaceT<L>& b ) { return AffineSpaceT<L>(a*b.l,a*b.p); }
-  template<typename L> inline const AffineSpaceT<L> operator *( const AffineSpaceT<L>& a, const AffineSpaceT<L>& b ) { return AffineSpaceT<L>(a.l*b.l,a.l*b.p+a.p); }
-  template<typename L> inline const AffineSpaceT<L> operator /( const AffineSpaceT<L>& a, const AffineSpaceT<L>& b ) { return a * rcp(b); }
-  template<typename L> inline const AffineSpaceT<L> operator /( const AffineSpaceT<L>& a, const ScalarT        & b ) { return a * rcp(b); }
+  template<typename L> inline AffineSpaceT<L> operator *( const ScalarT        & a, const AffineSpaceT<L>& b ) { return AffineSpaceT<L>(a*b.l,a*b.p); }
+  template<typename L> inline AffineSpaceT<L> operator *( const AffineSpaceT<L>& a, const AffineSpaceT<L>& b ) { return AffineSpaceT<L>(a.l*b.l,a.l*b.p+a.p); }
+  template<typename L> inline AffineSpaceT<L> operator /( const AffineSpaceT<L>& a, const AffineSpaceT<L>& b ) { return a * rcp(b); }
+  template<typename L> inline AffineSpaceT<L> operator /( const AffineSpaceT<L>& a, const ScalarT        & b ) { return a * rcp(b); }
 
   template<typename L> inline AffineSpaceT<L>& operator *=( AffineSpaceT<L>& a, const AffineSpaceT<L>& b ) { return a = a * b; }
   template<typename L> inline AffineSpaceT<L>& operator *=( AffineSpaceT<L>& a, const ScalarT        & b ) { return a = a * b; }

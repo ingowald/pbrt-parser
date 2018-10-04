@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -34,32 +34,29 @@ namespace ospcommon {
 
   Library::Library(const std::string& name)
   {
-#ifdef OSPRAY_TARGET_MIC
-    std::string file = name+"_mic";
-#else
     std::string file = name;
-#endif
 #ifdef _WIN32
     std::string fullName = file+".dll";
     lib = LoadLibrary(fullName.c_str());
-    if (!lib) {
-      FileName executable = getExecutableFileName();
-      lib = LoadLibrary((executable.path() + fullName).c_str());
-    }
 #else
 #if defined(__MACOSX__)
     std::string fullName = "lib"+file+".dylib";
 #else
     std::string fullName = "lib"+file+".so";
 #endif
-    lib = dlopen(fullName.c_str(), RTLD_NOW);
-    if (!lib) {
-      FileName executable = getExecutableFileName();
-      lib = dlopen((executable.path() + fullName).c_str(), RTLD_NOW);
-    }
+    lib = dlopen(fullName.c_str(), RTLD_NOW | RTLD_GLOBAL);
 #endif
 
-    if (lib == NULL) {
+    // iw: do NOT use this 'hack' that tries to find the
+    // library in another location: first it shouldn't be used in
+    // the first place (if you want a shared library, put it
+    // into your LD_LIBRARY_PATH!; second, it messes up the 'real'
+    // errors when the first library couldn't be opened (because
+    // whatever error messaes there were - depedencies, missing
+    // symbols, etc - get overwritten by that second dlopen,
+    // which almost always returns 'file not found')
+
+    if (lib == nullptr) {
 #ifdef _WIN32
       // TODO: Must use GetLastError and FormatMessage on windows
       // to log out the error that occurred when calling LoadLibrary
@@ -84,11 +81,11 @@ namespace ospcommon {
   }
 
 
-  LibraryRepository* LibraryRepository::instance = NULL;
+  LibraryRepository* LibraryRepository::instance = nullptr;
 
   LibraryRepository* LibraryRepository::getInstance()
   {
-    if (instance == NULL)
+    if (instance == nullptr)
       instance = new LibraryRepository;
 
     return instance;
@@ -104,8 +101,8 @@ namespace ospcommon {
 
   void* LibraryRepository::getSymbol(const std::string& name) const
   {
-    void *sym = NULL;
-    for (auto lib = repo.cbegin(); sym == NULL && lib != repo.end(); ++lib)
+    void *sym = nullptr;
+    for (auto lib = repo.cbegin(); sym == nullptr && lib != repo.end(); ++lib)
       sym = lib->second->getSymbol(name);
 
     return sym;
@@ -123,7 +120,7 @@ namespace ospcommon {
     // we cannot get a function from ospray.dll, because this would create a
     // cyclic dependency between ospray.dll and ospray_common.dll
 
-    // only works when ospray_common is liked statically into ospray
+    // only works when ospray_common is linked statically into ospray
     const void * functionInOSPRayDLL = ospcommon::getSymbol;
     // get handle to current dll via a known function
     MEMORY_BASIC_INFORMATION mbi;

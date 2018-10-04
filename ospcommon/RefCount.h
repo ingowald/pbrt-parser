@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -23,7 +23,7 @@
     homebrewed one */
 namespace ospcommon
 {
-#if defined(__X86_64__) || defined(__MIC__)
+#ifdef __X86_64__
   typedef long long atomic_init_t;
 #else
   typedef int atomic_init_t;

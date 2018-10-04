@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015 Ingo Wald
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include "common/plib.h"
+#include "../common.h"
 
-namespace plib {
-  namespace pbrt {
+namespace ospcommon {
 
-  }
-}
+  void OSPCOMMON_INTERFACE initTaskingSystem(int numThreads = -1);
+
+}// namespace ospcommon

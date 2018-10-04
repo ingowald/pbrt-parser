@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2009-2015 Ingo Wald                                            ##
+## Copyright 2009-2018 Ingo Wald                                            ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -25,24 +25,17 @@ IF(COMMAND cmake_policy)
   ENDIF(${CMAKE_MAJOR_VERSION} EQUAL 3)
 ENDIF(COMMAND cmake_policy)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+SET(CMAKE_CXX_STANDARD 11)
 SET(PLIB_BINARY_DIR ${PROJECT_BINARY_DIR})
 SET(LIBRARY_OUTPUT_PATH ${PLIB_BINARY_DIR})
 SET(EXECUTABLE_OUTPUT_PATH ${PLIB_BINARY_DIR})
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
-ADD_LIBRARY(plib_common
-  ospcommon/common.cpp
-  ospcommon/FileName.cpp
-  ospcommon/sysinfo.cpp
-  ospcommon/malloc.cpp
-  ospcommon/library.cpp
-  ospcommon/thread.cpp
-  ospcommon/vec.cpp
-  ospcommon/array3D/Array3D.cpp
-  )
+ADD_SUBDIRECTORY(ospcommon)
+
 ADD_SUBDIRECTORY(pbrt)
 ADD_SUBDIRECTORY(apps)
+
 
 

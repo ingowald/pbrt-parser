@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -31,7 +31,7 @@ namespace std
 }
 #endif
 #else
-#include <x86intrin.h>
+// #include <x86intrin.h>
 # include <emmintrin.h>
 # include <xmmintrin.h>
 # ifdef __SSE4_1__
@@ -63,16 +63,16 @@ namespace ospcommon
   __forceinline float sign ( const float x ) { return x<0?-1.0f:1.0f; }
   __forceinline float sqr  ( const float x ) { return x*x; }
 
-#ifndef __MIC__
   __forceinline float rcp  ( const float x ) 
   {
     const __m128 a = _mm_set_ss(x);
     const __m128 r = _mm_rcp_ps(a);
-// #if defined(__AVX2__)
-//     return _mm_cvtss_f32(_mm_mul_ps(r,_mm_fnmadd_ps(r, a, _mm_set_ss(2.0f))));
-// #else
+// NOTE(jda) - turn off AVX2 optimizations for GCC 6.x w/ -mavx2 flag
+#if 0//defined(__AVX2__)
+    return _mm_cvtss_f32(_mm_mul_ps(r,_mm_fnmadd_ps(r, a, _mm_set_ss(2.0f))));
+#else
     return _mm_cvtss_f32(_mm_mul_ps(r,_mm_sub_ps(_mm_set_ss(2.0f), _mm_mul_ps(r, a))));
-// #endif
+#endif
   }
 
   __forceinline float signmsk ( const float x ) { 
@@ -87,17 +87,10 @@ namespace ospcommon
   __forceinline float rsqrt( const float x ) { 
     const __m128 a = _mm_set_ss(x);
     const __m128 r = _mm_rsqrt_ps(a);
-    const __m128 c = _mm_add_ps(_mm_mul_ps(_mm_set_ps(1.5f, 1.5f, 1.5f, 1.5f), r),
-                                _mm_mul_ps(_mm_mul_ps(_mm_mul_ps(a, _mm_set_ps(-0.5f, -0.5f, -0.5f, -0.5f)), r), _mm_mul_ps(r, r)));
+    const __m128 c = _mm_add_ps(_mm_mul_ps(_mm_set_ps1(1.5f), r),
+                                _mm_mul_ps(_mm_mul_ps(_mm_mul_ps(a, _mm_set_ps1(-0.5f)), r), _mm_mul_ps(r, r)));
     return _mm_cvtss_f32(c);
   }
-#else
-  __forceinline float rcp  ( const float x ) { return 1.0f/x; }
-  __forceinline float signmsk ( const float x ) { return cast_i2f(cast_f2i(x)&0x80000000); }
-  __forceinline float xorf( const float x, const float y ) { return cast_i2f(cast_f2i(x) ^ cast_f2i(y)); }
-  __forceinline float andf( const float x, const float y ) { return cast_i2f(cast_f2i(x) & cast_f2i(y)); }
-  __forceinline float rsqrt( const float x ) { return 1.0f/sqrtf(x); }
-#endif
 
 #ifndef _WIN32
   __forceinline float abs  ( const float x ) { return ::fabsf(x); }
@@ -197,17 +190,18 @@ namespace ospcommon
   template<typename T> __forceinline T  sin2cos ( const T& x )  { return sqrt(max(T(zero),T(one)-x*x)); }
   template<typename T> __forceinline T  cos2sin ( const T& x )  { return sin2cos(x); }
 
-// #if defined(__AVX2__)
-//   __forceinline float madd  ( const float a, const float b, const float c) { return _mm_cvtss_f32(_mm_fmadd_ss(_mm_set_ss(a),_mm_set_ss(b),_mm_set_ss(c))); }
-//   __forceinline float msub  ( const float a, const float b, const float c) { return _mm_cvtss_f32(_mm_fmsub_ss(_mm_set_ss(a),_mm_set_ss(b),_mm_set_ss(c))); }
-//   __forceinline float nmadd ( const float a, const float b, const float c) { return _mm_cvtss_f32(_mm_fnmadd_ss(_mm_set_ss(a),_mm_set_ss(b),_mm_set_ss(c))); }
-//   __forceinline float nmsub ( const float a, const float b, const float c) { return _mm_cvtss_f32(_mm_fnmsub_ss(_mm_set_ss(a),_mm_set_ss(b),_mm_set_ss(c))); }
-// #else
+// NOTE(jda) - turn off AVX2 optimizations for GCC 6.x w/ -mavx2 flag
+#if 0//defined(__AVX2__)
+  __forceinline float madd  ( const float a, const float b, const float c) { return _mm_cvtss_f32(_mm_fmadd_ss(_mm_set_ss(a),_mm_set_ss(b),_mm_set_ss(c))); }
+  __forceinline float msub  ( const float a, const float b, const float c) { return _mm_cvtss_f32(_mm_fmsub_ss(_mm_set_ss(a),_mm_set_ss(b),_mm_set_ss(c))); }
+  __forceinline float nmadd ( const float a, const float b, const float c) { return _mm_cvtss_f32(_mm_fnmadd_ss(_mm_set_ss(a),_mm_set_ss(b),_mm_set_ss(c))); }
+  __forceinline float nmsub ( const float a, const float b, const float c) { return _mm_cvtss_f32(_mm_fnmsub_ss(_mm_set_ss(a),_mm_set_ss(b),_mm_set_ss(c))); }
+#else
   __forceinline float madd  ( const float a, const float b, const float c) { return a*b+c; }
   __forceinline float msub  ( const float a, const float b, const float c) { return a*b-c; }
   __forceinline float nmadd ( const float a, const float b, const float c) { return -a*b+c;}
   __forceinline float nmsub ( const float a, const float b, const float c) { return -a*b-c; }
-// #endif
+#endif
 
   /*! random functions */
   template<typename T> T random() { return T(0); }

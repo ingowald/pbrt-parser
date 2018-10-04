@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015 Ingo Wald
+// Copyright 2015-2018 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,7 +14,25 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-namespace plib {
-  namespace pbrt {
-  }
-}
+#pragma once
+
+#include "ospcommon/vec.h"
+#include "ospcommon/AffineSpace.h"
+#include "ospcommon/FileName.h"
+
+namespace pbrt_parser {
+
+  using namespace ospcommon;
+  
+#ifdef _WIN32
+#  ifdef pbrt_parser_EXPORTS
+#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
+#  else
+#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
+#  endif
+#else
+#  define PBRT_PARSER_INTERFACE /* ignore on linux */
+#endif
+  
+} // ::pbrt_parser
+

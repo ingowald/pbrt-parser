@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -474,7 +474,7 @@ namespace ospcommon
   }
 
   double getSeconds() {
-    struct timeval tp; gettimeofday(&tp,NULL);
+    struct timeval tp; gettimeofday(&tp,nullptr);
     return double(tp.tv_sec) + double(tp.tv_usec)/1E6;
   }
 }

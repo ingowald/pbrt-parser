@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -159,7 +159,7 @@ namespace ospcommon {
   /// 3D Linear Transform (3x3 Matrix)
   ////////////////////////////////////////////////////////////////////////////////
 
-  template<typename T> struct LinearSpace3
+  template<typename T> struct /* OSPCOMMON_INTERFACE */ LinearSpace3
   {
     typedef T Vector;
     typedef typename T::scalar_t Scalar;

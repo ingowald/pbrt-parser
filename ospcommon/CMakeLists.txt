@@ -14,55 +14,38 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-SET(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-SET(THREADS_PREFER_PTHREAD_FLAG TRUE)
-FIND_PACKAGE(Threads REQUIRED)
-SET(LINK_LIBS ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+IF (NOT (TARGET ospray_common))
+  SET(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+  SET(THREADS_PREFER_PTHREAD_FLAG TRUE)
+  FIND_PACKAGE(Threads REQUIRED)
+  SET(LINK_LIBS ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+  
+  IF (WIN32)
+    LIST(APPEND LINK_LIBS ws2_32)
+  ENDIF()
+  
+  ADD_LIBRARY(ospray_common SHARED
+    common.cpp
+    FileName.cpp
+    sysinfo.cpp
+    malloc.cpp
+    library.cpp
+    thread.cpp
+    vec.cpp
+    array3D/Array3D.cpp
 
-IF (WIN32)
-  LIST(APPEND LINK_LIBS ws2_32)
+    AffineSpace.h
+    box.h
+    constants.h
+    intrinsics.h
+    LinearSpace.h
+    math.h
+    platform.h
+    Quaternion.h
+    RefCount.h
+    vec.h
+    )
+  TARGET_LINK_LIBRARIES(
+    ospray_common ${LINK_LIBS}
+    )
 ENDIF()
-
-OSPRAY_CREATE_LIBRARY(ospray_common
-  common.cpp
-  FileName.cpp
-  sysinfo.cpp
-  malloc.cpp
-  library.cpp
-  thread.cpp
-  vec.cpp
-  array3D/Array3D.cpp
-
-  AffineSpace.h
-  box.h
-  constants.h
-  intrinsics.h
-  LinearSpace.h
-  math.h
-  platform.h
-  Quaternion.h
-  RefCount.h
-  vec.h
-LINK
-  ${LINK_LIBS}
-)
-
-OSPRAY_INSTALL_SDK_HEADERS(
-  AffineSpace.h
-  box.h
-  common.h
-  constants.h
-  FileName.h
-  intrinsics.h
-  library.h
-  LinearSpace.h
-  malloc.h
-  math.h
-  platform.h
-  Quaternion.h
-  RefCount.h
-  sysinfo.h
-  thread.h
-  vec.h
-  DESTINATION ../ospcommon #NOTE: this is "next" to the SDK/ directory
-)
