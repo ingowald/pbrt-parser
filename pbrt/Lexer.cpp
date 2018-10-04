@@ -90,87 +90,13 @@ namespace pbrt_parser {
   {
   }
 
-  /*! produce the next token from the input stream; return nullptr if
-    end of (all files) is reached */
-  inline std::shared_ptr<Token> Lexer::produceNextToken() 
-  {
-    // skip all white space and comments
-    int c;
-
-    std::stringstream ss;
-
-    Loc startLoc = loc;
-    // skip all whitespaces and comments
-    while (1) {
-      c = get_char();
-
-      if (c < 0) { file->close(); return std::shared_ptr<Token>(); }
-          
-      if (isWhite(c)) {
-        continue;
-      }
-          
-      if (c == '#') {
-        startLoc = loc;
-        Loc lastLoc = loc;
-        // std::cout << "start of comment at " << startLoc.toString() << std::endl;
-        while (c != '\n') {
-          lastLoc = loc;
-          c = get_char();
-          if (c < 0) return std::shared_ptr<Token>();
-        }
-        // std::cout << "END of comment at " << lastLoc.toString() << std::endl;
-        continue;
-      }
-      break;
-    }
-
-    startLoc = loc;
-    Loc lastLoc = loc;
-    if (c == '"') {
-      // cout << "START OF STRING at " << loc.toString() << endl;
-      while (1) {
-        lastLoc = loc;
-        c = get_char();
-        if (c < 0)
-          THROW_RUNTIME_ERROR("could not find end of string literal (found eof instead)");
-        if (c == '"') 
-          break;
-        ss << (char)c;
-      } 
-      return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_STRING,ss.str());
-    }
-
-    // -------------------------------------------------------
-    // special char
-    // -------------------------------------------------------
-    if (isSpecial(c)) {
-      ss << (char)c;
-      return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_SPECIAL,ss.str());
-    }
-
-    ss << (char)c;
-    // cout << "START OF TOKEN at " << loc.toString() << endl;
-    while (1) {
-      lastLoc = loc;
-      c = get_char();
-      if (c < 0)
-        return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
-      if (c == '#' || isSpecial(c) || isWhite(c) || c=='"') {
-        // cout << "END OF TOKEN AT " << lastLoc.toString() << endl;
-        unget_char(c);
-        return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
-      }
-      ss << (char)c;
-    }
-  }
-
-  std::shared_ptr<Token> Lexer::peek(size_t i)
-  {
-    while (i >= peekedTokens.size())
-      peekedTokens.push_back(produceNextToken());
-    return peekedTokens[i];
-  }
+  // TokenHandle Lexer::peek(size_t i)
+  // {
+  //   while (i >= peekedTokens.size())
+  //     peekedTokens.push_back(produceNextToken());
+  //   PRINT(peekedTokens[i]);
+  //   return peekedTokens[i];
+  // }
       
   inline void Lexer::unget_char(int c)
   {
@@ -211,14 +137,75 @@ namespace pbrt_parser {
     return strchr("[,]",c)!=nullptr;
   }
 
-  std::shared_ptr<Token> Lexer::next() 
+  TokenHandle Lexer::next() 
   {
-    if (peekedTokens.empty())
-      return produceNextToken();
-      
-    std::shared_ptr<Token> token = peekedTokens.front();
-    peekedTokens.pop_front();
-    return token;
+    // skip all white space and comments
+    int c;
+
+    std::stringstream ss;
+
+    Loc startLoc = loc;
+    // skip all whitespaces and comments
+    while (1) {
+      c = get_char();
+
+      if (c < 0) { file->close(); return TokenHandle(); }
+          
+      if (isWhite(c)) {
+        continue;
+      }
+          
+      if (c == '#') {
+        startLoc = loc;
+        Loc lastLoc = loc;
+        while (c != '\n') {
+          lastLoc = loc;
+          c = get_char();
+          if (c < 0) return TokenHandle();
+        }
+        continue;
+      }
+      break;
+    }
+
+    startLoc = loc;
+    Loc lastLoc = loc;
+    if (c == '"') {
+      while (1) {
+        lastLoc = loc;
+        c = get_char();
+        if (c < 0)
+          THROW_RUNTIME_ERROR("could not find end of string literal (found eof instead)");
+        if (c == '"') 
+          break;
+        ss << (char)c;
+      }
+      return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_STRING,ss.str());
+    }
+
+    // -------------------------------------------------------
+    // special char
+    // -------------------------------------------------------
+    if (isSpecial(c)) {
+      ss << (char)c;
+      return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_SPECIAL,ss.str());
+    }
+
+    ss << (char)c;
+    // cout << "START OF TOKEN at " << loc.toString() << endl;
+    while (1) {
+      lastLoc = loc;
+      c = get_char();
+      if (c < 0)
+        return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
+      if (c == '#' || isSpecial(c) || isWhite(c) || c=='"') {
+        // cout << "END OF TOKEN AT " << lastLoc.toString() << endl;
+        unget_char(c);
+        return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
+      }
+      ss << (char)c;
+    }
   }
 
+  
 } // ::pbrt_parser

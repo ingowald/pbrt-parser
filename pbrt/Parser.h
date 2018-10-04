@@ -17,13 +17,11 @@
 #pragma once
 
 #include "pbrt/Scene.h"
+#include "Lexer.h"
 // std
 #include <stack>
 
 namespace pbrt_parser {
-
-  struct Lexer;
-  struct Token;
 
   struct CTM : public Transforms {
     void reset()
@@ -59,28 +57,42 @@ namespace pbrt_parser {
       
     /*! try parsing this token as some sort of transform token, and
       return true if successful, false if not recognized  */
-    bool parseTransforms(std::shared_ptr<Token> token);
+    bool parseTransforms(TokenHandle token);
 
     void pushTransform();
     void popTransform();
 
+    vec3f parseVec3f();
+    float parseFloat();
+    affine3f parseMatrix();
+
+
     std::map<std::string,std::shared_ptr<Object> >   namedObjects;
 
-    inline std::shared_ptr<Param> parseParam(std::string &name, Lexer &tokens);
-    void parseParams(std::map<std::string, std::shared_ptr<Param> > &params, Lexer &tokens);
+    inline std::shared_ptr<Param> parseParam(std::string &name);
+    void parseParams(std::map<std::string, std::shared_ptr<Param> > &params);
 
     /*! return the scene we have parsed */
     std::shared_ptr<Scene> getScene() { return scene; }
     std::shared_ptr<Texture> getTexture(const std::string &name);
   private:
     //! stack of parent files' token streams
-    std::stack<std::shared_ptr<Lexer> > tokenizerStack;
+    std::stack<std::shared_ptr<Lexer>> tokenizerStack;
+    std::deque<TokenHandle> peekQueue;
+    
     //! token stream of currently open file
     std::shared_ptr<Lexer> tokens;
+    
     /*! get the next token to process (either from current file, or
       parent file(s) if current file is EOL!); return NULL if
       complete end of input */
-    std::shared_ptr<Token> getNextToken();
+    TokenHandle getNextToken();
+    TokenHandle next();
+    
+    /*! peek ahead by N tokens, (either from current file, or
+      parent file(s) if current file is EOL!); return NULL if
+      complete end of input */
+    TokenHandle peek(int ahead=0);
 
     // add additional transform to current transform
     void addTransform(const affine3f &xfm)
