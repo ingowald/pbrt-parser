@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2017 Ingo Wald                                            //
+// Copyright 2015-2018 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -23,6 +23,8 @@
 
 namespace pbrt_parser {
 
+  /*! the class that implements PBRT's "current transformation matrix
+      (CTM)" stack */
   struct CTM : public Transforms {
     void reset()
     {
@@ -35,6 +37,7 @@ namespace pbrt_parser {
     /*! pbrt's "CTM" (current transformation matrix) handling */
     std::stack<Transforms> stack;
   };
+
   
   /*! parser object that holds persistent state about the parsing
     state (e.g., file paths, named objects, etc), even if they are
