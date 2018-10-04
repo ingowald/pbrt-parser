@@ -19,14 +19,27 @@
 /*! \file pbrt/Scene.h Defines the root pbrt scene to be
     created/parsed by this parser */
 
-
-#include "pbrt/pbrt.h"
+#include "ospcommon/vec.h"
+#include "ospcommon/AffineSpace.h"
+#include "ospcommon/FileName.h"
+  
 // stl
 #include <map>
 #include <vector>
 
-namespace pbrt_parser {
+#ifdef _WIN32
+#  ifdef pbrt_parser_EXPORTS
+#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
+#  else
+#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
+#  endif
+#else
+#  define PBRT_PARSER_INTERFACE /* ignore on linux */
+#endif
 
+namespace pbrt_parser {
+  using namespace ospcommon;
+  
   struct Object;
   struct Material;
   struct Medium;

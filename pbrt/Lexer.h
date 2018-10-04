@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "pbrt/pbrt.h"
+#include "Scene.h"
 // stl
 #include <queue>
 #include <memory>
@@ -25,7 +25,7 @@ namespace pbrt_parser {
 
   /*! file name and handle, to be used by tokenizer and loc */
   struct PBRT_PARSER_INTERFACE File {
-    File(const FileName &fn);
+    File(const std::string &fn);
     void close() { fclose(file); file = NULL; }
     virtual ~File();
     /*! get name of the file */
@@ -109,7 +109,7 @@ namespace pbrt_parser {
   struct PBRT_PARSER_INTERFACE Lexer {
 
     //! constructor
-    Lexer(const FileName &fn);
+    Lexer(const std::string &fn);
 
     TokenHandle next();
       

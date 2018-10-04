@@ -25,3 +25,6 @@ TARGET_LINK_LIBRARIES(pbrt_parser
   ospray_common
   )
 
+install(TARGETS pbrt_parser DESTINATION lib)
+install(FILES Scene.h DESTINATION include/pbrt_parser)
+

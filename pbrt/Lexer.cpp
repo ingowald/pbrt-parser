@@ -22,12 +22,12 @@ namespace pbrt_parser {
   // =======================================================
   // file
   // =======================================================
-  File::File(const FileName &fn)
+  File::File(const std::string &fn)
     : name(fn)
   {
-    file = fopen(fn.str().c_str(),"r");
+    file = fopen(fn.c_str(),"r");
     if (!file)
-      throw std::runtime_error("could not open file '"+fn.str()+"'");
+      throw std::runtime_error("could not open file '"+fn+"'");
   }
 
   File::~File()
@@ -82,7 +82,7 @@ namespace pbrt_parser {
   // =======================================================
 
   //! constructor
-  Lexer::Lexer(const FileName &fn)
+  Lexer::Lexer(const std::string &fn)
     : file(new File(fn)), loc(file), peekedChar(-1) 
   {
   }
