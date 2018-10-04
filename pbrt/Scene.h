@@ -159,43 +159,64 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Node : public Parameterized {
-    Node(const Node &node) = default;
-    Node(Node &&node) = default;
     Node(const std::string &type)
-      // , 
-      //    const Transforms &transform=Transforms()) 
       : type(type)
-      // , 
-      // transform(transform)
       {}
-    virtual std::string toString() const { return type; }
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const = 0;
 
     const std::string type;
-    //      std::map<std::string,std::shared_ptr<Param> > param;
-
-    /*! the active transform stack that was active when then shape
-      was defined */
-    // Transforms transform;
   };
 
+  /*! a PBRT "Camera" object - does not actually specify any
+      particular members by itself, all semantics is included in the
+      'type' field and its (type-specfic) parameters */
   struct PBRT_PARSER_INTERFACE Camera : public Node {
+    /*! constructor */
     Camera(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "Camera<"+type+">"; }
   };
 
   struct PBRT_PARSER_INTERFACE Sampler : public Node {
+    /*! constructor */
     Sampler(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "Sampler<"+type+">"; }
   };
+
   struct PBRT_PARSER_INTERFACE Integrator : public Node {
+    /*! constructor */
     Integrator(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "Integrator<"+type+">"; }
   };
   struct PBRT_PARSER_INTERFACE SurfaceIntegrator : public Node {
+    /*! constructor */
     SurfaceIntegrator(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "SurfaceIntegrator<"+type+">"; }
   };
+
   struct PBRT_PARSER_INTERFACE VolumeIntegrator : public Node {
+    /*! constructor */
     VolumeIntegrator(const std::string &type) : Node(type) {};
+    
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "VolumeIntegrator<"+type+">"; }
   };
+  
   struct PBRT_PARSER_INTERFACE PixelFilter : public Node {
+    /*! constructor */
     PixelFilter(const std::string &type) : Node(type) {};
+    
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "PixelFilter<"+type+">"; }
   };
 
   /*! a PBRT 'geometric shape' (a geometry in ospray terms) - ie,
@@ -207,8 +228,11 @@ namespace pbrt_parser {
           std::shared_ptr<Material>   material,
           std::shared_ptr<Attributes> attributes,
           const Transforms &transform);
-    Shape(const Shape &shape) = default;
-    Shape(Shape &&shape) = default;
+    // Shape(const Shape &shape) = default;
+    // Shape(Shape &&shape) = default;
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "Shape<"+type+">"; }
 
     /*! material active when the shape was generated - PBRT has only
       one material per shape */
@@ -219,26 +243,44 @@ namespace pbrt_parser {
 
   struct PBRT_PARSER_INTERFACE Volume : public Node {
     Volume(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "Volume<"+type+">"; }
   };
 
   struct PBRT_PARSER_INTERFACE LightSource : public Node {
     LightSource(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "LightSource<"+type+">"; }
   };
 
   struct PBRT_PARSER_INTERFACE AreaLightSource : public Node {
     AreaLightSource(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "AreaLightSource<"+type+">"; }
   };
 
   struct PBRT_PARSER_INTERFACE Film : public Node {
     Film(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "Film<"+type+">"; }
   };
 
   struct PBRT_PARSER_INTERFACE Accelerator : public Node {
     Accelerator(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "Accelerator<"+type+">"; }
   };
 
   struct PBRT_PARSER_INTERFACE Renderer : public Node {
     Renderer(const std::string &type) : Node(type) {};
+
+    /*! pretty-printing, for debugging */
+    virtual std::string toString() const override { return "Renderer<"+type+">"; }
   };
 
   // a "LookAt" in the pbrt file has three vec3fs, no idea what for

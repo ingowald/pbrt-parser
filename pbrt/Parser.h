@@ -86,9 +86,8 @@ namespace pbrt_parser {
     /*! get the next token to process (either from current file, or
       parent file(s) if current file is EOL!); return NULL if
       complete end of input */
-    TokenHandle getNextToken();
     TokenHandle next();
-    
+
     /*! peek ahead by N tokens, (either from current file, or
       parent file(s) if current file is EOL!); return NULL if
       complete end of input */
@@ -122,6 +121,10 @@ namespace pbrt_parser {
     std::shared_ptr<Scene>    scene;
     std::shared_ptr<Object>   currentObject;
     std::shared_ptr<Material> currentMaterial;
+    
+    /*! tracks the location of the last token gotten through next() (for debugging) */
+    Loc lastLoc;
+    
   };
 
   PBRT_PARSER_INTERFACE void parsePLY(const std::string &fileName,

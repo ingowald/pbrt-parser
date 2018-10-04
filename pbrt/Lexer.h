@@ -40,9 +40,9 @@ namespace pbrt_parser {
 
   /*! struct referring to a 'loc'ation in the input stream, given by
     file name and line number */
-  struct PBRT_PARSER_INTERFACE Loc { 
+  struct PBRT_PARSER_INTERFACE Loc {
     //! constructor
-    Loc(std::shared_ptr<File> file);
+    Loc(std::shared_ptr<File> file=std::shared_ptr<File>());
     //! copy-constructor
     Loc(const Loc &loc);
 
@@ -52,7 +52,8 @@ namespace pbrt_parser {
     friend class Lexer;
   private:
     std::shared_ptr<File> file;
-    int line, col;
+    int line { -1 };
+    int col  { -1 };
   };
 
   struct PBRT_PARSER_INTERFACE Token {

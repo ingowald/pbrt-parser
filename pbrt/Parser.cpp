@@ -206,7 +206,11 @@ namespace pbrt_parser {
   std::shared_ptr<Texture> Parser::getTexture(const std::string &name) 
   {
     if (attributesStack.top()->namedTexture.find(name) == attributesStack.top()->namedTexture.end())
-      throw std::runtime_error("no texture named '"+name+"'");
+      // throw std::runtime_error(lastLoc.toString()+": no texture named '"+name+"'");
+      {
+        std::cerr << "warning: could not find texture named '" << name << "'" << std::endl;
+        return std::shared_ptr<Texture> ();
+      }
     return attributesStack.top()->namedTexture[name]; 
   }
 
@@ -352,7 +356,7 @@ namespace pbrt_parser {
   {
     if (dbg) cout << "Parsing PBRT World" << endl;
     while (1) {
-      TokenHandle token = getNextToken();
+      TokenHandle token = next();
       assert(token);
       if (dbg) std::cout << "World token : " << token->toString() << std::endl;
 
@@ -566,16 +570,15 @@ namespace pbrt_parser {
     }
   }
 
-  TokenHandle Parser::getNextToken()
+  TokenHandle Parser::next()
   {
     TokenHandle token = peek();
     if (!token)
       throw std::runtime_error("unexpected end of file ...");
     peekQueue.pop_front();
+    lastLoc = token->loc;
     return token;
   }
-  
-  TokenHandle Parser::next() { return getNextToken(); }
     
   TokenHandle Parser::peek(int i)
   {
@@ -593,7 +596,6 @@ namespace pbrt_parser {
         tokenizerStack.push(tokens);
         tokens = std::make_shared<Lexer>(includedFileName);
         continue;
-        // return getNextToken();
       }
       
       if (token) {
@@ -613,29 +615,13 @@ namespace pbrt_parser {
       continue;
     }
     return peekQueue[i];
-    // assert(token);
-    // if (token == "Include") {
-    //   TokenHandle fileNameToken = next();
-    //   FileName includedFileName = fileNameToken;
-    //   if (includedFileName.str()[0] != '/') {
-    //     includedFileName = rootNamePath+includedFileName;
-    //   }
-    //   if (dbg) cout << "... including file '" << includedFileName.str() << " ..." << endl;
-        
-    //   tokenizerStack.push(tokens);
-    //   tokens = std::make_shared<Lexer>(includedFileName);
-    //   return getNextToken();
-    // }
-    // else
-    //   return token;
-    // }
   }
     
   void Parser::parseScene()
   {
     while (peek()) {
       
-      TokenHandle token = getNextToken();
+      TokenHandle token = next();
       if (!token)
         break;
 
@@ -756,7 +742,7 @@ namespace pbrt_parser {
         continue;
       }
 
-      throw std::runtime_error("unexpected token '"+token->toString()
+      throw std::runtime_error("unexpected token '"+token->text
                                +"' at "+token->loc.toString());
     }
   }

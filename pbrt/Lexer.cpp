@@ -43,21 +43,18 @@ namespace pbrt_parser {
   //! constructor
   Loc::Loc(std::shared_ptr<File> file) : file(file), line(1), col(0) 
   {
-    assert(file);
   }
     
   //! copy-constructor
   Loc::Loc(const Loc &loc) : file(loc.file), line(loc.line), col(loc.col) 
   {
-    assert(loc.file);
   }
     
   //! pretty-print
   std::string Loc::toString() const 
   {
     std::stringstream ss;
-    assert(file);
-    ss << "@" << file->getFileName() << ":" << line << "." << col;
+    ss << "@" << (file?file->getFileName():"<invalid>") << ":" << line << "." << col;
     return ss.str();
   }
 
@@ -76,7 +73,7 @@ namespace pbrt_parser {
   std::string Token::toString() const 
   {
     std::stringstream ss;
-    ss << loc.toString() <<": " << text;
+    ss << loc.toString() <<": '" << text << "'";
     return ss.str();
   }
     
@@ -90,14 +87,6 @@ namespace pbrt_parser {
   {
   }
 
-  // TokenHandle Lexer::peek(size_t i)
-  // {
-  //   while (i >= peekedTokens.size())
-  //     peekedTokens.push_back(produceNextToken());
-  //   PRINT(peekedTokens[i]);
-  //   return peekedTokens[i];
-  // }
-      
   inline void Lexer::unget_char(int c)
   {
     if (peekedChar >= 0) 
