@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2009-2017 Ingo Wald                                            ##
+## Copyright 2009-2018 Ingo Wald                                            ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -13,6 +13,9 @@
 ## See the License for the specific language governing permissions and      ##
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
+
+ADD_EXECUTABLE(pbrtlint pbrtlint.cpp)
+TARGET_LINK_LIBRARIES(pbrtlint pbrt_parser)
 
 ADD_EXECUTABLE(pbrt2rivl pbrt2rivl.cpp)
 TARGET_LINK_LIBRARIES(pbrt2rivl pbrt_parser)

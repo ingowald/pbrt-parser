@@ -184,7 +184,7 @@ namespace pbrt_parser {
     int materialID = exportMaterial(shape->material,texture_color,texture_bumpmap);
 
     int thisID = nextNodeID++;
-    const affine3f xfm = instanceXfm*shape->transform;
+    const affine3f xfm = instanceXfm*shape->transform.atStart;
     // PRINT(instanceXfm);
     // PRINT(shape->transform);
     // PRINT(xfm);
@@ -260,7 +260,7 @@ namespace pbrt_parser {
     parsePLY(fn.str(),p,n,idx);
 
     int thisID = nextNodeID++;
-    const affine3f xfm = instanceXfm*shape->transform;
+    const affine3f xfm = instanceXfm*shape->transform.atStart;
     alreadyExported[shape] = thisID;
     transformOfFirstInstance[thisID] = xfm;
       
@@ -354,7 +354,7 @@ namespace pbrt_parser {
     }
     for (int instID=0;instID<object->objectInstances.size();instID++) {
       writeObject(object->objectInstances[instID]->object,
-                  instanceXfm*object->objectInstances[instID]->xfm);
+                  instanceXfm*object->objectInstances[instID]->xfm.atStart);
     }      
   }
 

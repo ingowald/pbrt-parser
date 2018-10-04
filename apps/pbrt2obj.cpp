@@ -85,7 +85,7 @@ namespace pbrt_parser {
     std::string materialString = exportMaterial(shape->material);
     fprintf(out,"%s\n",materialString.c_str());
 
-    const affine3f xfm = instanceXfm*shape->transform;
+    const affine3f xfm = instanceXfm*shape->transform.atStart;
     size_t firstVertexID = numVerticesWritten+1;
 
     std::shared_ptr<ParamT<float> > param_st = shape->findParam<float>("st");
@@ -159,7 +159,7 @@ namespace pbrt_parser {
     FileName fn = FileName(basePath) + param_fileName->paramVec[0];
     parsePLY(fn.str(),p,n,idx);
 
-    const affine3f xfm = instanceXfm*shape->transform;
+    const affine3f xfm = instanceXfm*shape->transform.atStart;
     size_t firstVertexID = numVerticesWritten+1;
 
     for (int i=0;i<p.size();i++) {
@@ -213,7 +213,7 @@ namespace pbrt_parser {
     }
     for (int instID=0;instID<object->objectInstances.size();instID++) {
       writeObject(object->objectInstances[instID]->object,
-                  instanceXfm*object->objectInstances[instID]->xfm);
+                  instanceXfm*object->objectInstances[instID]->xfm.atStart);
     }
   }
 

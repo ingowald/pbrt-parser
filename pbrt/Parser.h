@@ -25,6 +25,19 @@ namespace pbrt_parser {
   struct Lexer;
   struct Token;
 
+  struct CTM : public Transforms {
+    void reset()
+    {
+      startActive = endActive = true;
+      atStart = atEnd = affine3f(ospcommon::one);
+    }
+    bool startActive { true };
+    bool endActive   { true };
+    
+    /*! pbrt's "CTM" (current transformation matrix) handling */
+    std::stack<Transforms> stack;
+  };
+  
   /*! parser object that holds persistent state about the parsing
     state (e.g., file paths, named objects, etc), even if they are
     split over multiple files. To parse different scenes, use
@@ -70,19 +83,23 @@ namespace pbrt_parser {
     std::shared_ptr<Token> getNextToken();
 
     // add additional transform to current transform
-    void addTransform(const affine3f &add)
+    void addTransform(const affine3f &xfm)
     {
-      transformStack.top() *= add; 
+      if (ctm.startActive) ctm.atStart *= xfm;
+      if (ctm.endActive)   ctm.atEnd   *= xfm;
     }
     void setTransform(const affine3f &xfm)
-    { transformStack.top() = xfm; }
+    {
+      if (ctm.startActive) ctm.atStart = xfm;
+      if (ctm.endActive) ctm.atEnd = xfm;
+    }
 
     std::stack<std::shared_ptr<Material> >   materialStack;
     std::stack<std::shared_ptr<Attributes> > attributesStack;
-    std::stack<affine3f>                     transformStack;
     std::stack<std::shared_ptr<Object> >     objectStack;
 
-    affine3f                getCurrentXfm() { return transformStack.top(); }
+    CTM ctm;
+    // Transforms              getCurrentXfm() { return transformStack.top(); }
     std::shared_ptr<Object> getCurrentObject();
     std::shared_ptr<Object> findNamedObject(const std::string &name, bool createIfNotExist=false);
 

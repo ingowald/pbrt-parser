@@ -41,7 +41,7 @@ namespace pbrt_parser {
   std::string Object::Instance::toString() const
   { 
     std::stringstream ss;
-    ss << "Inst: " << object->toString() << " xfm " << xfm; 
+    ss << "Inst: " << object->toString() << " xfm " << xfm.atStart; 
     return ss.str();
   }
 
@@ -222,10 +222,11 @@ namespace pbrt_parser {
   Shape::Shape(const std::string &type,
                std::shared_ptr<Material>   material,
                std::shared_ptr<Attributes> attributes,
-               affine3f &transform) 
-    : Node(type,transform), 
+               const Transforms &transform) 
+    : Node(type), 
       material(material),
-      attributes(attributes)
+      attributes(attributes),
+      transform(transform)
   {};
 
   // ==================================================================

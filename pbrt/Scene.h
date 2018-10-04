@@ -25,8 +25,17 @@ namespace pbrt_parser {
 
   struct Object;
   struct Material;
+  struct Medium;
   struct Texture;
 
+  /*! start-time and end-time transforms - PBRT allows for specifying
+      transforms at both 'start' and 'end' time, to allow for linear
+      motion */
+  struct Transforms {
+    affine3f atStart;
+    affine3f atEnd;
+  };
+  
   struct PBRT_PARSER_INTERFACE Param {
     virtual std::string getType() const = 0;
     virtual size_t getSize() const = 0;
@@ -100,7 +109,9 @@ namespace pbrt_parser {
 
     virtual std::shared_ptr<Attributes> clone() const { return std::make_shared<Attributes>(*this); }
 
+    std::pair<std::string,std::string>               mediumInterface;
     std::map<std::string,std::shared_ptr<Material> > namedMaterial;
+    std::map<std::string,std::shared_ptr<Medium> >   namedMedium;
     std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
   };
 
@@ -115,6 +126,21 @@ namespace pbrt_parser {
       ways of specifying that type: for the 'Material' command it
       specifies the type explicitly right after the 'matierla'
       command; for the 'makenamedmaterial' it uses an implicit
+      'type' parameter */
+    std::string type;
+  };
+
+  struct PBRT_PARSER_INTERFACE Medium : public Parameterized {
+    Medium(const std::string &type) : type(type) {};
+
+    /*! pretty-print this medium (for debugging) */
+    std::string toString() const;
+
+    /*! the 'type' of the medium, such as 'uber'medium, 'matte',
+      'mix' etc. Note that the PBRT format has two inconsistent
+      ways of specifying that type: for the 'Medium' command it
+      specifies the type explicitly right after the 'matierla'
+      command; for the 'makenamedmedium' it uses an implicit
       'type' parameter */
     std::string type;
   };
@@ -135,11 +161,13 @@ namespace pbrt_parser {
   struct PBRT_PARSER_INTERFACE Node : public Parameterized {
     Node(const Node &node) = default;
     Node(Node &&node) = default;
-    Node(const std::string &type, 
-         const affine3f &transform=affine3f(one)) 
-      : type(type), 
-      transform(transform)
-      {};
+    Node(const std::string &type)
+      // , 
+      //    const Transforms &transform=Transforms()) 
+      : type(type)
+      // , 
+      // transform(transform)
+      {}
     virtual std::string toString() const { return type; }
 
     const std::string type;
@@ -147,7 +175,7 @@ namespace pbrt_parser {
 
     /*! the active transform stack that was active when then shape
       was defined */
-    affine3f        transform;
+    // Transforms transform;
   };
 
   struct PBRT_PARSER_INTERFACE Camera : public Node {
@@ -178,7 +206,7 @@ namespace pbrt_parser {
     Shape(const std::string &type,
           std::shared_ptr<Material>   material,
           std::shared_ptr<Attributes> attributes,
-          affine3f &transform);
+          const Transforms &transform);
     Shape(const Shape &shape) = default;
     Shape(Shape &&shape) = default;
 
@@ -186,6 +214,7 @@ namespace pbrt_parser {
       one material per shape */
     std::shared_ptr<Material>   material;
     std::shared_ptr<Attributes> attributes;
+    Transforms                  transform;
   };
 
   struct PBRT_PARSER_INTERFACE Volume : public Node {
@@ -230,14 +259,14 @@ namespace pbrt_parser {
     
     struct PBRT_PARSER_INTERFACE Instance {
       Instance(const std::shared_ptr<Object> &object,
-               const affine3f    &xfm)
+               const Transforms  &xfm)
         : object(object), xfm(xfm)
       {}
       
       std::string toString() const;
 
       std::shared_ptr<Object> object;
-      affine3f    xfm;
+      Transforms    xfm;
     };
 
     //! pretty-print scene info into a std::string 

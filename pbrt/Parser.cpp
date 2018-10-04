@@ -73,6 +73,8 @@ namespace pbrt_parser {
         ret = std::make_shared<ParamT<float>>(type);
       } else if (type == "color") {
         ret = std::make_shared<ParamT<float> >(type);
+      } else if (type == "blackbody") {
+        ret = std::make_shared<ParamT<float>>(type);
       } else if (type == "rgb") {
         ret = std::make_shared<ParamT<float> >(type);
       } else if (type == "spectrum") {
@@ -156,7 +158,7 @@ namespace pbrt_parser {
     Parser::Parser(bool dbg, const std::string &basePath) 
       : scene(std::make_shared<Scene>()), dbg(dbg), basePath(basePath) 
     {
-      transformStack.push(affine3f(ospcommon::one));
+      ctm.reset();
       attributesStack.push(std::make_shared<Attributes>());
       objectStack.push(scene->world);//scene.cast<Object>());
     }
@@ -202,12 +204,13 @@ namespace pbrt_parser {
     
     void Parser::pushTransform() 
     {
-      transformStack.push(transformStack.top());
+      ctm.stack.push(ctm);
     }
 
     void Parser::popTransform() 
     {
-      transformStack.pop();
+      (Transforms&)ctm = ctm.stack.top();
+      ctm.stack.pop();
     }
     
     affine3f parseMatrix(Lexer &tokens)
@@ -248,6 +251,23 @@ namespace pbrt_parser {
 
     bool Parser::parseTransforms(std::shared_ptr<Token> token)
     {
+      if (token->text == "ActiveTransform") {
+        const std::string which = tokens->next()->text;
+        if (which == "All") {
+          ctm.startActive = true;
+          ctm.endActive = true;
+        } else if (which == "StartTime") {
+          ctm.startActive = true;
+          ctm.endActive = false;
+        } else if (which == "EndTime") {
+          ctm.startActive = false;
+          ctm.endActive = true;
+        } else
+          throw std::runtime_error("unknown argument '"+which+"' to 'ActiveTransform' command");
+          
+        pushTransform();
+        return true;
+      }
       if (token->text == "TransformBegin") {
         pushTransform();
         return true;
@@ -311,12 +331,12 @@ namespace pbrt_parser {
 
     void Parser::parseWorld()
     {
-      cout << "Parsing PBRT World" << endl;
+      if (dbg) cout << "Parsing PBRT World" << endl;
       while (1) {
         std::shared_ptr<Token> token = getNextToken();
         assert(token);
         if (token->text == "WorldEnd") {
-          cout << "Parsing PBRT World - done!" << endl;
+          if (dbg) cout << "Parsing PBRT World - done!" << endl;
           break;
         }
         // -------------------------------------------------------
@@ -389,6 +409,35 @@ namespace pbrt_parser {
           continue;
         }
 
+
+        if (token->text == "MakeNamedMedium") {
+          std::string name = tokens->next()->text;
+          std::shared_ptr<Medium> medium
+            = std::make_shared<Medium>("<implicit>");
+          attributesStack.top()->namedMedium[name] = medium;
+          parseParams(medium->param,*tokens);
+
+          /* named medium have the parameter type implicitly as a
+             parameter rather than explicitly on the
+             'makenamedmedium' command; so let's parse this here */
+          std::shared_ptr<Param> type = medium->param["type"];
+          if (!type) throw std::runtime_error("named medium that does not specify a 'type' parameter!?");
+          std::shared_ptr<ParamT<std::string>> asString
+            = std::dynamic_pointer_cast<ParamT<std::string> >(type);
+          if (!asString)
+            throw std::runtime_error("named medium has a type, but not a string!?");
+          assert(asString->getSize() == 1);
+          medium->type = asString->paramVec[0];
+          continue;
+        }
+
+        if (token->text == "MediumInterface") {
+          attributesStack.top()->mediumInterface.first = tokens->next()->text;
+          attributesStack.top()->mediumInterface.second = tokens->next()->text;
+          continue;
+        }
+
+        
         // -------------------------------------------------------
         // Attributes
         // -------------------------------------------------------
@@ -408,7 +457,7 @@ namespace pbrt_parser {
             = std::make_shared<Shape>(tokens->next()->text,
                                       currentMaterial,
                                       attributesStack.top()->clone(),
-                                      transformStack.top());
+                                      ctm);
           parseParams(shape->param,*tokens);
           getCurrentObject()->shapes.push_back(shape);
           continue;
@@ -440,15 +489,11 @@ namespace pbrt_parser {
           std::shared_ptr<Object> object = findNamedObject(name,1);
 
           objectStack.push(object);
-          // if (verbose)
-          //   cout << "pushing object " << object->toString() << endl;
-          // transformStack.push(ospcommon::one);
           continue;
         }
           
         if (token->text == "ObjectEnd") {
           objectStack.pop();
-          // transformStack.pop();
           continue;
         }
 
@@ -456,7 +501,7 @@ namespace pbrt_parser {
           std::string name = tokens->next()->text;
           std::shared_ptr<Object> object = findNamedObject(name,1);
           std::shared_ptr<Object::Instance> inst
-            = std::make_shared<Object::Instance>(object,getCurrentXfm());
+            = std::make_shared<Object::Instance>(object,ctm);
           getCurrentObject()->objectInstances.push_back(inst);
           if (verbose)
             cout << "adding instance " << inst->toString()
@@ -489,7 +534,7 @@ namespace pbrt_parser {
         if (includedFileName.str()[0] != '/') {
           includedFileName = rootNamePath+includedFileName;
         }
-        cout << "... including file '" << includedFileName.str() << " ..." << endl;
+        if (dbg) cout << "... including file '" << includedFileName.str() << " ..." << endl;
         
         tokenizerStack.push(tokens);
         tokens = std::make_shared<Lexer>(includedFileName);
@@ -610,7 +655,7 @@ namespace pbrt_parser {
         }
 
         if (token->text == "WorldBegin") {
-          setTransform(affine3f(ospcommon::one));
+          ctm.reset();
           parseWorld();
           continue;
         }
