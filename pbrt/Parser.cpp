@@ -43,20 +43,20 @@ namespace pbrt_parser {
     return elems;
   }
 
-    /* split a string on a set of delimiters */
-    inline std::vector<std::string> split(const std::string &input, 
-                                          const std::string &delim)
-    {
-      std::vector<std::string> tokens;
-      size_t pos = 0;
-      while (1) {
-        size_t begin = input.find_first_not_of(delim,pos);
-        if (begin == input.npos) return tokens;
-        size_t end = input.find_first_of(delim,begin);
-        tokens.push_back(input.substr(begin,(end==input.npos)?input.npos:(end-begin)));
-        pos = end;
-      }
+  /* split a string on a set of delimiters */
+  inline std::vector<std::string> split(const std::string &input, 
+                                        const std::string &delim)
+  {
+    std::vector<std::string> tokens;
+    size_t pos = 0;
+    while (1) {
+      size_t begin = input.find_first_not_of(delim,pos);
+      if (begin == input.npos) return tokens;
+      size_t end = input.find_first_of(delim,begin);
+      tokens.push_back(input.substr(begin,(end==input.npos)?input.npos:(end-begin)));
+      pos = end;
     }
+  }
 
   
   inline float Parser::parseFloat()
@@ -613,21 +613,21 @@ namespace pbrt_parser {
       continue;
     }
     return peekQueue[i];
-      // assert(token);
-      // if (token == "Include") {
-      //   TokenHandle fileNameToken = next();
-      //   FileName includedFileName = fileNameToken;
-      //   if (includedFileName.str()[0] != '/') {
-      //     includedFileName = rootNamePath+includedFileName;
-      //   }
-      //   if (dbg) cout << "... including file '" << includedFileName.str() << " ..." << endl;
+    // assert(token);
+    // if (token == "Include") {
+    //   TokenHandle fileNameToken = next();
+    //   FileName includedFileName = fileNameToken;
+    //   if (includedFileName.str()[0] != '/') {
+    //     includedFileName = rootNamePath+includedFileName;
+    //   }
+    //   if (dbg) cout << "... including file '" << includedFileName.str() << " ..." << endl;
         
-      //   tokenizerStack.push(tokens);
-      //   tokens = std::make_shared<Lexer>(includedFileName);
-      //   return getNextToken();
-      // }
-      // else
-      //   return token;
+    //   tokenizerStack.push(tokens);
+    //   tokens = std::make_shared<Lexer>(includedFileName);
+    //   return getNextToken();
+    // }
+    // else
+    //   return token;
     // }
   }
     
