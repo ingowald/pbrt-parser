@@ -21,12 +21,21 @@
     never have to look into this file directly, and only use \see
     pbrt_parser::Scene::parseFromFile() */
 
-#include "Scene.h"
+#include "ospcommon/vec.h"
+#include "ospcommon/AffineSpace.h"
+  
+#define PBRT_PARSER_VEC_TYPE       ospcommon::vec3f
+#define PBRT_PARSER_TRANSFORM_TYPE ospcommon::affine3f
+
 #include "Lexer.h"
+#include "Scene.h"
 // std
 #include <stack>
 
+
 namespace pbrt_parser {
+  
+  using namespace ospcommon;
 
   /*! the class that implements PBRT's "current transformation matrix
       (CTM)" stack */

@@ -20,6 +20,7 @@
 // stl
 #include <queue>
 #include <memory>
+#include <string.h>
 
 namespace pbrt_parser {
 

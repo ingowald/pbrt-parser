@@ -14,7 +14,6 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Scene.h"
 #include "Parser.h"
 // std
 #include <iostream>

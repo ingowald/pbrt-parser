@@ -36,7 +36,7 @@ namespace pbrt_parser {
         if (arg == "-dbg" || arg == "--dbg")
           dbg = true;
         else
-          THROW_RUNTIME_ERROR("invalid argument '"+arg+"'");
+          throw std::runtime_error("invalid argument '"+arg+"'");
       } else {
         fileName.push_back(arg);
       }          

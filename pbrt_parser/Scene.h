@@ -19,12 +19,10 @@
 /*! \file pbrt/Scene.h Defines the root pbrt scene to be
     created/parsed by this parser */
 
-#include "ospcommon/vec.h"
-#include "ospcommon/AffineSpace.h"
-  
 // stl
 #include <map>
 #include <vector>
+#include <memory>
 
 #ifdef _WIN32
 #  ifdef pbrt_parser_EXPORTS
@@ -37,38 +35,43 @@
 #endif
 
 namespace pbrt_parser {
-  using namespace ospcommon;
   
   struct Object;
   struct Material;
   struct Medium;
   struct Texture;
 
-  struct float3 {
+#if defined(PBRT_PARSER_VEC_TYPE)
+  using vec3f = PBRT_PARSER_VEC_TYPE;
+#else
+  struct vec3f {
     float x, y, z;
   };
+#endif
     
+#if defined(PBRT_PARSER_TRANSFORM_TYPE)
+  using affine3f = PBRT_PARSER_TRANSFORM_TYPE;
+#else
   /*! a affine transform, specified via rotation matrix and
       translation part */
-  struct Affine3f {
+  struct affine3f {
     /*! x-basis vector of affine transform matrix */
-    float3 vx;
+    vec3f vx;
     /*! y-basis vector of affine transform matrix */
-    float3 vy;
+    vec3f vy;
     /*! z-basis vector of affine transform matrix */
-    float3 vz;
+    vec3f vz;
     /*! translational part */
-    float3 p;
+    vec3f p;
   };
+#endif
     
   /*! start-time and end-time transforms - PBRT allows for specifying
       transforms at both 'start' and 'end' time, to allow for linear
       motion */
   struct Transforms {
-    Affine3f atStart;
-    Affine3f atEnd;
-    // affine3f atStart;
-    // affine3f atEnd;
+    affine3f atStart;
+    affine3f atEnd;
   };
   
   struct PBRT_PARSER_INTERFACE Param {
@@ -120,7 +123,7 @@ namespace pbrt_parser {
     Parameterized(Parameterized &&) = default;
     Parameterized(const Parameterized &) = default;
     
-    vec3f getParam3f(const std::string &name, const vec3f &fallBack=vec3f(0)) const;
+    vec3f getParam3f(const std::string &name, const vec3f &fallBack) const;
     float getParam1f(const std::string &name, const float fallBack=0) const;
     int getParam1i(const std::string &name, const int fallBack=0) const;
     bool getParamBool(const std::string &name, const bool fallBack=false) const;

@@ -90,7 +90,7 @@ namespace pbrt_parser {
   inline void Lexer::unget_char(int c)
   {
     if (peekedChar >= 0) 
-      THROW_RUNTIME_ERROR("can't push back more than one char ...");
+      throw std::runtime_error("can't push back more than one char ...");
     peekedChar = c;
   }
 
@@ -164,7 +164,7 @@ namespace pbrt_parser {
         lastLoc = loc;
         c = get_char();
         if (c < 0)
-          THROW_RUNTIME_ERROR("could not find end of string literal (found eof instead)");
+          throw std::runtime_error("could not find end of string literal (found eof instead)");
         if (c == '"') 
           break;
         ss << (char)c;
