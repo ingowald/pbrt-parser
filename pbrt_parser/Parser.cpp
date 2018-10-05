@@ -758,7 +758,7 @@ namespace pbrt_parser {
   {
     size_t pos = fn.find_last_of(path_sep);
     if (pos == std::string::npos) return std::string();
-    return fn.substr(0,pos);
+    return fn.substr(0,pos+1);
   }
 
 
@@ -771,6 +771,7 @@ namespace pbrt_parser {
       : (std::string)basePath;
     this->tokens = std::make_shared<Lexer>(fn);
     parseScene();
+    scene->basePath = rootNamePath;
   }
 
 } // ::pbrt_parser

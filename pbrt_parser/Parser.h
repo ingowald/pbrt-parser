@@ -34,7 +34,7 @@ namespace pbrt_parser {
     void reset()
     {
       startActive = endActive = true;
-      atStart = atEnd = affine3f(ospcommon::one);
+      (ospcommon::affine3f&)atStart = (ospcommon::affine3f&)atEnd = affine3f(ospcommon::one);
     }
     bool startActive { true };
     bool endActive   { true };
@@ -110,13 +110,13 @@ namespace pbrt_parser {
     // add additional transform to current transform
     void addTransform(const affine3f &xfm)
     {
-      if (ctm.startActive) ctm.atStart *= xfm;
-      if (ctm.endActive)   ctm.atEnd   *= xfm;
+      if (ctm.startActive) (ospcommon::affine3f&)ctm.atStart *= xfm;
+      if (ctm.endActive)   (ospcommon::affine3f&)ctm.atEnd   *= xfm;
     }
     void setTransform(const affine3f &xfm)
     {
-      if (ctm.startActive) ctm.atStart = xfm;
-      if (ctm.endActive) ctm.atEnd = xfm;
+      if (ctm.startActive) (ospcommon::affine3f&)ctm.atStart = xfm;
+      if (ctm.endActive) (ospcommon::affine3f&)ctm.atEnd = xfm;
     }
 
     std::stack<std::shared_ptr<Material> >   materialStack;

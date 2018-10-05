@@ -44,12 +44,31 @@ namespace pbrt_parser {
   struct Medium;
   struct Texture;
 
+  struct float3 {
+    float x, y, z;
+  };
+    
+  /*! a affine transform, specified via rotation matrix and
+      translation part */
+  struct Affine3f {
+    /*! x-basis vector of affine transform matrix */
+    float3 vx;
+    /*! y-basis vector of affine transform matrix */
+    float3 vy;
+    /*! z-basis vector of affine transform matrix */
+    float3 vz;
+    /*! translational part */
+    float3 p;
+  };
+    
   /*! start-time and end-time transforms - PBRT allows for specifying
       transforms at both 'start' and 'end' time, to allow for linear
       motion */
   struct Transforms {
-    affine3f atStart;
-    affine3f atEnd;
+    Affine3f atStart;
+    Affine3f atEnd;
+    // affine3f atStart;
+    // affine3f atEnd;
   };
   
   struct PBRT_PARSER_INTERFACE Param {
@@ -317,7 +336,7 @@ namespace pbrt_parser {
       std::string toString() const;
 
       std::shared_ptr<Object> object;
-      Transforms    xfm;
+      Transforms              xfm;
     };
 
     //! pretty-print scene info into a std::string 
@@ -377,6 +396,20 @@ namespace pbrt_parser {
     /*! the root scene geometry, defined in the
       'WorldBegin'/'WorldEnd' statements */
     std::shared_ptr<Object> world;
+
+    std::string makeGlobalFileName(const std::string &relativePath)
+    { return basePath + relativePath; }
+    
+    /*! the base path for all filenames defined in this scene. In
+        pbrt, lots of objects (a ply mesh geometry, a texture, etc)
+        will require additional files in other formats (e.g., the
+        actual .ply file that the ply geometry refers to; and the file
+        names will typically be relative to the file that referenced
+        them. To help computing a global file name for this we compute
+        - and store - the name of the directory that contained the
+        first file we parsed (ie, the "entry point" into the entire
+        scene */
+    std::string basePath;
   };
 
 } // ::pbrt_parser

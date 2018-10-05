@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // pbrt
-#include "pbrt/Parser.h"
+#include "pbrt_parser/Scene.h"
 // stl
 #include <iostream>
 #include <vector>
@@ -31,7 +31,7 @@ namespace pbrt_parser {
 
   size_t numWritten = 0;
   size_t numVerticesWritten = 0;
-
+  
   std::string exportMaterial(std::shared_ptr<Material> material)
   {
     if (!material) 
@@ -79,11 +79,11 @@ namespace pbrt_parser {
   void writeTriangleMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
   {
     /*! call 'exportMateiral, which will return a string that properly
-        defined and/or activates the given mateirla */
+      defined and/or activates the given mateirla */
     std::string materialString = exportMaterial(shape->material);
     fprintf(out,"%s\n",materialString.c_str());
 
-    const affine3f xfm = instanceXfm*shape->transform.atStart;
+    const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
     size_t firstVertexID = numVerticesWritten+1;
 
     std::shared_ptr<ParamT<float> > param_st = shape->findParam<float>("st");
@@ -145,7 +145,7 @@ namespace pbrt_parser {
   void writePlyMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
   {
     /*! call 'exportMateiral, which will return a string that properly
-        defined and/or activates the given mateirla */
+      defined and/or activates the given mateirla */
     std::string materialString = exportMaterial(shape->material);
     fprintf(out,"%s\n",materialString.c_str());
 
@@ -154,10 +154,11 @@ namespace pbrt_parser {
     std::vector<vec3i> idx;
       
     std::shared_ptr<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
-    FileName fn = FileName(basePath) + param_fileName->paramVec[0];
-    parsePLY(fn.str(),p,n,idx);
+    std::string fn = param_fileName->paramVec[0];
+    // std::string fn = basePath + "/" + param_fileName->paramVec[0];
+    parsePLY(fn,p,n,idx);
 
-    const affine3f xfm = instanceXfm*shape->transform.atStart;
+    const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
     size_t firstVertexID = numVerticesWritten+1;
 
     for (int i=0;i<p.size();i++) {
@@ -211,27 +212,24 @@ namespace pbrt_parser {
     }
     for (int instID=0;instID<object->objectInstances.size();instID++) {
       writeObject(object->objectInstances[instID]->object,
-                  instanceXfm*object->objectInstances[instID]->xfm.atStart);
+                  instanceXfm*(ospcommon::affine3f&)object->objectInstances[instID]->xfm.atStart);
     }
   }
 
 
   void pbrt2obj(int ac, char **av)
   {
-    std::vector<std::string> fileName;
-    bool dbg = false;
+    std::string inFileName;
     std::string outFileName = "a.obj";
     for (int i=1;i<ac;i++) {
       const std::string arg = av[i];
       if (arg[0] == '-') {
-        if (arg == "-dbg" || arg == "--dbg")
-          dbg = true;
-        else if (arg == "-o")
+        if (arg == "-o")
           outFileName = av[++i];
         else
           THROW_RUNTIME_ERROR("invalid argument '"+arg+"'");
       } else {
-        fileName.push_back(arg);
+        inFileName = arg;
       }          
     }
     out = fopen(outFileName.c_str(),"w");
@@ -241,26 +239,21 @@ namespace pbrt_parser {
     
   
     std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << "parsing:";
-    for (int i=0;i<fileName.size();i++) {
-      std::cout << " " << fileName[i];
+    std::cout << "parsing: " << inFileName << std::endl;
       
-      try {
-        pbrt_parser::Parser *parser = new pbrt_parser::Parser(dbg,fileName[i]);
-          parser->parse(fileName[i]);
-        
-        std::cout << "==> parsing successful (grammar only for now)" << std::endl;
-        
-        std::shared_ptr<Scene> scene = parser->getScene();
-        writeObject(scene->world,ospcommon::one);
-        fclose(out);
+    try {
+      std::cout << "==> parsing successful (grammar only for now)" << std::endl;
+      std::shared_ptr<Scene> scene = pbrt_parser::Scene::parseFromFile(inFileName);
+      std::cout << "done parsing, now exporting (triangular geometry from) scene" << std::endl;
+      writeObject(scene->world,ospcommon::one);
+      fclose(out);
       cout << "Done exporting to OBJ; wrote a total of " << numWritten << " triangles" << endl;
     } catch (std::runtime_error e) {
       std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
       exit(1);
     }
   }
-
+  
 } // ::pbrt_parser
 
 int main(int ac, char **av)
