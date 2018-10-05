@@ -328,9 +328,12 @@ namespace pbrt_parser {
 
   //! what's in a objectbegin/objectned, as well as the root object
   struct PBRT_PARSER_INTERFACE Object {
+    typedef std::shared_ptr<Object> SP;
     Object(const std::string &name) : name(name) {}
     
     struct PBRT_PARSER_INTERFACE Instance {
+      typedef std::shared_ptr<Instance> SP;
+      
       Instance(const std::shared_ptr<Object> &object,
                const Transforms  &xfm)
         : object(object), xfm(xfm)
