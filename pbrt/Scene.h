@@ -21,7 +21,6 @@
 
 #include "ospcommon/vec.h"
 #include "ospcommon/AffineSpace.h"
-#include "ospcommon/FileName.h"
   
 // stl
 #include <map>

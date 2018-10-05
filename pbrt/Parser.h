@@ -59,7 +59,7 @@ namespace pbrt_parser {
     Parser(bool dbg, const std::string &basePath="");
 
     /*! parse given file, and add it to the scene we hold */
-    void parse(const FileName &fn);
+    void parse(const std::string &fn);
 
     /*! parse everything in WorldBegin/WorldEnd */
     void parseWorld();
@@ -131,7 +131,7 @@ namespace pbrt_parser {
     // emit debug status messages...
     bool dbg;
     const std::string basePath;
-    FileName rootNamePath;
+    std::string rootNamePath;
     std::shared_ptr<Scene>    scene;
     std::shared_ptr<Object>   currentObject;
     std::shared_ptr<Material> currentMaterial;

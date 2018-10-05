@@ -27,7 +27,7 @@ namespace pbrt_parser {
                                               bool dbg)
   {
     std::shared_ptr<Parser> parser = std::make_shared<Parser>(dbg);
-    parser->parse(FileName(fileName));
+    parser->parse(fileName);
     return parser->getScene();
   }
     

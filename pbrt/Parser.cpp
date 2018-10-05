@@ -587,11 +587,11 @@ namespace pbrt_parser {
       // first, handle the 'Include' statement by inlining such files
       if (token && token == "Include") {
         TokenHandle fileNameToken = tokens->next();
-        FileName includedFileName = (std::string)fileNameToken;
-        if (includedFileName.str()[0] != '/') {
-          includedFileName = rootNamePath+includedFileName;
+        std::string includedFileName = (std::string)fileNameToken;
+        if (includedFileName[0] != '/') {
+          includedFileName = rootNamePath+"/"+includedFileName;
         }
-        if (dbg) cout << "... including file '" << includedFileName.str() << " ..." << endl;
+        if (dbg) cout << "... including file '" << includedFileName << " ..." << endl;
         
         tokenizerStack.push(tokens);
         tokens = std::make_shared<Lexer>(includedFileName);
@@ -747,14 +747,28 @@ namespace pbrt_parser {
     }
   }
 
-    
+
+#ifdef _WIN32
+    const char path_sep = '\\';
+#else
+    const char path_sep = '/';
+#endif
+
+  std::string pathOf(const std::string &fn)
+  {
+    size_t pos = fn.find_last_of(path_sep);
+    if (pos == std::string::npos) return std::string();
+    return fn.substr(0,pos);
+  }
+
+
   /*! parse given file, and add it to the scene we hold */
-  void Parser::parse(const FileName &fn)
+  void Parser::parse(const std::string &fn)
   {
     rootNamePath
       = basePath==""
-      ? (std::string)fn.path()
-      : (std::string)FileName(basePath);
+      ? (std::string)pathOf(fn)
+      : (std::string)basePath;
     this->tokens = std::make_shared<Lexer>(fn);
     parseScene();
   }

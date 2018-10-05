@@ -34,7 +34,7 @@ namespace pbrt_parser {
     friend class Lexer;
 
   private:
-    FileName name;
+    std::string name;
     FILE *file;
   };
 

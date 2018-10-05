@@ -26,8 +26,6 @@ namespace pbrt_parser {
   using std::cout;
   using std::endl;
 
-  FileName basePath = "";
-
   // the output file we're writing.
   FILE *out = NULL;
 
@@ -228,8 +226,6 @@ namespace pbrt_parser {
       if (arg[0] == '-') {
         if (arg == "-dbg" || arg == "--dbg")
           dbg = true;
-        else if (arg == "--path" || arg == "-path")
-          basePath = av[++i];
         else if (arg == "-o")
           outFileName = av[++i];
         else
@@ -246,23 +242,18 @@ namespace pbrt_parser {
   
     std::cout << "-------------------------------------------------------" << std::endl;
     std::cout << "parsing:";
-    for (int i=0;i<fileName.size();i++)
+    for (int i=0;i<fileName.size();i++) {
       std::cout << " " << fileName[i];
-    std::cout << std::endl;
-
-    if (basePath.str() == "")
-      basePath = FileName(fileName[0]).path();
-  
-    pbrt_parser::Parser *parser = new pbrt_parser::Parser(dbg,basePath);
-    try {
-      for (int i=0;i<fileName.size();i++)
-        parser->parse(fileName[i]);
-    
-      std::cout << "==> parsing successful (grammar only for now)" << std::endl;
-    
-      std::shared_ptr<Scene> scene = parser->getScene();
-      writeObject(scene->world,ospcommon::one);
-      fclose(out);
+      
+      try {
+        pbrt_parser::Parser *parser = new pbrt_parser::Parser(dbg,fileName[i]);
+          parser->parse(fileName[i]);
+        
+        std::cout << "==> parsing successful (grammar only for now)" << std::endl;
+        
+        std::shared_ptr<Scene> scene = parser->getScene();
+        writeObject(scene->world,ospcommon::one);
+        fclose(out);
       cout << "Done exporting to OBJ; wrote a total of " << numWritten << " triangles" << endl;
     } catch (std::runtime_error e) {
       std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;

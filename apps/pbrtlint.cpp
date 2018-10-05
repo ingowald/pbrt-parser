@@ -26,8 +26,6 @@ namespace pbrt_parser {
   using std::cout;
   using std::endl;
 
-  FileName basePath = "";
-
   void pbrtLint(int ac, char **av)
   {
     std::vector<std::string> fileName;
@@ -37,8 +35,6 @@ namespace pbrt_parser {
       if (arg[0] == '-') {
         if (arg == "-dbg" || arg == "--dbg")
           dbg = true;
-        else if (arg == "--path" || arg == "-path")
-          basePath = av[++i];
         else
           THROW_RUNTIME_ERROR("invalid argument '"+arg+"'");
       } else {
@@ -47,20 +43,16 @@ namespace pbrt_parser {
     }
     std::cout << "-------------------------------------------------------" << std::endl;
     std::cout << "pbrtlint - checking valid parsing(-only) on a pbrt file ..." << std::endl;
-    for (int i=0;i<fileName.size();i++)
-      std::cout << " - " << fileName[i];
-    std::cout << std::endl;
-
-    if (basePath.str() == "")
-      basePath = FileName(fileName[0]).path();
-  
-    try {
-      std::shared_ptr<Scene> scene = pbrt_parser::Scene::parseFromFile(basePath,dbg);
-      std::cout << " => yay! parsing successful..." << std::endl;
-    } catch (std::runtime_error e) {
-      std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
-      std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
-      exit(1);
+    for (int i=0;i<fileName.size();i++) {
+      std::cout << " - " << fileName[i] << std::endl;
+      try {
+        std::shared_ptr<Scene> scene = pbrt_parser::Scene::parseFromFile(fileName[i],dbg);
+        std::cout << " => yay! parsing successful..." << std::endl;
+      } catch (std::runtime_error e) {
+        std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
+        std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
+        exit(1);
+      }
     }
   }
 
