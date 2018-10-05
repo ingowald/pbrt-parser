@@ -18,8 +18,7 @@
 #include "ospcommon/vec.h"
 #include "ospcommon/AffineSpace.h"
 // pbrt-parser
-#define PBRT_PARSER_VEC_TYPE       ospcommon::vec3f
-#define PBRT_PARSER_TRANSFORM_TYPE ospcommon::affine3f
+#define PBRT_PARSER_VECTYPE_NAMESPACE    ospcommon
 #include "pbrt_parser/Scene.h"
 // stl
 #include <iostream>
@@ -144,12 +143,9 @@ namespace pbrt_parser {
     }        
   }
 
-  void parsePLY(const std::string &fileName,
-                std::vector<vec3f> &v,
-                std::vector<vec3f> &n,
-                std::vector<vec3i> &idx);
-
-  void writePlyMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
+  void writePlyMesh(std::shared_ptr<Scene> scene,
+                   std::shared_ptr<Shape> shape,
+                    const affine3f &instanceXfm)
   {
     /*! call 'exportMateiral, which will return a string that properly
       defined and/or activates the given mateirla */
@@ -160,10 +156,11 @@ namespace pbrt_parser {
     std::vector<vec3f> p, n;
     std::vector<vec3i> idx;
       
-    std::shared_ptr<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
-    std::string fn = param_fileName->paramVec[0];
+    // std::shared_ptr<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
+    std::string fn = scene->makeGlobalFileName(shape->getParamString("filename"));
+    // param_fileName->paramVec[0]);
     // std::string fn = basePath + "/" + param_fileName->paramVec[0];
-    parsePLY(fn,p,n,idx);
+    pbrt_parser::loadPlyTriangles(fn,p,n,idx);
 
     const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
     size_t firstVertexID = numVerticesWritten+1;
@@ -204,7 +201,8 @@ namespace pbrt_parser {
     fprintf(file,"\n");
   }
   
-  void writeObject(std::shared_ptr<Object> object, 
+  void writeObject(std::shared_ptr<Scene> scene,
+                   std::shared_ptr<Object> object, 
                    const affine3f &instanceXfm)
   {
     cout << "writing " << object->toString() << endl;
@@ -213,12 +211,13 @@ namespace pbrt_parser {
       if (shape->type == "trianglemesh") {
         writeTriangleMesh(shape,instanceXfm);
       } else if (shape->type == "plymesh") {
-        writePlyMesh(shape,instanceXfm);
+        writePlyMesh(scene,shape,instanceXfm);
       } else 
         cout << "**** invalid shape #" << shapeID << " : " << shape->type << endl;
     }
     for (int instID=0;instID<object->objectInstances.size();instID++) {
-      writeObject(object->objectInstances[instID]->object,
+      writeObject(scene,
+                  object->objectInstances[instID]->object,
                   instanceXfm*(ospcommon::affine3f&)object->objectInstances[instID]->xfm.atStart);
     }
   }
@@ -252,7 +251,7 @@ namespace pbrt_parser {
       std::cout << "==> parsing successful (grammar only for now)" << std::endl;
       std::shared_ptr<Scene> scene = pbrt_parser::Scene::parseFromFile(inFileName);
       std::cout << "done parsing, now exporting (triangular geometry from) scene" << std::endl;
-      writeObject(scene->world,ospcommon::one);
+      writeObject(scene,scene->world,ospcommon::one);
       fclose(out);
       cout << "Done exporting to OBJ; wrote a total of " << numWritten << " triangles" << endl;
     } catch (std::runtime_error e) {

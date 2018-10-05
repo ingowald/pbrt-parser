@@ -41,19 +41,50 @@ namespace pbrt_parser {
   struct Medium;
   struct Texture;
 
-#if defined(PBRT_PARSER_VEC_TYPE)
-  using vec3f = PBRT_PARSER_VEC_TYPE;
+  /*! the PBRT_PARSER_VECTYPE_NAMESPACE #define allows the
+      application/user to override the 'internal' vec3f, vec3i, and
+      affine3f classes with whatever the application wants us to
+      use. 
+
+    - if PBRT_PARSER_VECTYPE_NAMESPACE is _not defined_, we will
+      define our own pbrt_parser::vec3f, pbrt_parser::vec3i, and
+      pbrt_parser::affine3f types as plain structs. Vec3i and vec3f
+      are three 32-bit ints and floats, respectively, and affine3f is
+      a 4xvec3f matrix as defined below.
+
+    - if PBRT_PARSER_VECTYPE_NAMESPACE _is_ defined, we will instead
+      use the types vec3f,vec3i,affine3f in the namespace as supplied
+      through this macro. Eg, if PBRT_PARSER_VECTYPE_NAMESPACE is set
+      to "myveclib" we will be usign the types myveclib::vec3f,
+      myveclib::vec3i, etc. For this to work, the following conditions
+      ahve to be fulfilled:
+
+      1) the given naemsapce has to contain all three type names:
+      vec3f, vec3i, and affine3f.  (though note that with the C++-11
+      "using" statement you can alias these to whatevr you like (e.g.,
+      if your vector class is called Vec3f or float3, you can simply
+      add a "using vec3f = Vec3f;" resp "using vec3f =
+      anyOtherNameSpace::float3", etc; and since these are aliased to
+      the same type you can continue to use them in your own
+      aplication as you see fit).
+
+      2) these types _have_ to be binary compatible with the fallback
+      types we wold be using otherwise (ie, 3 floats for vec3f,
+      4xvec3f for an affine3f, etc. The reason behind this is that the
+      library itself internally uses this binary layout, so making the
+      app use a different data layout will create trouble
+  */
+#if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
+  using vec3f = PBRT_PARSER_VECTYPE_NAMESPACE::vec3f;
+  using vec3i = PBRT_PARSER_VECTYPE_NAMESPACE::vec3i;
+  using affine3f = PBRT_PARSER_VECTYPE_NAMESPACE::affine3f;
 #else
   struct vec3f {
     float x, y, z;
   };
-#endif
-    
-#if defined(PBRT_PARSER_TRANSFORM_TYPE)
-  using affine3f = PBRT_PARSER_TRANSFORM_TYPE;
-#else
-  /*! a affine transform, specified via rotation matrix and
-      translation part */
+  struct vec3i {
+    int x, y, z;
+  };
   struct affine3f {
     /*! x-basis vector of affine transform matrix */
     vec3f vx;
@@ -65,7 +96,7 @@ namespace pbrt_parser {
     vec3f p;
   };
 #endif
-    
+
   /*! start-time and end-time transforms - PBRT allows for specifying
       transforms at both 'start' and 'end' time, to allow for linear
       motion */
@@ -255,6 +286,8 @@ namespace pbrt_parser {
     something that has primitives that together form some sort of
     surface(s) that a ray can intersect*/
   struct PBRT_PARSER_INTERFACE Shape : public Node {
+    typedef std::shared_ptr<Shape> SP;
+    
     /*! constructor */
     Shape(const std::string &type,
           std::shared_ptr<Material>   material,
@@ -421,5 +454,11 @@ namespace pbrt_parser {
         scene */
     std::string basePath;
   };
+
+  /*! a helper function to load a ply file */
+  void loadPlyTriangles(const std::string &fileName,
+                        std::vector<vec3f> &v,
+                        std::vector<vec3f> &n,
+                        std::vector<vec3i> &idx);
 
 } // ::pbrt_parser

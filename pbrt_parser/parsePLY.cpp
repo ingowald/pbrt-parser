@@ -372,10 +372,10 @@ namespace pbrt_parser {
 
   } // ::pbrt_parser::ply
 
-  void parsePLY(const std::string &fileName,
-                std::vector<vec3f> &v,
-                std::vector<vec3f> &n,
-                std::vector<vec3i> &idx)
+  void loadPlyTriangles(const std::string &fileName,
+                        std::vector<vec3f> &v,
+                        std::vector<vec3f> &n,
+                        std::vector<vec3i> &idx)
   {
     ply::parse(fileName,v,n,idx);
   }

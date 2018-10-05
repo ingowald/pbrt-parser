@@ -24,8 +24,7 @@
 #include "ospcommon/vec.h"
 #include "ospcommon/AffineSpace.h"
   
-#define PBRT_PARSER_VEC_TYPE       ospcommon::vec3f
-#define PBRT_PARSER_TRANSFORM_TYPE ospcommon::affine3f
+#define PBRT_PARSER_VECTYPE_NAMESPACE  ospcommon
 
 #include "Lexer.h"
 #include "Scene.h"
