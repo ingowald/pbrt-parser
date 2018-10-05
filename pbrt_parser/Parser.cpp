@@ -214,8 +214,8 @@ namespace pbrt_parser {
     return attributesStack.top()->namedTexture[name]; 
   }
 
-  Parser::Parser(bool dbg, const std::string &basePath) 
-    : scene(std::make_shared<Scene>()), dbg(dbg), basePath(basePath) 
+  Parser::Parser(const std::string &basePath) 
+    : scene(std::make_shared<Scene>()), dbg(false), basePath(basePath) 
   {
     ctm.reset();
     attributesStack.push(std::make_shared<Attributes>());

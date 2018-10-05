@@ -22,10 +22,9 @@
 namespace pbrt_parser {
  
   /*! parse the given file name, return parsed scene */
-  std::shared_ptr<Scene> Scene::parseFromFile(const std::string &fileName,
-                                              bool dbg)
+  std::shared_ptr<Scene> Scene::parseFromFile(const std::string &fileName)
   {
-    std::shared_ptr<Parser> parser = std::make_shared<Parser>(dbg);
+    std::shared_ptr<Parser> parser = std::make_shared<Parser>();
     parser->parse(fileName);
     return parser->getScene();
   }

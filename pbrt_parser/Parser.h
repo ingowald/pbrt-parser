@@ -65,7 +65,7 @@ namespace pbrt_parser {
     mess with the state of later pbrt file parse's */
   struct PBRT_PARSER_INTERFACE Parser {
     /*! constructor */
-    Parser(bool dbg, const std::string &basePath="");
+    Parser(const std::string &basePath="");
 
     /*! parse given file, and add it to the scene we hold */
     void parse(const std::string &fn);

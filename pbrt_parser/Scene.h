@@ -370,7 +370,7 @@ namespace pbrt_parser {
       {}
 
     /*! parse the given file name, return parsed scene */
-    static std::shared_ptr<Scene> parseFromFile(const std::string &fileName, bool dbg=false);
+    static std::shared_ptr<Scene> parseFromFile(const std::string &fileName);
     
     //! pretty-print scene info into a std::string 
     std::string toString(const int depth = 0) { return world->toString(depth); }

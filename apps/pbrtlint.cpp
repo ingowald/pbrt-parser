@@ -29,13 +29,9 @@ namespace pbrt_parser {
   void pbrtLint(int ac, char **av)
   {
     std::vector<std::string> fileName;
-    bool dbg = false;
     for (int i=1;i<ac;i++) {
       const std::string arg = av[i];
       if (arg[0] == '-') {
-        if (arg == "-dbg" || arg == "--dbg")
-          dbg = true;
-        else
           throw std::runtime_error("invalid argument '"+arg+"'");
       } else {
         fileName.push_back(arg);
@@ -46,7 +42,7 @@ namespace pbrt_parser {
     for (int i=0;i<fileName.size();i++) {
       std::cout << " - " << fileName[i] << std::endl;
       try {
-        std::shared_ptr<Scene> scene = pbrt_parser::Scene::parseFromFile(fileName[i],dbg);
+        std::shared_ptr<Scene> scene = pbrt_parser::Scene::parseFromFile(fileName[i]);
         std::cout << " => yay! parsing successful..." << std::endl;
       } catch (std::runtime_error e) {
         std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
