@@ -22,7 +22,7 @@ ADD_LIBRARY(pbrt_parser SHARED
   ../3rdParty/ply.cpp
   )
 TARGET_LINK_LIBRARIES(pbrt_parser 
-  ospray_common
+#  ospray_common
   )
 
 install(TARGETS pbrt_parser DESTINATION lib)

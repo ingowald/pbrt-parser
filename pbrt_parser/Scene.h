@@ -364,6 +364,10 @@ namespace pbrt_parser {
       use, etc, plus some geometry. */
   struct PBRT_PARSER_INTERFACE Scene {
 
+    /*! allows for writing pbrt_parser::Scene::SP, which is somewhat more concise
+        than std::shared_ptr<pbrt_parser::Scene> */
+    typedef std::shared_ptr<Scene> SP;
+    
     /*! default constructor - creates a new (and at first, empty) scene */
     Scene()
       : world(std::make_shared<Object>("<root>"))
