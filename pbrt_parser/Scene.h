@@ -455,10 +455,13 @@ namespace pbrt_parser {
     std::string basePath;
   };
 
-  /*! a helper function to load a ply file */
-  void loadPlyTriangles(const std::string &fileName,
-                        std::vector<vec3f> &v,
-                        std::vector<vec3f> &n,
-                        std::vector<vec3i> &idx);
-
 } // ::pbrt_parser
+
+extern "C" pbrt_parser::Scene::SP pbrtParser_loadScene(const std::string &fileName);
+
+/*! a helper function to load a ply file */
+extern "C" void pbrtParser_loadPlyTriangles(const std::string &fileName,
+                                            std::vector<pbrt_parser::vec3f> &v,
+                                            std::vector<pbrt_parser::vec3f> &n,
+                                            std::vector<pbrt_parser::vec3i> &idx);
+

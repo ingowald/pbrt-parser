@@ -160,7 +160,7 @@ namespace pbrt_parser {
     std::string fn = scene->makeGlobalFileName(shape->getParamString("filename"));
     // param_fileName->paramVec[0]);
     // std::string fn = basePath + "/" + param_fileName->paramVec[0];
-    pbrt_parser::loadPlyTriangles(fn,p,n,idx);
+    pbrtParser_loadPlyTriangles(fn,p,n,idx);
 
     const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
     size_t firstVertexID = numVerticesWritten+1;
