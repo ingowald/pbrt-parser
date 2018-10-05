@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // pbrt
-#include "pbrt/Parser.h"
+#include "Parser.h"
 // stl
 #include <iostream>
 #include <vector>

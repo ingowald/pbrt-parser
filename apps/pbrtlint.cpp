@@ -14,8 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// pbrt
-#include "pbrt/Parser.h"
+// pbrt_parser
+#include "pbrt_parser/Scene.h"
 // stl
 #include <iostream>
 #include <vector>

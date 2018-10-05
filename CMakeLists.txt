@@ -39,7 +39,7 @@ set(pbrt-parser_VERSION_MAJOR 0)
 set(pbrt-parser_VERSION_MINOR 1)
 set(pbrt-parser_VERSION_PATCH 0)
 
-ADD_SUBDIRECTORY(pbrt)
+ADD_SUBDIRECTORY(pbrt_parser)
 ADD_SUBDIRECTORY(apps)
 
 

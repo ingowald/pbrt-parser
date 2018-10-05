@@ -21,7 +21,7 @@
     never have to look into this file directly, and only use \see
     pbrt_parser::Scene::parseFromFile() */
 
-#include "pbrt/Scene.h"
+#include "Scene.h"
 #include "Lexer.h"
 // std
 #include <stack>
