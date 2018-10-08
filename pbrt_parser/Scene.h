@@ -264,6 +264,11 @@ namespace pbrt_parser {
       particular members by itself, all semantics is included in the
       'type' field and its (type-specfic) parameters */
   struct PBRT_PARSER_INTERFACE Camera : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more consise, and easier to read */
+    typedef std::shared_ptr<Material> SP;
+
     /*! constructor */
     Camera(const std::string &type,
            const Transforms &transforms)
@@ -384,22 +389,22 @@ namespace pbrt_parser {
     virtual std::string toString() const override { return "Renderer<"+type+">"; }
   };
 
-  // a "LookAt" in the pbrt file has three vec3fs, no idea what for
-  // right now - need to rename once we figure that out
-  struct PBRT_PARSER_INTERFACE LookAt {
+  // // a "LookAt" in the pbrt file has three vec3fs, no idea what for
+  // // right now - need to rename once we figure that out
+  // struct PBRT_PARSER_INTERFACE LookAt {
 
-    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
-      more consise, and easier to read */
-    typedef std::shared_ptr<LookAt> SP;
+  //   /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+  //     more consise, and easier to read */
+  //   typedef std::shared_ptr<LookAt> SP;
     
-    LookAt(const vec3f &v0, 
-           const vec3f &v1, 
-           const vec3f &v2)
-      : v0(v0),v1(v1),v2(v2)
-    {}
+  //   LookAt(const vec3f &v0, 
+  //          const vec3f &v1, 
+  //          const vec3f &v2)
+  //     : v0(v0),v1(v1),v2(v2)
+  //   {}
 
-    vec3f v0, v1, v2;
-  };
+  //   vec3f v0, v1, v2;
+  // };
 
   //! what's in a objectbegin/objectned, as well as the root object
   struct PBRT_PARSER_INTERFACE Object {
