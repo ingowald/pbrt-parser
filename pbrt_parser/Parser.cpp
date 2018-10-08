@@ -642,7 +642,7 @@ namespace pbrt_parser {
         affine3f xfm;
         xfm.l.vz = normalize(v1-v0);
         xfm.l.vx = normalize(cross(xfm.l.vz,v2));
-        xfm.l.vy = cross(xfm.l.vx,xfm.l.vy);
+        xfm.l.vy = cross(xfm.l.vx,xfm.l.vz);
         xfm.p    = v0;
         
         addTransform(xfm);
