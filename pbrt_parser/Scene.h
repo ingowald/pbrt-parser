@@ -314,6 +314,9 @@ namespace pbrt_parser {
     something that has primitives that together form some sort of
     surface(s) that a ray can intersect*/
   struct PBRT_PARSER_INTERFACE Shape : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more consise, and easier to read */
     typedef std::shared_ptr<Shape> SP;
     
     /*! constructor */
@@ -378,6 +381,11 @@ namespace pbrt_parser {
   // a "LookAt" in the pbrt file has three vec3fs, no idea what for
   // right now - need to rename once we figure that out
   struct PBRT_PARSER_INTERFACE LookAt {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+      more consise, and easier to read */
+    typedef std::shared_ptr<LookAt> SP;
+    
     LookAt(const vec3f &v0, 
            const vec3f &v1, 
            const vec3f &v2)
@@ -389,6 +397,7 @@ namespace pbrt_parser {
 
   //! what's in a objectbegin/objectned, as well as the root object
   struct PBRT_PARSER_INTERFACE Object {
+    
     /*! allows for writing pbrt_parser::Scene::SP, which is somewhat more concise
         than std::shared_ptr<pbrt_parser::Scene> */
     typedef std::shared_ptr<Object> SP;
