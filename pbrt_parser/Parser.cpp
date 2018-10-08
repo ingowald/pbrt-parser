@@ -645,7 +645,7 @@ namespace pbrt_parser {
         xfm.l.vy = cross(xfm.l.vx,xfm.l.vz);
         xfm.p    = v0;
         
-        addTransform(xfm);
+        addTransform(rcp(xfm));
         continue;
       }
 
