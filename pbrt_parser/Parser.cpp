@@ -633,6 +633,21 @@ namespace pbrt_parser {
       if (parseTransforms(token))
         continue;
         
+      if (token == "LookAt") {
+        vec3f v0 = parseVec3f();
+        vec3f v1 = parseVec3f();
+        vec3f v2 = parseVec3f();
+        
+        // scene->lookAt = std::make_shared<LookAt>(v0,v1,v2);
+        affine3f xfm;
+        xfm.l.vz = normalize(v1-v0);
+        xfm.l.vx = normalize(cross(xfm.l.vz,v2));
+        xfm.l.vy = cross(xfm.l.vx,xfm.l.vy);
+        xfm.p    = v0;
+        
+        addTransform(xfm);
+        continue;
+      }
 
       if (token == "ConcatTransform") {
         next(); // '['
@@ -661,15 +676,8 @@ namespace pbrt_parser {
         continue;
       }
 
-      if (token == "LookAt") {
-        vec3f v0 = parseVec3f();
-        vec3f v1 = parseVec3f();
-        vec3f v2 = parseVec3f();
-        scene->lookAt = std::make_shared<LookAt>(v0,v1,v2);
-        continue;
-      }
       if (token == "Camera") {
-        std::shared_ptr<Camera> camera = std::make_shared<Camera>(next());
+        std::shared_ptr<Camera> camera = std::make_shared<Camera>(next(),ctm);
         parseParams(camera->param);
         scene->cameras.push_back(camera);
         continue;

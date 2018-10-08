@@ -265,10 +265,16 @@ namespace pbrt_parser {
       'type' field and its (type-specfic) parameters */
   struct PBRT_PARSER_INTERFACE Camera : public Node {
     /*! constructor */
-    Camera(const std::string &type) : Node(type) {};
+    Camera(const std::string &type,
+           const Transforms &transforms)
+      : Node(type),
+      transforms(transforms)
+    {};
 
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Camera<"+type+">"; }
+
+    const Transforms transforms;
   };
 
   struct PBRT_PARSER_INTERFACE Sampler : public Node {
@@ -458,8 +464,8 @@ namespace pbrt_parser {
     //! list of cameras defined in this object
     std::vector<std::shared_ptr<Camera> > cameras;
 
-    //! last lookat specified in the scene, or nullptr if none.
-    std::shared_ptr<LookAt> lookAt;
+    // //! last lookat specified in the scene, or nullptr if none.
+    // std::shared_ptr<LookAt> lookAt;
 
     //! last sampler specified in the scene, or nullptr if none.
     std::shared_ptr<Sampler> sampler;
