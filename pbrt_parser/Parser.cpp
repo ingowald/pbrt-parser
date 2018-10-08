@@ -131,35 +131,35 @@ namespace pbrt_parser {
 
     std::shared_ptr<Param> ret; 
     if (type == "float") {
-      ret = std::make_shared<ParamT<float>>(type);
+      ret = std::make_shared<ParamArray<float>>(type);
     } else if (type == "color") {
-      ret = std::make_shared<ParamT<float> >(type);
+      ret = std::make_shared<ParamArray<float> >(type);
     } else if (type == "blackbody") {
-      ret = std::make_shared<ParamT<float>>(type);
+      ret = std::make_shared<ParamArray<float>>(type);
     } else if (type == "rgb") {
-      ret = std::make_shared<ParamT<float> >(type);
+      ret = std::make_shared<ParamArray<float> >(type);
     } else if (type == "spectrum") {
-      ret = std::make_shared<ParamT<std::string>>(type);
+      ret = std::make_shared<ParamArray<std::string>>(type);
     } else if (type == "integer") {
-      ret = std::make_shared<ParamT<int>>(type);
+      ret = std::make_shared<ParamArray<int>>(type);
     } else if (type == "bool") {
-      ret = std::make_shared<ParamT<bool>>(type);
+      ret = std::make_shared<ParamArray<bool>>(type);
     } else if (type == "texture") {
-      ret = std::make_shared<ParamT<Texture>>(type);
+      ret = std::make_shared<ParamArray<Texture>>(type);
     } else if (type == "normal") {
-      ret = std::make_shared<ParamT<float> >(type);
+      ret = std::make_shared<ParamArray<float> >(type);
     } else if (type == "point") {
-      ret = std::make_shared<ParamT<float>>(type);
+      ret = std::make_shared<ParamArray<float>>(type);
     } else if (type == "point2") {
-      ret = std::make_shared<ParamT<float>>(type);
+      ret = std::make_shared<ParamArray<float>>(type);
     } else if (type == "point3") {
-      ret = std::make_shared<ParamT<float>>(type);
+      ret = std::make_shared<ParamArray<float>>(type);
     } else if (type == "point4") {
-      ret = std::make_shared<ParamT<float>>(type);
+      ret = std::make_shared<ParamArray<float>>(type);
     } else if (type == "vector") {
-      ret = std::make_shared<ParamT<float>>(type);
+      ret = std::make_shared<ParamArray<float>>(type);
     } else if (type == "string") {
-      ret = std::make_shared<ParamT<std::string>>(type);
+      ret = std::make_shared<ParamArray<std::string>>(type);
     } else {
       throw std::runtime_error("unknown parameter type '"+type+"' "+token->loc.toString()
                                +std::string("\n@")+std::string(__PRETTY_FUNCTION__));
@@ -171,7 +171,7 @@ namespace pbrt_parser {
         
       while (p != "]") {
         if (type == "texture") {
-          std::dynamic_pointer_cast<ParamT<Texture>>(ret)->texture 
+          std::dynamic_pointer_cast<ParamArray<Texture>>(ret)->texture 
             = getTexture(p);
         } else {
           ret->add(p);
@@ -180,7 +180,7 @@ namespace pbrt_parser {
       }
     } else {
       if (type == "texture") {
-        std::dynamic_pointer_cast<ParamT<Texture>>(ret)->texture 
+        std::dynamic_pointer_cast<ParamArray<Texture>>(ret)->texture 
           = getTexture(value);
       } else {
         ret->add(value);
@@ -430,12 +430,12 @@ namespace pbrt_parser {
            'makenamedmaterial' command; so let's parse this here */
         std::shared_ptr<Param> type = material->param["type"];
         if (!type) throw std::runtime_error("named material that does not specify a 'type' parameter!?");
-        std::shared_ptr<ParamT<std::string>> asString
-          = std::dynamic_pointer_cast<ParamT<std::string> >(type);
+        std::shared_ptr<ParamArray<std::string>> asString
+          = std::dynamic_pointer_cast<ParamArray<std::string> >(type);
         if (!asString)
           throw std::runtime_error("named material has a type, but not a string!?");
         assert(asString->getSize() == 1);
-        material->type = asString->paramVec[0];
+        material->type = asString->get(0); //paramVec[0];
         continue;
       }
 
@@ -463,12 +463,11 @@ namespace pbrt_parser {
            'makenamedmedium' command; so let's parse this here */
         std::shared_ptr<Param> type = medium->param["type"];
         if (!type) throw std::runtime_error("named medium that does not specify a 'type' parameter!?");
-        std::shared_ptr<ParamT<std::string>> asString
-          = std::dynamic_pointer_cast<ParamT<std::string>>(type);
+        ParamArray<std::string>::SP asString = type->as<std::string>();
         if (!asString)
           throw std::runtime_error("named medium has a type, but not a string!?");
         assert(asString->getSize() == 1);
-        medium->type = asString->paramVec[0];
+        medium->type = asString->get(0); //paramVec[0];
         continue;
       }
 

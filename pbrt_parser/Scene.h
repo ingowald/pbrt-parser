@@ -104,8 +104,21 @@ namespace pbrt_parser {
     affine3f atStart;
     affine3f atEnd;
   };
-  
-  struct PBRT_PARSER_INTERFACE Param {
+
+  /*! forward definition of a typed parameter */
+  template<typename T>
+  struct ParamArray;
+
+  /*! base abstraction for any type of parameter - typically,
+      parameters in pbrt can be either single values or
+      arbitrarily-sized arrays of values, so we will eventually
+      implement them as std::vectors, with the special case of a
+      single-value parameter being a std::vector with one element */
+  struct PBRT_PARSER_INTERFACE Param : public std::enable_shared_from_this<Param> {
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more consise, and easier to read */
+    typedef std::shared_ptr<Param> SP;
+    
     virtual std::string getType() const = 0;
     virtual size_t getSize() const = 0;
     virtual std::string toString() const = 0;
@@ -113,28 +126,38 @@ namespace pbrt_parser {
     /*! used during parsing, to add a newly parsed parameter value
       to the list */
     virtual void add(const std::string &text) = 0;
+
+    template<typename T>
+      std::shared_ptr<ParamArray<T>> as();
   };
 
   template<typename T>
-  struct PBRT_PARSER_INTERFACE ParamT : public Param {
-    ParamT(const std::string &type) : type(type) {};
+  struct PBRT_PARSER_INTERFACE ParamArray : public Param, public std::vector<T> {
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more consise, and easier to read */
+    typedef std::shared_ptr<ParamArray<T>> SP;
+    
+    ParamArray(const std::string &type) : type(type) {};
+    
     virtual std::string getType() const { return type; };
-    virtual size_t getSize() const { return paramVec.size(); }
+    virtual size_t getSize() const { return this->size(); }
     virtual std::string toString() const;
+    T get(const size_t idx) const { return (*this)[idx]; }
 
     /*! used during parsing, to add a newly parsed parameter value
       to the list */
     virtual void add(const std::string &text);
     //    private:
     std::string type;
-    std::vector<T> paramVec;
+
+    // std::vector<T> paramVec;
   };
 
   struct Texture;
 
   template<>
-  struct PBRT_PARSER_INTERFACE ParamT<Texture> : public Param {
-    ParamT(const std::string &type) : type(type) {};
+  struct PBRT_PARSER_INTERFACE ParamArray<Texture> : public Param {
+    ParamArray(const std::string &type) : type(type) {};
     virtual std::string getType() const { return type; };
     virtual size_t getSize() const { return 1; }
     virtual std::string toString() const;
@@ -148,11 +171,11 @@ namespace pbrt_parser {
   };
 
   /*! any class that can store (and query) parameters */
-  struct PBRT_PARSER_INTERFACE Parameterized {
+  struct PBRT_PARSER_INTERFACE ParamSet {
 
-    Parameterized() = default;
-    Parameterized(Parameterized &&) = default;
-    Parameterized(const Parameterized &) = default;
+    ParamSet() = default;
+    ParamSet(ParamSet &&) = default;
+    ParamSet(const ParamSet &) = default;
     
     vec3f getParam3f(const std::string &name, const vec3f &fallBack) const;
     float getParam1f(const std::string &name, const float fallBack=0) const;
@@ -162,10 +185,10 @@ namespace pbrt_parser {
     std::shared_ptr<Texture> getParamTexture(const std::string &name) const;
 
     template<typename T>
-      std::shared_ptr<ParamT<T> > findParam(const std::string &name) const {
+      std::shared_ptr<ParamArray<T> > findParam(const std::string &name) const {
       auto it = param.find(name);
-      if (it == param.end()) return std::shared_ptr<ParamT<T>>();
-      return std::dynamic_pointer_cast<ParamT<T> >(it->second);
+      if (it == param.end()) return typename ParamArray<T>::SP();
+      return it->second->as<T>(); //std::dynamic_pointer_cast<ParamArray<T> >(it->second);
     }
 
     std::map<std::string,std::shared_ptr<Param> > param;
@@ -184,7 +207,12 @@ namespace pbrt_parser {
     std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
   };
 
-  struct PBRT_PARSER_INTERFACE Material : public Parameterized {
+  struct PBRT_PARSER_INTERFACE Material : public ParamSet {
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more consise, and easier to read */
+    typedef std::shared_ptr<Material> SP;
+
+    /*! constructor */
     Material(const std::string &type) : type(type) {};
 
     /*! pretty-print this material (for debugging) */
@@ -199,7 +227,7 @@ namespace pbrt_parser {
     std::string type;
   };
 
-  struct PBRT_PARSER_INTERFACE Medium : public Parameterized {
+  struct PBRT_PARSER_INTERFACE Medium : public ParamSet {
     Medium(const std::string &type) : type(type) {};
 
     /*! pretty-print this medium (for debugging) */
@@ -209,7 +237,7 @@ namespace pbrt_parser {
     std::string type;
   };
 
-  struct PBRT_PARSER_INTERFACE Texture : public Parameterized {
+  struct PBRT_PARSER_INTERFACE Texture : public ParamSet {
     std::string name;
     std::string texelType;
     std::string mapType;
@@ -221,7 +249,7 @@ namespace pbrt_parser {
     {};
   };
 
-  struct PBRT_PARSER_INTERFACE Node : public Parameterized {
+  struct PBRT_PARSER_INTERFACE Node : public ParamSet {
     Node(const std::string &type)
       : type(type)
       {}
@@ -361,7 +389,10 @@ namespace pbrt_parser {
 
   //! what's in a objectbegin/objectned, as well as the root object
   struct PBRT_PARSER_INTERFACE Object {
+    /*! allows for writing pbrt_parser::Scene::SP, which is somewhat more concise
+        than std::shared_ptr<pbrt_parser::Scene> */
     typedef std::shared_ptr<Object> SP;
+    
     Object(const std::string &name) : name(name) {}
     
     struct PBRT_PARSER_INTERFACE Instance {
@@ -455,6 +486,9 @@ namespace pbrt_parser {
     std::string basePath;
   };
 
+  template<typename T> std::shared_ptr<ParamArray<T>> Param::as()
+  { return std::dynamic_pointer_cast<ParamArray<T>>(shared_from_this()); }
+  
 } // ::pbrt_parser
 
 extern "C" pbrt_parser::Scene::SP pbrtParser_loadScene(const std::string &fileName);

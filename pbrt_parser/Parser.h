@@ -91,8 +91,8 @@ namespace pbrt_parser {
 
     std::map<std::string,std::shared_ptr<Object> >   namedObjects;
 
-    inline std::shared_ptr<Param> parseParam(std::string &name);
-    void parseParams(std::map<std::string, std::shared_ptr<Param> > &params);
+    inline Param::SP parseParam(std::string &name);
+    void parseParams(std::map<std::string, Param::SP> &params);
 
     /*! return the scene we have parsed */
     std::shared_ptr<Scene> getScene() { return scene; }

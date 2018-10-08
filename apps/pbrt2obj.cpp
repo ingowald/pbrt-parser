@@ -38,7 +38,7 @@ namespace pbrt_parser {
   size_t numWritten = 0;
   size_t numVerticesWritten = 0;
   
-  std::string exportMaterial(std::shared_ptr<Material> material)
+  std::string exportMaterial(Material::SP material)
   {
     if (!material) 
       // default material
@@ -92,24 +92,24 @@ namespace pbrt_parser {
     const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
     size_t firstVertexID = numVerticesWritten+1;
 
-    std::shared_ptr<ParamT<float> > param_st = shape->findParam<float>("st");
+    std::shared_ptr<ParamArray<float> > param_st = shape->findParam<float>("st");
     if (param_st) {
-      const size_t numPoints = param_st->paramVec.size() / 2;
+      const size_t numPoints = param_st->size() / 2;
       for (int i=0;i<numPoints;i++) {
-        vec2f v(param_st->paramVec[2*i+0],
-                param_st->paramVec[2*i+1]);
+        vec2f v(param_st->get(2*i+0),
+                param_st->get(2*i+1));
         fprintf(out,"vt %f %f\n",v.x,v.y);
       }
     }
     
     { // parse "point P"
-      std::shared_ptr<ParamT<float> > param_P = shape->findParam<float>("P");
+      std::shared_ptr<ParamArray<float> > param_P = shape->findParam<float>("P");
       if (param_P) {
-        const size_t numPoints = param_P->paramVec.size() / 3;
+        const size_t numPoints = param_P->size() / 3;
         for (int i=0;i<numPoints;i++) {
-          vec3f v(param_P->paramVec[3*i+0],
-                  param_P->paramVec[3*i+1],
-                  param_P->paramVec[3*i+2]);
+          vec3f v(param_P->get(3*i+0),
+                  param_P->get(3*i+1),
+                  param_P->get(3*i+2));
           v = xfmPoint(xfm,v);
           fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
           numVerticesWritten++;
@@ -118,14 +118,14 @@ namespace pbrt_parser {
     }
 
     { // parse "int indices"
-      std::shared_ptr<ParamT<int> > param_indices = shape->findParam<int>("indices");
+      std::shared_ptr<ParamArray<int> > param_indices = shape->findParam<int>("indices");
       if (param_indices) {
           
-        const size_t numIndices = param_indices->paramVec.size() / 3;
+        const size_t numIndices = param_indices->size() / 3;
         for (int i=0;i<numIndices;i++) {
-          vec3i v(param_indices->paramVec[3*i+0],
-                  param_indices->paramVec[3*i+1],
-                  param_indices->paramVec[3*i+2]);
+          vec3i v(param_indices->get(3*i+0),
+                  param_indices->get(3*i+1),
+                  param_indices->get(3*i+2));
           if (param_st) {
             fprintf(out,"f %lu//%lu %lu//%lu %lu//%lu\n",
                     firstVertexID+v.x,
@@ -156,10 +156,10 @@ namespace pbrt_parser {
     std::vector<vec3f> p, n;
     std::vector<vec3i> idx;
       
-    // std::shared_ptr<ParamT<std::string> > param_fileName = shape->findParam<std::string>("filename");
+    // std::shared_ptr<ParamArray<std::string> > param_fileName = shape->findParam<std::string>("filename");
     std::string fn = scene->makeGlobalFileName(shape->getParamString("filename"));
-    // param_fileName->paramVec[0]);
-    // std::string fn = basePath + "/" + param_fileName->paramVec[0];
+    // param_fileName->get(0));
+    // std::string fn = basePath + "/" + param_fileName->get(0);
     pbrtParser_loadPlyTriangles(fn,p,n,idx);
 
     const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
@@ -201,8 +201,8 @@ namespace pbrt_parser {
     fprintf(file,"\n");
   }
   
-  void writeObject(std::shared_ptr<Scene> scene,
-                   std::shared_ptr<Object> object, 
+  void writeObject(Scene::SP scene,
+                   Object::SP object, 
                    const affine3f &instanceXfm)
   {
     cout << "writing " << object->toString() << endl;

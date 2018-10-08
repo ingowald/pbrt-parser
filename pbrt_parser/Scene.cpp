@@ -55,38 +55,38 @@ namespace pbrt_parser {
   // ==================================================================
   // Param
   // ==================================================================
-  template<> void ParamT<float>::add(const std::string &text)
-  { paramVec.push_back(atof(text.c_str())); }
+  template<> void ParamArray<float>::add(const std::string &text)
+  { this->push_back(atof(text.c_str())); }
 
-  template<> void ParamT<int>::add(const std::string &text)
-  { paramVec.push_back(atoi(text.c_str())); }
+  template<> void ParamArray<int>::add(const std::string &text)
+  { this->push_back(atoi(text.c_str())); }
 
-  template<> void ParamT<std::string>::add(const std::string &text)
-  { paramVec.push_back(text); }
+  template<> void ParamArray<std::string>::add(const std::string &text)
+  { this->push_back(text); }
 
-  template<> void ParamT<bool>::add(const std::string &text)
+  template<> void ParamArray<bool>::add(const std::string &text)
   { 
     if (text == "true")
-      paramVec.push_back(true); 
+      this->push_back(true); 
     else if (text == "false")
-      paramVec.push_back(false); 
+      this->push_back(false); 
     else
       throw std::runtime_error("invalid value '"+text+"' for bool parameter");
   }
 
 
-  template<> std::string ParamT<float>::toString() const
+  template<> std::string ParamArray<float>::toString() const
   { 
     std::stringstream ss;
     ss << getType() << " ";
     ss << "[ ";
-    for (int i=0;i<paramVec.size();i++)
-      ss << paramVec[i] << " ";
+    for (int i=0;i<this->size();i++)
+      ss << get(i) << " ";
     ss << "]";
     return ss.str();
   }
 
-  std::string ParamT<Texture>::toString() const
+  std::string ParamArray<Texture>::toString() const
   { 
     std::stringstream ss;
     ss << getType() << " ";
@@ -96,110 +96,110 @@ namespace pbrt_parser {
     return ss.str();
   }
 
-  template<> std::string ParamT<std::string>::toString() const
+  template<> std::string ParamArray<std::string>::toString() const
   { 
     std::stringstream ss;
     ss << getType() << " ";
     ss << "[ ";
-    for (int i=0;i<paramVec.size();i++)
-      ss << paramVec[i] << " ";
+    for (int i=0;i<this->size();i++)
+      ss << get(i) << " ";
     ss << "]";
     return ss.str();
   }
 
-  template<> std::string ParamT<int>::toString() const
+  template<> std::string ParamArray<int>::toString() const
   { 
     std::stringstream ss;
     ss << getType() << " ";
     ss << "[ ";
-    for (int i=0;i<paramVec.size();i++)
-      ss << paramVec[i] << " ";
+    for (int i=0;i<this->size();i++)
+      ss << get(i) << " ";
     ss << "]";
     return ss.str();
   }
 
-  template<> std::string ParamT<bool>::toString() const
+  template<> std::string ParamArray<bool>::toString() const
   { 
     std::stringstream ss;
     ss << getType() << " ";
     ss << "[ ";
-    for (int i=0;i<paramVec.size();i++)
-      ss << paramVec[i] << " ";
+    for (int i=0;i<this->size();i++)
+      ss << get(i) << " ";
     ss << "]";
     return ss.str();
   }
 
-  template struct ParamT<float>;
-  template struct ParamT<int>;
-  template struct ParamT<bool>;
-  template struct ParamT<std::string>;
+  template struct ParamArray<float>;
+  template struct ParamArray<int>;
+  template struct ParamArray<bool>;
+  template struct ParamArray<std::string>;
 
   // ==================================================================
-  // Parameterized
+  // ParamSet
   // ==================================================================
-  vec3f Parameterized::getParam3f(const std::string &name, const vec3f &fallBack) const
+  vec3f ParamSet::getParam3f(const std::string &name, const vec3f &fallBack) const
   {
     std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
     if (it == param.end())
       return fallBack;
     std::shared_ptr<Param> pr = it->second;
-    const std::shared_ptr<ParamT<float>> p = std::dynamic_pointer_cast<ParamT<float>>(pr);
+    const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
     if (!p)
       throw std::runtime_error("found param of given name, but of wrong type!");
     if (p->getSize() != 3)
       throw std::runtime_error("found param of given name and type, but wrong number of components!");
-    return vec3f(p->paramVec[0],p->paramVec[1],p->paramVec[2]);
+    return vec3f(p->get(0),p->get(1),p->get(2));
   }
 
-  float Parameterized::getParam1f(const std::string &name, const float fallBack) const
+  float ParamSet::getParam1f(const std::string &name, const float fallBack) const
   {
     std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
     if (it == param.end())
       return fallBack;
     std::shared_ptr<Param> pr = it->second;
-    const std::shared_ptr<ParamT<float>> p = std::dynamic_pointer_cast<ParamT<float>>(pr);
+    const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
     if (!p)
       throw std::runtime_error("found param of given name, but of wrong type!");
     if (p->getSize() != 1)
       throw std::runtime_error("found param of given name and type, but wrong number of components!");
-    return p->paramVec[0];
+    return p->get(0);
   }
 
-  int Parameterized::getParam1i(const std::string &name, const int fallBack) const
+  int ParamSet::getParam1i(const std::string &name, const int fallBack) const
   {
     std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
     if (it == param.end())
       return fallBack;
     std::shared_ptr<Param> pr = it->second;
-    const std::shared_ptr<ParamT<int>> p = std::dynamic_pointer_cast<ParamT<int>>(pr);
+    const std::shared_ptr<ParamArray<int>> p = std::dynamic_pointer_cast<ParamArray<int>>(pr);
     if (!p)
       throw std::runtime_error("found param of given name, but of wrong type!");
     if (p->getSize() != 1)
       throw std::runtime_error("found param of given name and type, but wrong number of components!");
-    return p->paramVec[0];
+    return p->get(0);
   }
 
-  std::string Parameterized::getParamString(const std::string &name) const
+  std::string ParamSet::getParamString(const std::string &name) const
   {
     std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
     if (it == param.end())
       return "";
     std::shared_ptr<Param> pr = it->second;
-    const std::shared_ptr<ParamT<std::string>> p = std::dynamic_pointer_cast<ParamT<std::string>>(pr);
+    const std::shared_ptr<ParamArray<std::string>> p = std::dynamic_pointer_cast<ParamArray<std::string>>(pr);
     if (!p)
       throw std::runtime_error("found param of given name, but of wrong type!");
     if (p->getSize() != 1)
       throw std::runtime_error("found param of given name and type, but wrong number of components!");
-    return p->paramVec[0];
+    return p->get(0);
   }
 
-  std::shared_ptr<Texture> Parameterized::getParamTexture(const std::string &name) const
+  std::shared_ptr<Texture> ParamSet::getParamTexture(const std::string &name) const
   {
     std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
     if (it == param.end())
       return std::shared_ptr<Texture>();
     std::shared_ptr<Param> pr = it->second;
-    const std::shared_ptr<ParamT<Texture>> p = std::dynamic_pointer_cast<ParamT<Texture>>(pr);
+    const std::shared_ptr<ParamArray<Texture>> p = std::dynamic_pointer_cast<ParamArray<Texture>>(pr);
     if (!p)
       throw std::runtime_error("found param of given name, but of wrong type!");
     if (p->getSize() != 1)
@@ -207,18 +207,18 @@ namespace pbrt_parser {
     return p->texture;
   }
 
-  bool Parameterized::getParamBool(const std::string &name, const bool fallBack) const
+  bool ParamSet::getParamBool(const std::string &name, const bool fallBack) const
   {
     std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
     if (it == param.end())
       return fallBack;
     std::shared_ptr<Param> pr = it->second;
-    const std::shared_ptr<ParamT<bool>> p = std::dynamic_pointer_cast<ParamT<bool>>(pr);
+    const std::shared_ptr<ParamArray<bool>> p = std::dynamic_pointer_cast<ParamArray<bool>>(pr);
     if (!p)
       throw std::runtime_error("found param of given name, but of wrong type!");
     if (p->getSize() != 1)
       throw std::runtime_error("found param of given name and type, but wrong number of components!");
-    return p->paramVec[0];
+    return p->get(0);
   }
 
   // ==================================================================
