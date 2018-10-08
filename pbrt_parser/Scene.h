@@ -267,7 +267,7 @@ namespace pbrt_parser {
 
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more consise, and easier to read */
-    typedef std::shared_ptr<Material> SP;
+    typedef std::shared_ptr<Camera> SP;
 
     /*! constructor */
     Camera(const std::string &type,
@@ -467,7 +467,7 @@ namespace pbrt_parser {
     std::string toString(const int depth = 0) { return world->toString(depth); }
 
     //! list of cameras defined in this object
-    std::vector<std::shared_ptr<Camera> > cameras;
+    std::vector<Camera::SP> cameras;
 
     // //! last lookat specified in the scene, or nullptr if none.
     // std::shared_ptr<LookAt> lookAt;
