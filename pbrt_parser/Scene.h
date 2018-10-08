@@ -469,6 +469,8 @@ namespace pbrt_parser {
     //! list of cameras defined in this object
     std::vector<Camera::SP> cameras;
 
+    std::shared_ptr<Film> film;
+    
     // //! last lookat specified in the scene, or nullptr if none.
     // std::shared_ptr<LookAt> lookAt;
 

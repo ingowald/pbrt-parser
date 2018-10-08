@@ -720,8 +720,8 @@ namespace pbrt_parser {
         continue;
       }
       if (token == "Film") {
-        std::shared_ptr<Film> film = std::make_shared<Film>(next());
-        parseParams(film->param);
+        scene->film = std::make_shared<Film>(next());
+        parseParams(scene->film->param);
         continue;
       }
       if (token == "Accelerator") {
