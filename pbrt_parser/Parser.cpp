@@ -440,6 +440,30 @@ namespace pbrt_parser {
       }
 
       // ------------------------------------------------------------------
+      // MakeNamedMedium
+      // ------------------------------------------------------------------
+      if (token == "MakeNamedMedium") {
+        std::string name = *next();
+        std::shared_ptr<Medium> medium
+          = std::make_shared<Medium>("<implicit>");
+        attributesStack.top()->namedMedium[name] = medium;
+        parseParams(medium->param);
+
+        /* named medium have the parameter type implicitly as a
+           parameter rather than explicitly on the
+           'makenamedmedium' command; so let's parse this here */
+        std::shared_ptr<Param> type = medium->param["type"];
+        if (!type) throw std::runtime_error("named medium that does not specify a 'type' parameter!?");
+        std::shared_ptr<ParamArray<std::string>> asString
+          = std::dynamic_pointer_cast<ParamArray<std::string> >(type);
+        if (!asString)
+          throw std::runtime_error("named medium has a type, but not a string!?");
+        assert(asString->getSize() == 1);
+        medium->type = asString->get(0); //paramVec[0];
+        continue;
+      }
+
+      // ------------------------------------------------------------------
       // NamedMaterial
       // ------------------------------------------------------------------
       if (token == "NamedMaterial") {
