@@ -513,6 +513,11 @@ namespace pbrt_parser {
   
 } // ::pbrt_parser
 
+extern "C" void pbrtParser_saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName);
+
+/*! given an already created scene, read given binary file, and populate this scene */
+extern "C" void pbrt_parser::Scene::SP pbrtParser_readFromToBinary(const std::string &fileName);
+
 extern "C" pbrt_parser::Scene::SP pbrtParser_loadScene(const std::string &fileName);
 
 /*! a helper function to load a ply file */
