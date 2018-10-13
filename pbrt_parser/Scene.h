@@ -116,7 +116,7 @@ namespace pbrt_parser {
       single-value parameter being a std::vector with one element */
   struct PBRT_PARSER_INTERFACE Param : public std::enable_shared_from_this<Param> {
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
-        more consise, and easier to read */
+        more concise, and easier to read */
     typedef std::shared_ptr<Param> SP;
     
     virtual std::string getType() const = 0;
@@ -134,7 +134,7 @@ namespace pbrt_parser {
   template<typename T>
   struct PBRT_PARSER_INTERFACE ParamArray : public Param, public std::vector<T> {
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
-        more consise, and easier to read */
+        more concise, and easier to read */
     typedef std::shared_ptr<ParamArray<T>> SP;
     
     ParamArray(const std::string &type) : type(type) {};
@@ -209,7 +209,7 @@ namespace pbrt_parser {
 
   struct PBRT_PARSER_INTERFACE Material : public ParamSet {
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
-        more consise, and easier to read */
+        more concise, and easier to read */
     typedef std::shared_ptr<Material> SP;
 
     /*! constructor */
@@ -266,7 +266,7 @@ namespace pbrt_parser {
   struct PBRT_PARSER_INTERFACE Camera : public Node {
 
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
-        more consise, and easier to read */
+        more concise, and easier to read */
     typedef std::shared_ptr<Camera> SP;
 
     /*! constructor */
@@ -327,7 +327,7 @@ namespace pbrt_parser {
   struct PBRT_PARSER_INTERFACE Shape : public Node {
 
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
-        more consise, and easier to read */
+        more concise, and easier to read */
     typedef std::shared_ptr<Shape> SP;
     
     /*! constructor */
@@ -388,23 +388,6 @@ namespace pbrt_parser {
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Renderer<"+type+">"; }
   };
-
-  // // a "LookAt" in the pbrt file has three vec3fs, no idea what for
-  // // right now - need to rename once we figure that out
-  // struct PBRT_PARSER_INTERFACE LookAt {
-
-  //   /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
-  //     more consise, and easier to read */
-  //   typedef std::shared_ptr<LookAt> SP;
-    
-  //   LookAt(const vec3f &v0, 
-  //          const vec3f &v1, 
-  //          const vec3f &v2)
-  //     : v0(v0),v1(v1),v2(v2)
-  //   {}
-
-  //   vec3f v0, v1, v2;
-  // };
 
   //! what's in a objectbegin/objectned, as well as the root object
   struct PBRT_PARSER_INTERFACE Object {
@@ -516,8 +499,9 @@ namespace pbrt_parser {
 extern "C" void pbrtParser_saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName);
 
 /*! given an already created scene, read given binary file, and populate this scene */
-extern "C" void pbrt_parser::Scene::SP pbrtParser_readFromToBinary(const std::string &fileName);
+extern "C" pbrt_parser::Scene::SP pbrtParser_readFromBinary(const std::string &fileName);
 
+/*! load pbrt scene from a pbrt file */
 extern "C" pbrt_parser::Scene::SP pbrtParser_loadScene(const std::string &fileName);
 
 /*! a helper function to load a ply file */

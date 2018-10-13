@@ -18,11 +18,137 @@
 // std
 #include <iostream>
 #include <sstream>
+#include <fstream>
+#include <stack>
 
 namespace pbrt_parser {
 
+  typedef enum : uint8_t {
+    // param types
+    Type_float=0,
+      Type_int,
+      Type_bool,
+      Type_string,
+      Type_texture,
+      // object types
+      Type_object=10,
+      Type_instance,
+      /* add more here */
+      } TypeTag;
 
-  extern "C" void pbrtParser_saveToBinary(const std::string &fileName)
-  { pbrt_parser::saveToBinary(fileName); }
+  struct OutBuffer : public std::vector<uint8_t>
+  {
+    typedef std::shared_ptr<OutBuffer> SP;
+  };
   
-extern "C" void pbrtParser_readFromToBinary(const std::string &fileName);
+  struct BinaryWriter {
+
+    std::stack<OutBuffer::SP> outBuffer;
+    std::ofstream binFile;
+
+    void write(const void *ptr, size_t size)
+    {
+      outBuffer.top()->insert(outBuffer.top()->end(),(uint8_t*)ptr,(uint8_t*)ptr + size);
+    }
+    
+    template<typename T>
+    void write(const T &t)
+    {
+      write(&t,sizeof(t));
+    }
+
+    void write(const std::string &t)
+    {
+      write((int32_t)t.size());
+      write(&t[0],t.size());
+    }
+    
+    template<typename T>
+    void writeVec(const std::vector<T> &t)
+    {
+      write(t.size());
+      write(&t[0],t.size());
+    }
+    
+    void startNewWrite()
+    { outBuffer.push(std::make_shared<OutBuffer>()); }
+    
+    void executeWrite()
+    {
+      binFile.write((const char *)outBuffer.top()->data(),outBuffer.top()->size());
+      outBuffer.pop();
+    }
+    
+    /*! if this object has already been written to file, return a
+        handle; else write it once, create a unique handle, and return
+        that */
+    int emitOnce(std::shared_ptr<Texture> texture)
+    {
+      std::map<std::shared_ptr<Texture>,int> alreadyEmitted;
+      if (alreadyEmitted.find(texture) != alreadyEmitted.end())
+        return alreadyEmitted[texture];
+      
+      startNewWrite(); {
+        write(Type_texture);
+        write(texture->name);
+        write(texture->texelType);
+        write(texture->mapType);
+        writeParams(*texture);
+      } executeWrite();
+      return alreadyEmitted[texture] = alreadyEmitted.size();
+    }
+    
+    void writeParams(const ParamSet &ps)
+    {
+      write((uint16_t)ps.param.size());
+      for (auto it : ps.param) {
+        const std::string name = it.first;
+        Param::SP param = it.second;
+        
+        TypeTag typeTag = typeOf(param->getType());
+        write(typeTag);
+        write(name);
+
+        switch(typeTag) {
+        case Type_float: {
+          writeVec(*param->as<float>());
+        } break;
+        case Type_int: {
+          writeVec(*param->as<int>());
+        } break;
+        case Type_bool: {
+          writeVec(*param->as<bool>());
+        } break;
+        case Type_string: {
+          writeVec(*param->as<std::string>());
+        } break;
+        case Type_texture: {
+          int32_t texID = returnHandleFor(param->as<Texture>()->texture);
+          write(texID);
+        } break;
+        default:
+          throw std::runtime_error("save-to-binary of parameter type '"+param.second->getType()+"' not implemented yet");
+        }
+      }
+    }
+  }
+  
+  pbrt_parser::Scene::SP readFromBinary(const std::string &fileName)
+  {
+    pbrt_parser::Scene::SP scene = std::make_shared<pbrt_parser::Scene>();
+    return scene;
+  }
+  
+  void saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName)
+  {
+  }
+
+}
+
+/*! given an already created scene, read given binary file, and populate this scene */
+extern "C" pbrt_parser::Scene::SP pbrtParser_readFromBinary(const std::string &fileName)
+{ return pbrt_parser::readFromBinary(fileName); }
+
+extern "C" void pbrtParser_saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName)
+{ pbrt_parser::saveToBinary(scene,fileName); }
+  

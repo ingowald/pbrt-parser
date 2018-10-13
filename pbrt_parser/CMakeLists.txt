@@ -18,6 +18,7 @@ ADD_LIBRARY(pbrt_parser SHARED
   Lexer.cpp
   Parser.cpp
   Scene.cpp
+  BinaryFileFormat.cpp
   parsePLY.cpp
   ../3rdParty/ply.cpp
   )
