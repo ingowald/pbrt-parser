@@ -33,6 +33,8 @@ namespace pbrt_parser {
       // object types
       Type_object=10,
       Type_instance,
+      Type_shape,
+      Type_material,
       /* add more here */
       } TypeTag;
 
@@ -48,6 +50,8 @@ namespace pbrt_parser {
   
   struct BinaryWriter {
 
+    BinaryWriter(const std::string &fileName) : binFile(fileName) {}
+    
     std::stack<OutBuffer::SP> outBuffer;
     std::ofstream binFile;
 
@@ -98,7 +102,7 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<Texture> texture)
     {
-      std::map<std::shared_ptr<Texture>,int> alreadyEmitted;
+      static std::map<std::shared_ptr<Texture>,int> alreadyEmitted;
       if (alreadyEmitted.find(texture) != alreadyEmitted.end())
         return alreadyEmitted[texture];
       
@@ -110,6 +114,91 @@ namespace pbrt_parser {
         writeParams(*texture);
       } executeWrite();
       return alreadyEmitted[texture] = alreadyEmitted.size();
+    }
+    
+    /*! if this material has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<Material> material)
+    {
+      if (!material) return -1;
+
+      static std::map<std::shared_ptr<Material>,int> alreadyEmitted;
+      if (alreadyEmitted.find(material) != alreadyEmitted.end())
+        return alreadyEmitted[material];
+      
+      startNewWrite(); {
+        write(Type_material);
+        write(material->type);
+        writeParams(*material);
+      } executeWrite();
+      
+      return alreadyEmitted[material] = alreadyEmitted.size();
+    }
+    
+    /*! if this instance has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<Object::Instance> instance)
+    {
+      if (!instance) return -1;
+
+      static std::map<std::shared_ptr<Object::Instance>,int> alreadyEmitted;
+      if (alreadyEmitted.find(instance) != alreadyEmitted.end())
+        return alreadyEmitted[instance];
+      
+      startNewWrite(); {
+        write(Type_instance);
+        write(instance->xfm);
+        write((int)emitOnce(instance->object));
+      } executeWrite();
+      
+      return alreadyEmitted[instance] = alreadyEmitted.size();
+    }
+    
+    /*! if this shape has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<Shape> shape)
+    {
+      if (!shape) return -1;
+
+      static std::map<std::shared_ptr<Shape>,int> alreadyEmitted;
+      if (alreadyEmitted.find(shape) != alreadyEmitted.end())
+        return alreadyEmitted[shape];
+      
+      startNewWrite(); {
+        write(Type_shape);
+        write(shape->type);
+        write((int)emitOnce(shape->material));
+        write(shape->transform);
+        writeParams(*shape);
+      } executeWrite();
+      return alreadyEmitted[shape] = alreadyEmitted.size();
+    }
+
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<Object> object)
+    {
+      static std::map<std::shared_ptr<Object>,int> alreadyEmitted;
+      if (alreadyEmitted.find(object) != alreadyEmitted.end())
+        return alreadyEmitted[object];
+      
+      startNewWrite(); {
+        write(Type_object);
+        
+        std::vector<int> shapeIDs;
+        for (auto shape : object->shapes) shapeIDs.push_back(emitOnce(shape));
+        writeVec(shapeIDs);
+
+        std::vector<int> instanceIDs;
+        for (auto instance : object->objectInstances) instanceIDs.push_back(emitOnce(instance));
+        writeVec(instanceIDs);
+
+      } executeWrite();
+      return alreadyEmitted[object] = alreadyEmitted.size();
     }
     
     void writeParams(const ParamSet &ps)
@@ -156,6 +245,8 @@ namespace pbrt_parser {
   
   void saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName)
   {
+    BinaryWriter writer(fileName);
+    writer.emitOnce(scene->world);
   }
 
 }
