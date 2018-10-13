@@ -36,6 +36,11 @@ namespace pbrt_parser {
       /* add more here */
       } TypeTag;
 
+  TypeTag typeOf(const std::string &s)
+  {
+    throw std::runtime_error("un-recognized type '"+s+"'");
+  }
+  
   struct OutBuffer : public std::vector<uint8_t>
   {
     typedef std::shared_ptr<OutBuffer> SP;
@@ -46,7 +51,7 @@ namespace pbrt_parser {
     std::stack<OutBuffer::SP> outBuffer;
     std::ofstream binFile;
 
-    void write(const void *ptr, size_t size)
+    void writeRaw(const void *ptr, size_t size)
     {
       outBuffer.top()->insert(outBuffer.top()->end(),(uint8_t*)ptr,(uint8_t*)ptr + size);
     }
@@ -54,20 +59,29 @@ namespace pbrt_parser {
     template<typename T>
     void write(const T &t)
     {
-      write(&t,sizeof(t));
+      writeRaw(&t,sizeof(t));
     }
 
     void write(const std::string &t)
     {
       write((int32_t)t.size());
-      write(&t[0],t.size());
+      writeRaw(&t[0],t.size());
     }
     
     template<typename T>
     void writeVec(const std::vector<T> &t)
     {
+      const void *ptr = (const void *)t.data();
       write(t.size());
-      write(&t[0],t.size());
+      writeRaw(ptr,t.size()*sizeof(T));
+    }
+
+    void writeVec(const std::vector<bool> &t)
+    {
+      std::vector<unsigned char> asChar(t.size());
+      for (int i=0;i<t.size();i++)
+        asChar[i] = t[i]?1:0;
+      writeVec(asChar);
     }
     
     void startNewWrite()
@@ -80,8 +94,8 @@ namespace pbrt_parser {
     }
     
     /*! if this object has already been written to file, return a
-        handle; else write it once, create a unique handle, and return
-        that */
+      handle; else write it once, create a unique handle, and return
+      that */
     int emitOnce(std::shared_ptr<Texture> texture)
     {
       std::map<std::shared_ptr<Texture>,int> alreadyEmitted;
@@ -123,15 +137,16 @@ namespace pbrt_parser {
           writeVec(*param->as<std::string>());
         } break;
         case Type_texture: {
-          int32_t texID = returnHandleFor(param->as<Texture>()->texture);
+          int32_t texID = emitOnce(param->as<Texture>()->texture);
           write(texID);
         } break;
         default:
-          throw std::runtime_error("save-to-binary of parameter type '"+param.second->getType()+"' not implemented yet");
+          throw std::runtime_error("save-to-binary of parameter type '"
+                                   +param->getType()+"' not implemented yet");
         }
       }
     }
-  }
+  };
   
   pbrt_parser::Scene::SP readFromBinary(const std::string &fileName)
   {
