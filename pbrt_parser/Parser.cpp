@@ -590,7 +590,8 @@ namespace pbrt_parser {
         if (includedFileName[0] != '/') {
           includedFileName = rootNamePath+"/"+includedFileName;
         }
-        if (dbg) cout << "... including file '" << includedFileName << " ..." << endl;
+        // if (dbg)
+          cout << "... including file '" << includedFileName << " ..." << endl;
         
         tokenizerStack.push(tokens);
         tokens = std::make_shared<Lexer>(includedFileName);
