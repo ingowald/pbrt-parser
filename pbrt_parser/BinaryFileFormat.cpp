@@ -40,7 +40,16 @@ namespace pbrt_parser {
       Type_instance,
       Type_shape,
       Type_material,
+      Type_camera,
+      Type_film,
+      Type_medium,
+      Type_sampler,
+      Type_pixelFilter,
+      Type_integrator,
+      Type_volumeIntegrator,
+      Type_surfaceIntegrator,
       /* add more here */
+      
       } TypeTag;
 
   TypeTag typeOf(const std::string &type)
@@ -58,17 +67,29 @@ namespace pbrt_parser {
 
     throw std::runtime_error("un-recognized type '"+type+"'");
   }
-  
+
+  /*! a simple buffer for binary data */
   struct OutBuffer : public std::vector<uint8_t>
   {
     typedef std::shared_ptr<OutBuffer> SP;
   };
   
+  /*! helper class that writes out a PBRT scene graph in a binary form
+      that is much faster to parse */
   struct BinaryWriter {
 
     BinaryWriter(const std::string &fileName) : binFile(fileName) {}
-    
+
+    /*! our stack of output buffers - each object we're writing might
+        depend on other objects that it references in its paramset, so
+        we use a stack of such buffers - every object writes to its
+        own buffer, and if it needs to write another object before
+        itself that other object can simply push a new buffer on the
+        stack, and first write that one before the child completes its
+        own writes. */
     std::stack<OutBuffer::SP> outBuffer;
+
+    /*! the file we'll be writing the buffers to */
     std::ofstream binFile;
 
     void writeRaw(const void *ptr, size_t size)
@@ -103,13 +124,17 @@ namespace pbrt_parser {
         asChar[i] = t[i]?1:0;
       writeVec(asChar);
     }
-    
+
+    /*! start a new write buffer on the stack - all future writes will go into this buffer */
     void startNewWrite()
     { outBuffer.push(std::make_shared<OutBuffer>()); }
     
+    /*! write the topmost write buffer to disk, and free its memory */
     void executeWrite()
     {
-      binFile.write((const char *)outBuffer.top()->data(),outBuffer.top()->size());
+      size_t size = outBuffer.top()->size();
+      binFile.write((const char *)&size,sizeof(size));
+      binFile.write((const char *)outBuffer.top()->data(),size);
       outBuffer.pop();
     }
     
@@ -130,6 +155,135 @@ namespace pbrt_parser {
         writeParams(*texture);
       } executeWrite();
       return alreadyEmitted[texture] = alreadyEmitted.size();
+    }
+    
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<Camera> camera)
+    {
+      static std::map<std::shared_ptr<Camera>,int> alreadyEmitted;
+      if (alreadyEmitted.find(camera) != alreadyEmitted.end())
+        return alreadyEmitted[camera];
+      
+      startNewWrite(); {
+        write(Type_camera);
+        write(camera->type);
+      } executeWrite();
+      return alreadyEmitted[camera] = alreadyEmitted.size();
+    }
+    
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<Integrator> integrator)
+    {
+      static std::map<std::shared_ptr<Integrator>,int> alreadyEmitted;
+      if (alreadyEmitted.find(integrator) != alreadyEmitted.end())
+        return alreadyEmitted[integrator];
+      
+      startNewWrite(); {
+        write(Type_integrator);
+        write(integrator->type);
+      } executeWrite();
+      return alreadyEmitted[integrator] = alreadyEmitted.size();
+    }
+    
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<VolumeIntegrator> volumeIntegrator)
+    {
+      static std::map<std::shared_ptr<VolumeIntegrator>,int> alreadyEmitted;
+      if (alreadyEmitted.find(volumeIntegrator) != alreadyEmitted.end())
+        return alreadyEmitted[volumeIntegrator];
+      
+      startNewWrite(); {
+        write(Type_volumeIntegrator);
+        write(volumeIntegrator->type);
+      } executeWrite();
+      return alreadyEmitted[volumeIntegrator] = alreadyEmitted.size();
+    }
+    
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<SurfaceIntegrator> surfaceIntegrator)
+    {
+      static std::map<std::shared_ptr<SurfaceIntegrator>,int> alreadyEmitted;
+      if (alreadyEmitted.find(surfaceIntegrator) != alreadyEmitted.end())
+        return alreadyEmitted[surfaceIntegrator];
+      
+      startNewWrite(); {
+        write(Type_surfaceIntegrator);
+        write(surfaceIntegrator->type);
+      } executeWrite();
+      return alreadyEmitted[surfaceIntegrator] = alreadyEmitted.size();
+    }
+    
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<Sampler> sampler)
+    {
+      static std::map<std::shared_ptr<Sampler>,int> alreadyEmitted;
+      if (alreadyEmitted.find(sampler) != alreadyEmitted.end())
+        return alreadyEmitted[sampler];
+      
+      startNewWrite(); {
+        write(Type_sampler);
+        write(sampler->type);
+      } executeWrite();
+      return alreadyEmitted[sampler] = alreadyEmitted.size();
+    }
+    
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<Film> film)
+    {
+      static std::map<std::shared_ptr<Film>,int> alreadyEmitted;
+      if (alreadyEmitted.find(film) != alreadyEmitted.end())
+        return alreadyEmitted[film];
+      
+      startNewWrite(); {
+        write(Type_film);
+        write(film->type);
+      } executeWrite();
+      return alreadyEmitted[film] = alreadyEmitted.size();
+    }
+    
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<PixelFilter> pixelFilter)
+    {
+      static std::map<std::shared_ptr<PixelFilter>,int> alreadyEmitted;
+      if (alreadyEmitted.find(pixelFilter) != alreadyEmitted.end())
+        return alreadyEmitted[pixelFilter];
+      
+      startNewWrite(); {
+        write(Type_pixelFilter);
+        write(pixelFilter->type);
+      } executeWrite();
+      return alreadyEmitted[pixelFilter] = alreadyEmitted.size();
+    }
+    
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int emitOnce(std::shared_ptr<Medium> medium)
+    {
+      static std::map<std::shared_ptr<Medium>,int> alreadyEmitted;
+      if (alreadyEmitted.find(medium) != alreadyEmitted.end())
+        return alreadyEmitted[medium];
+      
+      startNewWrite(); {
+        write(Type_medium);
+        write(medium->type);
+        writeParams(*medium);
+      } executeWrite();
+      return alreadyEmitted[medium] = alreadyEmitted.size();
     }
     
     /*! if this material has already been written to file, return a
@@ -255,6 +409,25 @@ namespace pbrt_parser {
         }
       }
     }
+    void emit(Scene::SP scene)
+    {
+#define    FORMAT_MAJOR 0
+#define    FORMAT_MINOR 1
+    
+      uint32_t formatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
+      write(formatID);
+      for (auto cam : scene->cameras)
+        write(emitOnce(cam));
+      write(emitOnce(scene->film));
+      write(emitOnce(scene->sampler));
+      write(emitOnce(scene->integrator));
+      write(emitOnce(scene->volumeIntegrator));
+      write(emitOnce(scene->surfaceIntegrator));
+      write(emitOnce(scene->pixelFilter));
+      emitOnce(scene->world);
+      size_t eofIndicator = (size_t)-1;
+      write(eofIndicator);
+    }
   };
   
   pbrt_parser::Scene::SP readFromBinary(const std::string &fileName)
@@ -266,7 +439,7 @@ namespace pbrt_parser {
   void saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName)
   {
     BinaryWriter writer(fileName);
-    writer.emitOnce(scene->world);
+    writer.emit(scene);
   }
 
 }
