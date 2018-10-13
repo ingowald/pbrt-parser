@@ -208,6 +208,7 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Material : public ParamSet {
+    
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
     typedef std::shared_ptr<Material> SP;
@@ -228,6 +229,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Medium : public ParamSet {
+    
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Medium> SP;
+    
     Medium(const std::string &type) : type(type) {};
 
     /*! pretty-print this medium (for debugging) */
@@ -238,6 +244,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Texture : public ParamSet {
+    
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Texture> SP;
+    
     std::string name;
     std::string texelType;
     std::string mapType;
@@ -274,7 +285,7 @@ namespace pbrt_parser {
            const Transforms &transforms)
       : Node(type),
       transforms(transforms)
-    {};
+      {};
 
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Camera<"+type+">"; }
