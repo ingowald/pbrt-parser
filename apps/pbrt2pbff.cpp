@@ -28,30 +28,31 @@ namespace pbrt_parser {
 
   void pbrt2pbff(int ac, char **av)
   {
-    std::vector<std::string> fileName;
+    std::string fileName;
     for (int i=1;i<ac;i++) {
       const std::string arg = av[i];
       if (arg[0] == '-') {
           throw std::runtime_error("invalid argument '"+arg+"'");
       } else {
-        fileName.push_back(arg);
+        fileName = arg;
       }          
     }
+    
     std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << "pbrtlint - checking valid parsing(-only) on a pbrt file ..." << std::endl;
-    for (int i=0;i<fileName.size();i++) {
-      std::cout << " - " << fileName[i] << std::endl;
-      std::shared_ptr<Scene> scene;
-      try {
-        scene = pbrt_parser::Scene::parseFromFile(fileName[i]);
-        std::cout << " => yay! parsing successful..." << std::endl;
-      } catch (std::runtime_error e) {
-        std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
-        std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
-        exit(1);
-      }
-      pbrtParser_saveToBinary(scene,"binary.pbff");
+    std::cout << "parsing pbrt file " << fileName << std::endl;
+    std::shared_ptr<Scene> scene;
+    try {
+      scene = pbrt_parser::Scene::parseFromFile(fileName);
+      std::cout << " => yay! parsing successful..." << std::endl;
+    } catch (std::runtime_error e) {
+      std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
+      std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
+      exit(1);
     }
+    const std::string outFileName = "binary.pbff";
+    std::cout << "writing to binary file " << outFileName << std::endl;
+    pbrtParser_saveToBinary(scene,outFileName);
+    std::cout << " => yay! writing successful..." << std::endl;
   }
 
 } // ::pbrt_parser

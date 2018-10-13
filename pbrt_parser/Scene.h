@@ -283,6 +283,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Sampler : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Sampler> SP;
+    
     /*! constructor */
     Sampler(const std::string &type) : Node(type) {};
 
@@ -291,13 +296,24 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Integrator : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Integrator> SP;
+    
     /*! constructor */
     Integrator(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Integrator<"+type+">"; }
   };
+
   struct PBRT_PARSER_INTERFACE SurfaceIntegrator : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<SurfaceIntegrator> SP;
+    
     /*! constructor */
     SurfaceIntegrator(const std::string &type) : Node(type) {};
 
@@ -306,6 +322,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE VolumeIntegrator : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<VolumeIntegrator> SP;
+    
     /*! constructor */
     VolumeIntegrator(const std::string &type) : Node(type) {};
     
@@ -314,6 +335,11 @@ namespace pbrt_parser {
   };
   
   struct PBRT_PARSER_INTERFACE PixelFilter : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<PixelFilter> SP;
+    
     /*! constructor */
     PixelFilter(const std::string &type) : Node(type) {};
     
@@ -347,6 +373,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Volume : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Volume> SP;
+    
     Volume(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -354,6 +385,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE LightSource : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<LightSource> SP;
+    
     LightSource(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -361,6 +397,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE AreaLightSource : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<AreaLightSource> SP;
+    
     AreaLightSource(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -368,6 +409,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Film : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Film> SP;
+    
     Film(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -375,6 +421,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Accelerator : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Accelerator> SP;
+    
     Accelerator(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -383,6 +434,11 @@ namespace pbrt_parser {
 
   /*! the type of renderer to be used for rendering the given scene */
   struct PBRT_PARSER_INTERFACE Renderer : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Renderer> SP;
+    
     Renderer(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */

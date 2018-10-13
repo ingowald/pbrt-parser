@@ -25,8 +25,10 @@
 namespace pbrt_parser {
 
   typedef enum : uint8_t {
+    Type_eof=0,
+      
     // param types
-    Type_float=0,
+    Type_float=10,
       Type_int,
       Type_bool,
       Type_string,
@@ -36,7 +38,7 @@ namespace pbrt_parser {
       Type_point,
       Type_color,
       // object types
-      Type_object=10,
+      Type_object=100,
       Type_instance,
       Type_shape,
       Type_material,
@@ -49,7 +51,6 @@ namespace pbrt_parser {
       Type_volumeIntegrator,
       Type_surfaceIntegrator,
       /* add more here */
-      
       } TypeTag;
 
   TypeTag typeOf(const std::string &type)
@@ -166,7 +167,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(std::shared_ptr<Camera> camera)
+    int emitOnce(Camera::SP camera)
     {
       if (!camera) return -1;
       
@@ -177,6 +178,7 @@ namespace pbrt_parser {
       startNewWrite(); {
         write(Type_camera);
         write(camera->type);
+        write(camera->transforms);
       } executeWrite();
       return alreadyEmitted[camera] = alreadyEmitted.size();
     }
@@ -184,7 +186,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(std::shared_ptr<Integrator> integrator)
+    int emitOnce(Integrator::SP integrator)
     {
       if (!integrator) return -1;
 
@@ -202,7 +204,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(std::shared_ptr<VolumeIntegrator> volumeIntegrator)
+    int emitOnce(VolumeIntegrator::SP volumeIntegrator)
     {
       if (!volumeIntegrator) return -1;
 
@@ -220,7 +222,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(std::shared_ptr<SurfaceIntegrator> surfaceIntegrator)
+    int emitOnce(SurfaceIntegrator::SP surfaceIntegrator)
     {
       if (!surfaceIntegrator) return -1;
 
@@ -238,7 +240,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(std::shared_ptr<Sampler> sampler)
+    int emitOnce(Sampler::SP sampler)
     {
       if (!sampler) return -1;
       
@@ -439,9 +441,8 @@ namespace pbrt_parser {
 #define    FORMAT_MINOR 1
     
       uint32_t formatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
-      startNewWrite(); {
-        write(formatID);
-      } executeWrite();
+      binFile.write((const char *)&formatID,sizeof(formatID));
+      
       for (auto cam : scene->cameras) {
         startNewWrite(); {
           write(emitOnce(cam));
@@ -477,17 +478,11 @@ namespace pbrt_parser {
       } executeWrite();
 
       startNewWrite(); {
-        size_t eofIndicator = (size_t)-1;
-        write(eofIndicator);
+        TypeTag eof = Type_eof;
+        write(eof);
       } executeWrite();
     }
   };
-  
-  pbrt_parser::Scene::SP readFromBinary(const std::string &fileName)
-  {
-    pbrt_parser::Scene::SP scene = std::make_shared<pbrt_parser::Scene>();
-    return scene;
-  }
   
   void saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName)
   {
@@ -495,6 +490,160 @@ namespace pbrt_parser {
     writer.emit(scene);
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+  struct BinaryReader {
+
+    struct Block {
+      Block() = default;
+      Block(Block &&) = default;
+      std::vector<unsigned char> data;
+      size_t pos = 0;
+      
+      template<typename T>
+      T read() {
+        T t;
+        readRaw(&t,sizeof(t));
+        return t;
+      }
+
+      void readRaw(void *ptr, size_t size)
+      {
+        PRINT(pos);
+        PRINT(size);
+        PRINT(data.size());
+        assert((pos + size) <= data.size());
+        memcpy((char*)ptr,data.data()+pos,size);
+        pos += size;
+      };
+      
+      std::string readString()
+      {
+        // write((int32_t)t.size());
+        // writeRaw(&t[0],t.size());
+        int32_t size = read<int32_t>();
+        std::string s(size,' ');
+        readRaw(&s[0],size);
+        return s;
+      }
+    };
+    
+    BinaryReader(const std::string &fileName) : binFile(fileName)
+    {
+      assert(binFile.good());
+    }
+
+    /*! our stack of output buffers - each object we're writing might
+        depend on other objects that it references in its paramset, so
+        we use a stack of such buffers - every object writes to its
+        own buffer, and if it needs to write another object before
+        itself that other object can simply push a new buffer on the
+        stack, and first write that one before the child completes its
+        own writes. */
+    std::stack<OutBuffer::SP> outBuffer;
+
+    /*! the file we'll be writing the buffers to */
+    std::ifstream binFile;
+
+    int readHeader()
+    {
+      PING;
+      int formatID;
+      assert(binFile.good());
+      binFile.read((char*)&formatID,sizeof(formatID));
+      assert(binFile.good());
+      PING;
+      PRINT((int*)(size_t)formatID);
+      return formatID;
+    }
+
+    Block readBlock()
+    {
+      Block block;
+      size_t size;
+      assert(binFile.good());
+      binFile.read((char*)&size,sizeof(size));
+      assert(binFile.good());
+      PRINT(size);
+
+      assert(size > 0);
+      block.data.resize(size);
+      assert(binFile.good());
+      binFile.read((char*)block.data.data(),size);
+      assert(binFile.good());
+
+      return block;
+    }
+
+    void readParams(ParamSet &paramSet, Block &block)
+    {
+      uint16_t numParams = block.read<uint16_t>();
+      PRINT(numParams);
+    }
+    
+    Camera::SP readCamera(Block &block)
+    {
+      // write(Type_camera);
+      // write(camera->type);
+      // write(camera->transforms);
+
+      std::string type = block.readString();
+      Transforms transforms = block.read<Transforms>();
+      
+      Camera::SP camera = std::make_shared<Camera>(type,transforms);
+      
+      readParams(*camera,block);
+      return camera;
+    }
+    
+    Scene::SP readScene()
+    {
+      Scene::SP scene = std::make_shared<Scene>();
+      PING;
+      readHeader();
+      PING;
+
+      std::vector<Object::SP> objects;
+    
+      while (1) {
+        BinaryReader::Block block = readBlock();
+        TypeTag typeTag = block.read<TypeTag>();
+        PRINT((int)typeTag);
+
+        switch(typeTag) {
+        case Type_camera:
+          scene->cameras.push_back(readCamera(block));
+          break;
+        case Type_eof:
+          std::cout << "Done parsing!" << std::endl;
+          assert(!objects.empty());
+          scene->world = objects.back();
+          break;
+        default:
+          throw std::runtime_error("unsupported type tag '"+std::to_string((int)typeTag)+"'");
+        };
+      }
+      return scene;
+    }
+  };
+    
+  
+  pbrt_parser::Scene::SP readFromBinary(const std::string &fileName)
+  {
+    BinaryReader reader(fileName);
+    return reader.readScene();    
+  }
+  
 }
 
 /*! given an already created scene, read given binary file, and populate this scene */
