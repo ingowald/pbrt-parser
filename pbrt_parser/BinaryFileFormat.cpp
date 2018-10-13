@@ -25,7 +25,7 @@
 namespace pbrt_parser {
 
 #define    FORMAT_MAJOR 0
-#define    FORMAT_MINOR 2
+#define    FORMAT_MINOR 3
   
   const uint32_t ourFormatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
 
@@ -700,13 +700,9 @@ namespace pbrt_parser {
         case Type_point:
           paramSet.param[name] = readParam<float>(typeToString(typeTag),block);
           break;
-        // case Type_int: {
-        //   paramSet[name] = readParam<int>();
-        // } break;
-        // case Type_bool: {
-        //   paramSet[name] = readParam<bool>();
-        // } break;
-        // case Type_spectrum:
+        case Type_integer:
+          paramSet.param[name] = readParam<int>(typeToString(typeTag),block);
+          break;
         case Type_string: 
           paramSet.param[name] = readParam<std::string>(typeToString(typeTag),block);
           break;
