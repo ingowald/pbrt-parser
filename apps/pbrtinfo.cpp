@@ -26,7 +26,12 @@ namespace pbrt_parser {
   using std::cout;
   using std::endl;
 
-  void pbrt2pbff(int ac, char **av)
+  bool endsWith(const std::string &s, const std::string &suffix)
+  {
+    return s.substr(s.size()-suffix.size(),suffix.size()) == suffix;
+  }
+  
+  void pbrtInfo(int ac, char **av)
   {
     std::string fileName;
     for (int i=1;i<ac;i++) {
@@ -39,26 +44,27 @@ namespace pbrt_parser {
     }
     
     std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << "parsing pbrt file " << fileName << std::endl;
+    std::cout << "pbrtinfo - printing info on pbrt file ..." << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+    
     std::shared_ptr<Scene> scene;
     try {
-      scene = pbrt_parser::Scene::parseFromFile(fileName);
+      scene
+        = endsWith(fileName,".pbff")
+        ? pbrtParser_readFromBinary(fileName)
+        : pbrt_parser::Scene::parseFromFile(fileName);
       std::cout << " => yay! parsing successful..." << std::endl;
     } catch (std::runtime_error e) {
       std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
       std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
       exit(1);
     }
-    const std::string outFileName = "binary.pbff";
-    std::cout << "writing to binary file " << outFileName << std::endl;
-    pbrtParser_saveToBinary(scene,outFileName);
-    std::cout << " => yay! writing successful..." << std::endl;
   }
-
+  
 } // ::pbrt_parser
 
 int main(int ac, char **av)
 {
-  pbrt_parser::pbrt2pbff(ac,av);
+  pbrt_parser::pbrtInfo(ac,av);
   return 0;
 }

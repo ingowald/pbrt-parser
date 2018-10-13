@@ -97,10 +97,10 @@ namespace pbrt_parser {
   };
 #endif
 
-  /*! start-time and end-time transforms - PBRT allows for specifying
-      transforms at both 'start' and 'end' time, to allow for linear
+  /*! start-time and end-time transform - PBRT allows for specifying
+      transform at both 'start' and 'end' time, to allow for linear
       motion */
-  struct Transforms {
+  struct Transform {
     affine3f atStart;
     affine3f atEnd;
   };
@@ -195,6 +195,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Attributes {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Attributes> SP;
+    
     Attributes();
     Attributes(Attributes &&other) = default;
     Attributes(const Attributes &other) = default;
@@ -208,6 +213,7 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Material : public ParamSet {
+    
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
     typedef std::shared_ptr<Material> SP;
@@ -228,6 +234,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Medium : public ParamSet {
+    
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Medium> SP;
+    
     Medium(const std::string &type) : type(type) {};
 
     /*! pretty-print this medium (for debugging) */
@@ -238,6 +249,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Texture : public ParamSet {
+    
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Texture> SP;
+    
     std::string name;
     std::string texelType;
     std::string mapType;
@@ -271,18 +287,23 @@ namespace pbrt_parser {
 
     /*! constructor */
     Camera(const std::string &type,
-           const Transforms &transforms)
+           const Transform &transform)
       : Node(type),
-      transforms(transforms)
-    {};
+      transform(transform)
+      {};
 
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Camera<"+type+">"; }
 
-    const Transforms transforms;
+    const Transform transform;
   };
 
   struct PBRT_PARSER_INTERFACE Sampler : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Sampler> SP;
+    
     /*! constructor */
     Sampler(const std::string &type) : Node(type) {};
 
@@ -291,13 +312,24 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Integrator : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Integrator> SP;
+    
     /*! constructor */
     Integrator(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Integrator<"+type+">"; }
   };
+
   struct PBRT_PARSER_INTERFACE SurfaceIntegrator : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<SurfaceIntegrator> SP;
+    
     /*! constructor */
     SurfaceIntegrator(const std::string &type) : Node(type) {};
 
@@ -306,6 +338,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE VolumeIntegrator : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<VolumeIntegrator> SP;
+    
     /*! constructor */
     VolumeIntegrator(const std::string &type) : Node(type) {};
     
@@ -314,6 +351,11 @@ namespace pbrt_parser {
   };
   
   struct PBRT_PARSER_INTERFACE PixelFilter : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<PixelFilter> SP;
+    
     /*! constructor */
     PixelFilter(const std::string &type) : Node(type) {};
     
@@ -334,7 +376,7 @@ namespace pbrt_parser {
     Shape(const std::string &type,
           std::shared_ptr<Material>   material,
           std::shared_ptr<Attributes> attributes,
-          const Transforms &transform);
+          const Transform &transform);
 
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Shape<"+type+">"; }
@@ -343,10 +385,15 @@ namespace pbrt_parser {
       one material per shape */
     std::shared_ptr<Material>   material;
     std::shared_ptr<Attributes> attributes;
-    Transforms                  transform;
+    Transform                  transform;
   };
 
   struct PBRT_PARSER_INTERFACE Volume : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Volume> SP;
+    
     Volume(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -354,6 +401,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE LightSource : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<LightSource> SP;
+    
     LightSource(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -361,6 +413,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE AreaLightSource : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<AreaLightSource> SP;
+    
     AreaLightSource(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -368,6 +425,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Film : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Film> SP;
+    
     Film(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -375,6 +437,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Accelerator : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Accelerator> SP;
+    
     Accelerator(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -383,6 +450,11 @@ namespace pbrt_parser {
 
   /*! the type of renderer to be used for rendering the given scene */
   struct PBRT_PARSER_INTERFACE Renderer : public Node {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Renderer> SP;
+    
     Renderer(const std::string &type) : Node(type) {};
 
     /*! pretty-printing, for debugging */
@@ -392,24 +464,27 @@ namespace pbrt_parser {
   //! what's in a objectbegin/objectned, as well as the root object
   struct PBRT_PARSER_INTERFACE Object {
     
-    /*! allows for writing pbrt_parser::Scene::SP, which is somewhat more concise
-        than std::shared_ptr<pbrt_parser::Scene> */
+    /*! allows for writing pbrt_parser::Scene::SP, which is somewhat
+      more concise than std::shared_ptr<pbrt_parser::Scene> */
     typedef std::shared_ptr<Object> SP;
     
     Object(const std::string &name) : name(name) {}
     
     struct PBRT_PARSER_INTERFACE Instance {
+
+      /*! allows for writing pbrt_parser::Scene::SP, which is somewhat
+        more concise than std::shared_ptr<pbrt_parser::Scene> */
       typedef std::shared_ptr<Instance> SP;
       
       Instance(const std::shared_ptr<Object> &object,
-               const Transforms  &xfm)
+               const Transform  &xfm)
         : object(object), xfm(xfm)
       {}
       
       std::string toString() const;
 
       std::shared_ptr<Object> object;
-      Transforms              xfm;
+      Transform              xfm;
     };
 
     //! pretty-print scene info into a std::string 
