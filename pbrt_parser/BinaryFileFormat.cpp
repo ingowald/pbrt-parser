@@ -14,6 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#include "Parser.h"
 #include "Scene.h"
 // std
 #include <iostream>
@@ -30,6 +31,10 @@ namespace pbrt_parser {
       Type_bool,
       Type_string,
       Type_texture,
+      Type_rgb,
+      Type_spectrum,
+      Type_point,
+      Type_color,
       // object types
       Type_object=10,
       Type_instance,
@@ -38,9 +43,20 @@ namespace pbrt_parser {
       /* add more here */
       } TypeTag;
 
-  TypeTag typeOf(const std::string &s)
+  TypeTag typeOf(const std::string &type)
   {
-    throw std::runtime_error("un-recognized type '"+s+"'");
+    if (type == "rgb") return Type_rgb;
+    if (type == "float") return Type_float;
+    if (type == "point") return Type_point;
+    if (type == "color") return Type_color;
+
+    if (type == "integer") return Type_int;
+    if (type == "string") return Type_string;
+    if (type == "spectrum") return Type_spectrum;
+
+    if (type == "texture") return Type_texture;
+
+    throw std::runtime_error("un-recognized type '"+type+"'");
   }
   
   struct OutBuffer : public std::vector<uint8_t>
@@ -213,18 +229,22 @@ namespace pbrt_parser {
         write(name);
 
         switch(typeTag) {
-        case Type_float: {
+        case Type_float: 
+        case Type_rgb: 
+        case Type_color:
+        case Type_point:
           writeVec(*param->as<float>());
-        } break;
+          break;
         case Type_int: {
           writeVec(*param->as<int>());
         } break;
         case Type_bool: {
           writeVec(*param->as<bool>());
         } break;
-        case Type_string: {
+        case Type_spectrum:
+        case Type_string: 
           writeVec(*param->as<std::string>());
-        } break;
+          break;
         case Type_texture: {
           int32_t texID = emitOnce(param->as<Texture>()->texture);
           write(texID);
