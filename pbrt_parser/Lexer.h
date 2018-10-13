@@ -43,7 +43,7 @@ namespace pbrt_parser {
     file name and line number */
   struct PBRT_PARSER_INTERFACE Loc {
     //! constructor
-    Loc(std::shared_ptr<File> file=std::shared_ptr<File>());
+    Loc(const std::shared_ptr<File> &file=std::shared_ptr<File>());
     //! copy-constructor
     Loc(const Loc &loc);
 
@@ -80,7 +80,6 @@ namespace pbrt_parser {
     const Type        type;
   };
 
-#if 1
   struct TokenHandle : public std::shared_ptr<Token> {
     TokenHandle() = default;
     TokenHandle(std::shared_ptr<Token> handle) : std::shared_ptr<Token>(handle) {}
@@ -90,20 +89,6 @@ namespace pbrt_parser {
     
     inline operator std::string() const { return get()->text; }
   };
-#else
-  struct TokenHandle {
-    TokenHandle() = default;
-    TokenHandle(std::shared_ptr<Token> handle) : handle(handle) {}
-    TokenHandle(const TokenHandle &) = default;
-    TokenHandle(TokenHandle &&) = default;
-    
-    inline operator std::string() const { return handle->text; }
-    inline operator std::shared_ptr<Token>() const { return handle; }
-    inline operator bool() const { return (bool)handle; }
-    std::shared_ptr<Token> handle;
-  };
-#endif
-  
 
   /*! class that does the lexing - ie, the breaking up of an input
     stream of chars into an input stream of tokens.  */
