@@ -229,7 +229,7 @@ namespace pbrt_parser {
   Shape::Shape(const std::string &type,
                std::shared_ptr<Material>   material,
                std::shared_ptr<Attributes> attributes,
-               const Transforms &transform) 
+               const Transform &transform) 
     : Node(type), 
       material(material),
       attributes(attributes),

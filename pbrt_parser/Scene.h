@@ -97,10 +97,10 @@ namespace pbrt_parser {
   };
 #endif
 
-  /*! start-time and end-time transforms - PBRT allows for specifying
-      transforms at both 'start' and 'end' time, to allow for linear
+  /*! start-time and end-time transform - PBRT allows for specifying
+      transform at both 'start' and 'end' time, to allow for linear
       motion */
-  struct Transforms {
+  struct Transform {
     affine3f atStart;
     affine3f atEnd;
   };
@@ -195,6 +195,11 @@ namespace pbrt_parser {
   };
 
   struct PBRT_PARSER_INTERFACE Attributes {
+
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<Attributes> SP;
+    
     Attributes();
     Attributes(Attributes &&other) = default;
     Attributes(const Attributes &other) = default;
@@ -282,15 +287,15 @@ namespace pbrt_parser {
 
     /*! constructor */
     Camera(const std::string &type,
-           const Transforms &transforms)
+           const Transform &transform)
       : Node(type),
-      transforms(transforms)
+      transform(transform)
       {};
 
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Camera<"+type+">"; }
 
-    const Transforms transforms;
+    const Transform transform;
   };
 
   struct PBRT_PARSER_INTERFACE Sampler : public Node {
@@ -371,7 +376,7 @@ namespace pbrt_parser {
     Shape(const std::string &type,
           std::shared_ptr<Material>   material,
           std::shared_ptr<Attributes> attributes,
-          const Transforms &transform);
+          const Transform &transform);
 
     /*! pretty-printing, for debugging */
     virtual std::string toString() const override { return "Shape<"+type+">"; }
@@ -380,7 +385,7 @@ namespace pbrt_parser {
       one material per shape */
     std::shared_ptr<Material>   material;
     std::shared_ptr<Attributes> attributes;
-    Transforms                  transform;
+    Transform                  transform;
   };
 
   struct PBRT_PARSER_INTERFACE Volume : public Node {
@@ -459,24 +464,27 @@ namespace pbrt_parser {
   //! what's in a objectbegin/objectned, as well as the root object
   struct PBRT_PARSER_INTERFACE Object {
     
-    /*! allows for writing pbrt_parser::Scene::SP, which is somewhat more concise
-        than std::shared_ptr<pbrt_parser::Scene> */
+    /*! allows for writing pbrt_parser::Scene::SP, which is somewhat
+      more concise than std::shared_ptr<pbrt_parser::Scene> */
     typedef std::shared_ptr<Object> SP;
     
     Object(const std::string &name) : name(name) {}
     
     struct PBRT_PARSER_INTERFACE Instance {
+
+      /*! allows for writing pbrt_parser::Scene::SP, which is somewhat
+        more concise than std::shared_ptr<pbrt_parser::Scene> */
       typedef std::shared_ptr<Instance> SP;
       
       Instance(const std::shared_ptr<Object> &object,
-               const Transforms  &xfm)
+               const Transform  &xfm)
         : object(object), xfm(xfm)
       {}
       
       std::string toString() const;
 
       std::shared_ptr<Object> object;
-      Transforms              xfm;
+      Transform              xfm;
     };
 
     //! pretty-print scene info into a std::string 
