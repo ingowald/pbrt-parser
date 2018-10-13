@@ -179,6 +179,7 @@ namespace pbrt_parser {
         write(Type_camera);
         write(camera->type);
         write(camera->transforms);
+        writeParams(*camera);
       } executeWrite();
       return alreadyEmitted[camera] = alreadyEmitted.size();
     }
