@@ -94,6 +94,7 @@ namespace pbrt_parser {
 
     void writeRaw(const void *ptr, size_t size)
     {
+      assert(ptr);
       outBuffer.top()->insert(outBuffer.top()->end(),(uint8_t*)ptr,(uint8_t*)ptr + size);
     }
     
@@ -114,7 +115,8 @@ namespace pbrt_parser {
     {
       const void *ptr = (const void *)t.data();
       write(t.size());
-      writeRaw(ptr,t.size()*sizeof(T));
+      if (!t.empty())
+        writeRaw(ptr,t.size()*sizeof(T));
     }
 
     void writeVec(const std::vector<bool> &t)
@@ -133,8 +135,10 @@ namespace pbrt_parser {
     void executeWrite()
     {
       size_t size = outBuffer.top()->size();
-      binFile.write((const char *)&size,sizeof(size));
-      binFile.write((const char *)outBuffer.top()->data(),size);
+      if (size) {
+        binFile.write((const char *)&size,sizeof(size));
+        binFile.write((const char *)outBuffer.top()->data(),size);
+      }
       outBuffer.pop();
     }
     
@@ -143,6 +147,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<Texture> texture)
     {
+      if (!texture) return -1;
+      
       static std::map<std::shared_ptr<Texture>,int> alreadyEmitted;
       if (alreadyEmitted.find(texture) != alreadyEmitted.end())
         return alreadyEmitted[texture];
@@ -162,6 +168,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<Camera> camera)
     {
+      if (!camera) return -1;
+      
       static std::map<std::shared_ptr<Camera>,int> alreadyEmitted;
       if (alreadyEmitted.find(camera) != alreadyEmitted.end())
         return alreadyEmitted[camera];
@@ -178,6 +186,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<Integrator> integrator)
     {
+      if (!integrator) return -1;
+
       static std::map<std::shared_ptr<Integrator>,int> alreadyEmitted;
       if (alreadyEmitted.find(integrator) != alreadyEmitted.end())
         return alreadyEmitted[integrator];
@@ -194,6 +204,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<VolumeIntegrator> volumeIntegrator)
     {
+      if (!volumeIntegrator) return -1;
+
       static std::map<std::shared_ptr<VolumeIntegrator>,int> alreadyEmitted;
       if (alreadyEmitted.find(volumeIntegrator) != alreadyEmitted.end())
         return alreadyEmitted[volumeIntegrator];
@@ -210,6 +222,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<SurfaceIntegrator> surfaceIntegrator)
     {
+      if (!surfaceIntegrator) return -1;
+
       static std::map<std::shared_ptr<SurfaceIntegrator>,int> alreadyEmitted;
       if (alreadyEmitted.find(surfaceIntegrator) != alreadyEmitted.end())
         return alreadyEmitted[surfaceIntegrator];
@@ -226,6 +240,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<Sampler> sampler)
     {
+      if (!sampler) return -1;
+      
       static std::map<std::shared_ptr<Sampler>,int> alreadyEmitted;
       if (alreadyEmitted.find(sampler) != alreadyEmitted.end())
         return alreadyEmitted[sampler];
@@ -242,6 +258,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<Film> film)
     {
+      if (!film) return -1;
+      
       static std::map<std::shared_ptr<Film>,int> alreadyEmitted;
       if (alreadyEmitted.find(film) != alreadyEmitted.end())
         return alreadyEmitted[film];
@@ -258,6 +276,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<PixelFilter> pixelFilter)
     {
+      if (!pixelFilter) return -1;
+      
       static std::map<std::shared_ptr<PixelFilter>,int> alreadyEmitted;
       if (alreadyEmitted.find(pixelFilter) != alreadyEmitted.end())
         return alreadyEmitted[pixelFilter];
@@ -274,6 +294,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<Medium> medium)
     {
+      if (!medium) return -1;
+      
       static std::map<std::shared_ptr<Medium>,int> alreadyEmitted;
       if (alreadyEmitted.find(medium) != alreadyEmitted.end())
         return alreadyEmitted[medium];
@@ -352,6 +374,8 @@ namespace pbrt_parser {
       that */
     int emitOnce(std::shared_ptr<Object> object)
     {
+      if (!object) return -1;
+      
       static std::map<std::shared_ptr<Object>,int> alreadyEmitted;
       if (alreadyEmitted.find(object) != alreadyEmitted.end())
         return alreadyEmitted[object];
@@ -415,18 +439,47 @@ namespace pbrt_parser {
 #define    FORMAT_MINOR 1
     
       uint32_t formatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
-      write(formatID);
-      for (auto cam : scene->cameras)
-        write(emitOnce(cam));
-      write(emitOnce(scene->film));
-      write(emitOnce(scene->sampler));
-      write(emitOnce(scene->integrator));
-      write(emitOnce(scene->volumeIntegrator));
-      write(emitOnce(scene->surfaceIntegrator));
-      write(emitOnce(scene->pixelFilter));
-      emitOnce(scene->world);
-      size_t eofIndicator = (size_t)-1;
-      write(eofIndicator);
+      startNewWrite(); {
+        write(formatID);
+      } executeWrite();
+      for (auto cam : scene->cameras) {
+        startNewWrite(); {
+          write(emitOnce(cam));
+        }
+      }
+      
+      startNewWrite(); {
+        write(emitOnce(scene->film));
+      } executeWrite();
+
+      startNewWrite(); {
+        write(emitOnce(scene->sampler));
+      } executeWrite();
+
+      startNewWrite(); {
+        write(emitOnce(scene->integrator));
+      } executeWrite();
+
+      startNewWrite(); {
+        write(emitOnce(scene->volumeIntegrator));
+      } executeWrite();
+
+      startNewWrite(); {
+        write(emitOnce(scene->surfaceIntegrator));
+      } executeWrite();
+
+      startNewWrite(); {
+        write(emitOnce(scene->pixelFilter));
+      } executeWrite();
+
+      startNewWrite(); {
+        emitOnce(scene->world);
+      } executeWrite();
+
+      startNewWrite(); {
+        size_t eofIndicator = (size_t)-1;
+        write(eofIndicator);
+      } executeWrite();
     }
   };
   
