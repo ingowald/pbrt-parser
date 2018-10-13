@@ -151,10 +151,8 @@ namespace pbrt_parser {
 
     void writeVec(const std::vector<std::string> &t)
     {
-      PING;
       write(t.size());
       for (auto &s : t) {
-        PRINT(s);
         write(s);
       }
     }
@@ -168,7 +166,7 @@ namespace pbrt_parser {
     {
       size_t size = outBuffer.top()->size();
       if (size) {
-        std::cout << "writing block of size " << size << std::endl;
+        // std::cout << "writing block of size " << size << std::endl;
         binFile.write((const char *)&size,sizeof(size));
         binFile.write((const char *)outBuffer.top()->data(),size);
       }
@@ -337,22 +335,17 @@ namespace pbrt_parser {
       that */
     int emitOnce(Film::SP film)
     {
-      PING;
-      
       if (!film) return -1;
 
-      PING;
       static std::map<std::shared_ptr<Film>,int> alreadyEmitted;
       if (alreadyEmitted.find(film) != alreadyEmitted.end())
         return alreadyEmitted[film];
       
-      PING;
       startNewWrite(); {
         write(Type_film);
         write(film->type);
         writeParams(*film);
       } executeWrite();
-      PING;
       return alreadyEmitted[film] = alreadyEmitted.size();
     }
     
@@ -444,13 +437,13 @@ namespace pbrt_parser {
     void writeParams(const ParamSet &ps)
     {
       write((uint16_t)ps.param.size());
-      std::cout << " - writing " << ps.param.size() << " params" << std::endl;
+      // std::cout << " - writing " << ps.param.size() << " params" << std::endl;
       for (auto it : ps.param) {
         const std::string name = it.first;
         Param::SP param = it.second;
         
         TypeTag typeTag = typeOf(param->getType());
-        std::cout << "   - writing " << param->getType() << " " << name << std::endl;
+        // std::cout << "   - writing " << param->getType() << " " << name << std::endl;
         write(typeTag);
         write(name);
 
