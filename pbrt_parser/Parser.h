@@ -145,7 +145,7 @@ namespace pbrt_parser {
     std::shared_ptr<Material> currentMaterial;
     
     /*! tracks the location of the last token gotten through next() (for debugging) */
-    Loc lastLoc;
+    // Loc lastLoc;
     
   };
 

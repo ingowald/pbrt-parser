@@ -45,10 +45,10 @@ namespace pbrt_parser {
   {
   }
     
-  //! copy-constructor
-  Loc::Loc(const Loc &loc) : file(loc.file), line(loc.line), col(loc.col) 
-  {
-  }
+  // //! copy-constructor
+  // Loc::Loc(const Loc &loc) : file(loc.file), line(loc.line), col(loc.col) 
+  // {
+  // }
     
   //! pretty-print
   std::string Loc::toString() const 
@@ -119,11 +119,13 @@ namespace pbrt_parser {
       
   inline bool Lexer::isWhite(const char c)
   {
-    return strchr(" \t\n\r",c)!=nullptr;
+    return (c==' ' || c=='\n' || c=='\t' || c=='\r');
+    // return strchr(" \t\n\r",c)!=nullptr;
   }
   inline bool Lexer::isSpecial(const char c)
   {
-    return strchr("[,]",c)!=nullptr;
+    return (c=='[' || c==',' || c==']');
+    // return strchr("[,]",c)!=nullptr;
   }
 
   TokenHandle Lexer::next() 
@@ -131,9 +133,7 @@ namespace pbrt_parser {
     // skip all white space and comments
     int c;
 
-    std::stringstream ss;
-
-    Loc startLoc = loc;
+    // Loc startLoc = loc;
     // skip all whitespaces and comments
     while (1) {
       c = get_char();
@@ -145,10 +145,10 @@ namespace pbrt_parser {
       }
           
       if (c == '#') {
-        startLoc = loc;
-        Loc lastLoc = loc;
+        // startLoc = loc;
+        // Loc lastLoc = loc;
         while (c != '\n') {
-          lastLoc = loc;
+          // lastLoc = loc;
           c = get_char();
           if (c < 0) return TokenHandle();
         }
@@ -157,11 +157,16 @@ namespace pbrt_parser {
       break;
     }
 
-    startLoc = loc;
-    Loc lastLoc = loc;
+    std::string s; s.reserve(100);
+    std::stringstream ss(s);
+
+    
+    Loc startLoc = loc;
+    // startLoc = loc;
+    // Loc lastLoc = loc;
     if (c == '"') {
       while (1) {
-        lastLoc = loc;
+        // lastLoc = loc;
         c = get_char();
         if (c < 0)
           throw std::runtime_error("could not find end of string literal (found eof instead)");
@@ -183,7 +188,7 @@ namespace pbrt_parser {
     ss << (char)c;
     // cout << "START OF TOKEN at " << loc.toString() << endl;
     while (1) {
-      lastLoc = loc;
+      // lastLoc = loc;
       c = get_char();
       if (c < 0)
         return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());

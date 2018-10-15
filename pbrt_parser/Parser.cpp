@@ -599,7 +599,7 @@ namespace pbrt_parser {
     if (!token)
       throw std::runtime_error("unexpected end of file ...");
     peekQueue.pop_front();
-    lastLoc = token->loc;
+    // lastLoc = token->loc;
     return token;
   }
     
@@ -614,7 +614,8 @@ namespace pbrt_parser {
         if (includedFileName[0] != '/') {
           includedFileName = rootNamePath+"/"+includedFileName;
         }
-        if (dbg) cout << "... including file '" << includedFileName << " ..." << endl;
+        // if (dbg)
+          cout << "... including file '" << includedFileName << " ..." << endl;
         
         tokenizerStack.push(tokens);
         tokens = std::make_shared<Lexer>(includedFileName);

@@ -45,7 +45,8 @@ namespace pbrt_parser {
     //! constructor
     Loc(std::shared_ptr<File> file=std::shared_ptr<File>());
     //! copy-constructor
-    Loc(const Loc &loc);
+    Loc(const Loc &loc) = default;
+    Loc(Loc &&) = default;
 
     //! pretty-print
     std::string toString() const;
@@ -65,6 +66,9 @@ namespace pbrt_parser {
     Token(const Loc &loc, 
           const Type type,
           const std::string &text);
+    Token(const Token &other) = default;
+    Token(Token &&) = default;
+    
     //! pretty-print
     std::string toString() const;
       
