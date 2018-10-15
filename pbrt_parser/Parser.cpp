@@ -268,11 +268,11 @@ namespace pbrt_parser {
 
   void Parser::popTransform() 
   {
-    (Transforms&)ctm = ctm.stack.top();
+    (Transform&)ctm = ctm.stack.top();
     ctm.stack.pop();
   }
     
-  bool Parser::parseTransforms(TokenHandle token)
+  bool Parser::parseTransform(TokenHandle token)
   {
     if (token == "ActiveTransform") {
       const std::string which = *next();
@@ -546,9 +546,9 @@ namespace pbrt_parser {
       }
 
       // -------------------------------------------------------
-      // Transforms
+      // Transform
       // -------------------------------------------------------
-      if (parseTransforms(token))
+      if (parseTransform(token))
         continue;
         
       // -------------------------------------------------------
@@ -653,9 +653,9 @@ namespace pbrt_parser {
         cout << token->toString() << endl;
 
       // -------------------------------------------------------
-      // Transforms
+      // Transform
       // -------------------------------------------------------
-      if (parseTransforms(token))
+      if (parseTransform(token))
         continue;
         
       if (token == "LookAt") {

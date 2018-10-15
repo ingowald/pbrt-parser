@@ -38,7 +38,7 @@ namespace pbrt_parser {
 
   /*! the class that implements PBRT's "current transformation matrix
       (CTM)" stack */
-  struct CTM : public Transforms {
+  struct CTM : public Transform {
     void reset()
     {
       startActive = endActive = true;
@@ -48,7 +48,7 @@ namespace pbrt_parser {
     bool endActive   { true };
     
     /*! pbrt's "CTM" (current transformation matrix) handling */
-    std::stack<Transforms> stack;
+    std::stack<Transform> stack;
   };
 
   
@@ -79,7 +79,7 @@ namespace pbrt_parser {
       
     /*! try parsing this token as some sort of transform token, and
       return true if successful, false if not recognized  */
-    bool parseTransforms(TokenHandle token);
+    bool parseTransform(TokenHandle token);
 
     void pushTransform();
     void popTransform();
@@ -132,7 +132,7 @@ namespace pbrt_parser {
     std::stack<std::shared_ptr<Object> >     objectStack;
 
     CTM ctm;
-    // Transforms              getCurrentXfm() { return transformStack.top(); }
+    // Transform              getCurrentXfm() { return transformtack.top(); }
     std::shared_ptr<Object> getCurrentObject();
     std::shared_ptr<Object> findNamedObject(const std::string &name, bool createIfNotExist=false);
 

@@ -41,7 +41,7 @@ namespace pbrt_parser {
   // =======================================================
 
   //! constructor
-  Loc::Loc(std::shared_ptr<File> file) : file(file), line(1), col(0) 
+  Loc::Loc(const std::shared_ptr<File> &file) : file(file), line(1), col(0) 
   {
   }
     
