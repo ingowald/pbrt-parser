@@ -42,6 +42,7 @@ namespace pbrt_parser {
       Type_spectrum,
       Type_point,
       Type_point2,
+      Type_point3,
       Type_normal,
       Type_color,
       // object types
@@ -68,6 +69,7 @@ namespace pbrt_parser {
     if (type == "float")    return Type_float;
     if (type == "point")    return Type_point;
     if (type == "point2")   return Type_point2;
+    if (type == "point3")   return Type_point3;
     if (type == "normal")   return Type_normal;
 
     if (type == "rgb")      return Type_rgb;
@@ -91,6 +93,7 @@ namespace pbrt_parser {
     case Type_float    : return "float";
     case Type_point    : return "point";
     case Type_point2   : return "point2";
+    case Type_point3   : return "point3";
     case Type_normal   : return "normal";
     case Type_string   : return "string";
     case Type_spectrum : return "spectrum";
@@ -465,6 +468,7 @@ namespace pbrt_parser {
         case Type_color:
         case Type_point:
         case Type_point2:
+        case Type_point3:
         case Type_normal:
           writeVec(*param->as<float>());
           break;
@@ -697,6 +701,7 @@ namespace pbrt_parser {
         case Type_color:
         case Type_point:
         case Type_point2:
+        case Type_point3:
         case Type_normal:
           paramSet.param[name] = readParam<float>(typeToString(typeTag),block);
           break;
