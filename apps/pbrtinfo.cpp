@@ -40,10 +40,28 @@ namespace pbrt_parser {
       traverse(scene->world);
       numObjects.print("objects");
       numShapes.print("shapes");
+      numShapes.print("triangles");
+      numCurves.print("curves");
+      numCurveSegments.print("curve segments");
     }
 
-    void traverseTriangleMesh(Shape::SP object, bool firstTime)
+    void traverseTriangleMesh(Shape::SP mesh, bool firstTime)
     {
+      if (mesh->findParam<float>("P") && mesh->findParam<int>("indices")) {
+        numTriangles.add(firstTime,mesh->findParam<int>("indices")->getSize()/3);
+      } else {
+        throw std::runtime_error("triangle mesh, but not loaded ....");
+      }
+    }
+
+    void traverseCurve(Shape::SP curve, bool firstTime)
+    {
+      if (curve->findParam<float>("P")) {
+        numCurves.add(firstTime,1);
+        numCurveSegments.add(firstTime,curve->findParam<float>("P")->getSize()-1);
+      } else {
+        throw std::runtime_error("curve, but no 'P' field!?");
+      }
     }
 
     void traverse(Object::SP object)
@@ -61,6 +79,8 @@ namespace pbrt_parser {
         const std::string type = shape->type;
         if (type == "trianglemesh")
           traverseTriangleMesh(shape,firstTime);
+        else if (type == "curve")
+          traverseCurve(shape,firstTime);
         else
           std::cout << "un-handled shape " << shape->type << std::endl;
       }
@@ -85,7 +105,7 @@ namespace pbrt_parser {
       size_t instanced = 0;
     };
 
-    Counter numInstances, numTriangles, numObjects, numVertices, numCurves, numShapes, numLights, numVolumes;
+    Counter numInstances, numTriangles, numObjects, numVertices, numCurves, numCurveSegments, numShapes, numLights, numVolumes;
   };
   
   void pbrtInfo(int ac, char **av)
