@@ -16,10 +16,13 @@
 
 // pbrt_parser
 #include "pbrt_parser/Scene.h"
+// ospcommon
+#include "ospcommon/common.h"
 // stl
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <set>
 
 namespace pbrt_parser {
 
@@ -30,6 +33,60 @@ namespace pbrt_parser {
   {
     return s.substr(s.size()-suffix.size(),suffix.size()) == suffix;
   }
+
+  struct PBRTInfo {
+    PBRTInfo(Scene::SP scene)
+    {
+      traverse(scene->world);
+      numObjects.print("objects");
+      numShapes.print("shapes");
+    }
+
+    void traverseTriangleMesh(Shape::SP object, bool firstTime)
+    {
+    }
+
+    void traverse(Object::SP object)
+    {
+      const bool firstTime = (alreadyTraversed.find(object) == alreadyTraversed.end());
+      alreadyTraversed.insert(object);
+
+      numObjects.add(firstTime,1);
+      numLights.add(firstTime,object->lightSources.size());
+      numVolumes.add(firstTime,object->volumes.size());
+      numShapes.add(firstTime,object->shapes.size());
+      numInstances.add(firstTime,object->objectInstances.size());
+      
+      for (auto shape : object->shapes) {
+        const std::string type = shape->type;
+        if (type == "trianglemesh")
+          traverseTriangleMesh(shape,firstTime);
+        else
+          std::cout << "un-handled shape " << shape->type << std::endl;
+      }
+
+      for (auto inst : object->objectInstances) {
+        traverse(inst->object);
+      }
+    }
+
+    std::set<Object::SP> alreadyTraversed;
+    
+    struct Counter {
+      void print(const std::string &name)
+      {
+        std::cout << "number of " << name << std::endl;
+        std::cout << " - unique    : " << ospcommon::prettyNumber(unique) << std::endl;
+        std::cout << " - instanced : " << ospcommon::prettyNumber(instanced) << std::endl;
+      }
+      void add(bool firstTime, size_t N) { instanced += N; if (firstTime) unique += N; }
+      
+      size_t unique = 0;
+      size_t instanced = 0;
+    };
+
+    Counter numInstances, numTriangles, numObjects, numVertices, numCurves, numShapes, numLights, numVolumes;
+  };
   
   void pbrtInfo(int ac, char **av)
   {
@@ -50,10 +107,11 @@ namespace pbrt_parser {
     std::shared_ptr<Scene> scene;
     try {
       scene
-        = endsWith(fileName,".pbff")
+        = (endsWith(fileName,".pbff")||endsWith(fileName,".pb"))
         ? pbrtParser_readFromBinary(fileName)
         : pbrt_parser::Scene::parseFromFile(fileName);
       std::cout << " => yay! parsing successful..." << std::endl;
+      PBRTInfo info(scene);
     } catch (std::runtime_error e) {
       std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
       std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;

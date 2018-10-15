@@ -157,6 +157,10 @@ namespace pbrt_parser {
 
   template<>
   struct PBRT_PARSER_INTERFACE ParamArray<Texture> : public Param {
+    /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+    typedef std::shared_ptr<ParamArray<Texture>> SP;
+    
     ParamArray(const std::string &type) : type(type) {};
     virtual std::string getType() const { return type; };
     virtual size_t getSize() const { return 1; }

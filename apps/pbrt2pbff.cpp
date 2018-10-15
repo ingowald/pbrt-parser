@@ -20,6 +20,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <assert.h>
 
 namespace pbrt_parser {
 
@@ -29,12 +30,16 @@ namespace pbrt_parser {
   void pbrt2pbff(int ac, char **av)
   {
     std::string fileName;
+    std::string outFileName = "binary.pbff";
     for (int i=1;i<ac;i++) {
       const std::string arg = av[i];
-      if (arg[0] == '-') {
-          throw std::runtime_error("invalid argument '"+arg+"'");
-      } else {
+      if (arg == "-o") {
+        assert(i+1 < ac);
+        outFileName = av[++i];
+      } else if (arg[0] != '-') {
         fileName = arg;
+      } else {
+        throw std::runtime_error("invalid argument '"+arg+"'");
       }          
     }
     
@@ -49,7 +54,6 @@ namespace pbrt_parser {
       std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
       exit(1);
     }
-    const std::string outFileName = "binary.pbff";
     std::cout << "writing to binary file " << outFileName << std::endl;
     pbrtParser_saveToBinary(scene,outFileName);
     std::cout << " => yay! writing successful..." << std::endl;

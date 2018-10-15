@@ -25,7 +25,7 @@
 namespace pbrt_parser {
 
 #define    FORMAT_MAJOR 0
-#define    FORMAT_MINOR 6
+#define    FORMAT_MINOR 7
   
   const uint32_t ourFormatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
 
@@ -41,6 +41,8 @@ namespace pbrt_parser {
       Type_rgb,
       Type_spectrum,
       Type_point,
+      Type_point2,
+      Type_normal,
       Type_color,
       // object types
       Type_object=100,
@@ -60,16 +62,21 @@ namespace pbrt_parser {
 
   TypeTag typeOf(const std::string &type)
   {
-    if (type == "rgb") return Type_rgb;
-    if (type == "float") return Type_float;
-    if (type == "point") return Type_point;
-    if (type == "color") return Type_color;
+    if (type == "bool")     return Type_bool;
+    if (type == "integer")  return Type_integer;
 
-    if (type == "integer") return Type_integer;
-    if (type == "string") return Type_string;
+    if (type == "float")    return Type_float;
+    if (type == "point")    return Type_point;
+    if (type == "point2")   return Type_point2;
+    if (type == "normal")   return Type_normal;
+
+    if (type == "rgb")      return Type_rgb;
+    if (type == "color")    return Type_color;
     if (type == "spectrum") return Type_spectrum;
 
-    if (type == "texture") return Type_texture;
+    if (type == "string")   return Type_string;
+
+    if (type == "texture")  return Type_texture;
 
     throw std::runtime_error("un-recognized type '"+type+"'");
   }
@@ -78,14 +85,16 @@ namespace pbrt_parser {
   {
     switch(tag) {
     default:
-    case Type_rgb : return "rgb";
-    case Type_float : return "float";
-    case Type_bool : return "bool";
-    case Type_integer : return "integer";
-    case Type_point : return "point";
-    case Type_string : return "string";
+    case Type_bool     : return "bool";
+    case Type_integer  : return "integer";
+    case Type_rgb      : return "rgb";
+    case Type_float    : return "float";
+    case Type_point    : return "point";
+    case Type_point2   : return "point2";
+    case Type_normal   : return "normal";
+    case Type_string   : return "string";
     case Type_spectrum : return "spectrum";
-    case Type_texture : return "texture";
+    case Type_texture  : return "texture";
       throw std::runtime_error("typeToString() : type tag '"+std::to_string((int)tag)+"' not implmemented");
     }
   }
@@ -448,17 +457,19 @@ namespace pbrt_parser {
         write(name);
 
         switch(typeTag) {
+        case Type_bool: {
+          writeVec(*param->as<bool>());
+        } break;
         case Type_float: 
         case Type_rgb: 
         case Type_color:
         case Type_point:
+        case Type_point2:
+        case Type_normal:
           writeVec(*param->as<float>());
           break;
         case Type_integer: {
           writeVec(*param->as<int>());
-        } break;
-        case Type_bool: {
-          writeVec(*param->as<bool>());
         } break;
         case Type_spectrum:
         case Type_string: 
@@ -561,6 +572,14 @@ namespace pbrt_parser {
         size_t size = read<size_t>();
         for (int i=0;i<size;i++)
           v.push_back(readString());
+      }
+      void readVec(std::vector<bool> &v)
+      {
+        std::vector<unsigned char> asChar;
+        readVec(asChar);
+        v.resize(asChar.size());
+        for (int i=0;i<asChar.size();i++)
+          v[i] = asChar[i];
       }
 
       template<typename T>
@@ -667,20 +686,30 @@ namespace pbrt_parser {
         TypeTag typeTag = block.read<TypeTag>();
         const std::string name = block.readString();
         switch(typeTag) {
+        case Type_bool:
+          paramSet.param[name] = readParam<bool>(typeToString(typeTag),block);
+          break;
+        case Type_integer:
+          paramSet.param[name] = readParam<int>(typeToString(typeTag),block);
+          break;
         case Type_float: 
         case Type_rgb: 
         case Type_color:
         case Type_point:
+        case Type_point2:
+        case Type_normal:
           paramSet.param[name] = readParam<float>(typeToString(typeTag),block);
-          break;
-        case Type_integer:
-          paramSet.param[name] = readParam<int>(typeToString(typeTag),block);
           break;
         case Type_spectrum: 
         case Type_string: 
           paramSet.param[name] = readParam<std::string>(typeToString(typeTag),block);
           break;
-          // case Type_texture: {
+        case Type_texture: {
+          int texID = block.read<int32_t>();
+          typename ParamArray<Texture>::SP param = std::make_shared<ParamArray<Texture>>(typeToString(typeTag));
+          param->texture = textures[texID];
+          paramSet.param[name] = param;
+        } break;
           //   int32_t texID = emitOnce(param->as<Texture>()->texture);
           //   write(texID);
         default:
@@ -720,10 +749,11 @@ namespace pbrt_parser {
       std::string type = block.readString();
       Attributes::SP attributes = std::make_shared<Attributes>(); // not stored or read right now!?
       Transform transform = block.read<Transform>();
+
+      Material::SP material;
       int matID = block.read<int32_t>();
-      assert(matID >= 0);
-      assert(matID < materials.size());
-      Material::SP material = materials[matID];
+      if (matID >= 0 && matID < materials.size())
+        material = materials[matID];
         
       Shape::SP shape = std::make_shared<Shape>(type,material,attributes,transform);
       
