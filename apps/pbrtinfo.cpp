@@ -40,7 +40,7 @@ namespace pbrt_parser {
       traverse(scene->world);
       numObjects.print("objects");
       numShapes.print("shapes");
-      numShapes.print("triangles");
+      numTriangles.print("triangles");
       numCurves.print("curves");
       numCurveSegments.print("curve segments");
     }
