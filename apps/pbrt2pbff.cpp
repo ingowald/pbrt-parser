@@ -107,7 +107,7 @@ namespace pbrt_parser {
         throw std::string("not a triangle mesh");
       
       // check: does it have a index field?
-      ParamArray<int>::SP indices = shape->findParam<int>("index");
+      ParamArray<int>::SP indices = shape->findParam<int>("indices");
       if (!indices)
         throw std::string("no 'indices' array found!?");
       
@@ -127,19 +127,19 @@ namespace pbrt_parser {
       shape->type = "implicitQuads";
       
       if (faceIndices) {
-        shape->removeParam("indices");
+        shape->param.erase("indices");
         size_t numBytes = indices->getSize()*sizeof(int);
         std::cout << " ... axing implicit 'indices' array (" << prettyNumber(numBytes) << "B)" << std::endl;
         savedBytes += numBytes;
       }
       if (stArray) {
-        shape->removeParam("st");
+        shape->param.erase("st");
         size_t numBytes = stArray->getSize()*sizeof(float);
         std::cout << " ... axing implicit 'st' array (" << prettyNumber(numBytes) << "B)" << std::endl;
         savedBytes += numBytes;
       }
       if (faceIndices) {
-        shape->removeParam("faceIndices");
+        shape->param.erase("faceIndices");
         size_t numBytes = faceIndices->getSize()*sizeof(int);
         std::cout << " ... axing implicit 'faceIndices' array (" << prettyNumber(numBytes) << "B)" << std::endl;
         savedBytes += numBytes;

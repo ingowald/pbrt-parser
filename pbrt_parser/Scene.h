@@ -188,17 +188,6 @@ namespace pbrt_parser {
     bool getParamBool(const std::string &name, const bool fallBack=false) const;
     std::string getParamString(const std::string &name) const;
     std::shared_ptr<Texture> getParamTexture(const std::string &name) const;
-
-    /*! completely remove given parameter field - not strictly part of
-        the parser, but useful for some helper tools that operate on
-        the scene graph (like removing redundant faceIndices for
-        moana). Calling this with a field name that does not exist in
-        this mesh is an error. */
-    void removeParam(const std::string &name) {
-      auto it = param.find("name");
-      assert(it != param.end());
-      param.erase(it);
-    }
     
     template<typename T>
       std::shared_ptr<ParamArray<T> > findParam(const std::string &name) const {
