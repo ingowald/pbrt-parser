@@ -23,6 +23,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <assert.h>
 
 #ifdef _WIN32
 #  ifdef pbrt_parser_EXPORTS
@@ -188,6 +189,17 @@ namespace pbrt_parser {
     std::string getParamString(const std::string &name) const;
     std::shared_ptr<Texture> getParamTexture(const std::string &name) const;
 
+    /*! completely remove given parameter field - not strictly part of
+        the parser, but useful for some helper tools that operate on
+        the scene graph (like removing redundant faceIndices for
+        moana). Calling this with a field name that does not exist in
+        this mesh is an error. */
+    void removeParam(const std::string &name) {
+      auto it = param.find("name");
+      assert(it != param.end());
+      param.erase(it);
+    }
+    
     template<typename T>
       std::shared_ptr<ParamArray<T> > findParam(const std::string &name) const {
       auto it = param.find(name);
@@ -269,6 +281,9 @@ namespace pbrt_parser {
     {};
   };
 
+  /*! base abstraction for any PBRT scene graph node - all shapes,
+      volumes, etc are eventually derived from this comon base
+      class */
   struct PBRT_PARSER_INTERFACE Node : public ParamSet {
     Node(const std::string &type)
       : type(type)
@@ -277,7 +292,9 @@ namespace pbrt_parser {
     /*! pretty-printing, for debugging */
     virtual std::string toString() const = 0;
 
-    const std::string type;
+    /*! the 'type' as specified in the PBRT field, such as
+        'trianglemesh' for a tri mesh shape, etc */
+    std::string type;
   };
 
   /*! a PBRT "Camera" object - does not actually specify any
@@ -389,7 +406,7 @@ namespace pbrt_parser {
       one material per shape */
     std::shared_ptr<Material>   material;
     std::shared_ptr<Attributes> attributes;
-    Transform                  transform;
+    Transform                   transform;
   };
 
   struct PBRT_PARSER_INTERFACE Volume : public Node {

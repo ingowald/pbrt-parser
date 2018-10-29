@@ -30,12 +30,127 @@ namespace pbrt_parser {
   using std::cout;
   using std::endl;
 
-
-  void runMoanaOptimizationsOn(Shape::SP shape)
+  /*! return 'pretty' string for given size_t (e,g "1.1M" for "1100000") */
+  inline std::string prettyNumber(const size_t s)
   {
-    std::cout << "moana-pass: passing over " << shape->type << std::endl;
+    char buf[100];
+    if (s >= (1024LL*1024LL*1024LL*1024LL)) {
+      sprintf(buf,"%.2fT",s/(1024.f*1024.f*1024.f*1024.f));
+    } else if (s >= (1024LL*1024LL*1024LL)) {
+      sprintf(buf,"%.2fG",s/(1024.f*1024.f*1024.f));
+    } else if (s >= (1024LL*1024LL)) {
+      sprintf(buf,"%.2fM",s/(1024.f*1024.f));
+    } else if (s >= (1024LL)) {
+      sprintf(buf,"%.2fK",s/(1024.f));
+    } else {
+      sprintf(buf,"%li",s);
+    }
+    return buf;
+  }
+  
+
+  /*! tests if this is a st array suitable for a fully implicit quad
+      mesh. If it is, the st array _must_ be a repeating sequence of
+      "(0,0),(1,0),(1,1),(0,1)" ... If the st's are anything other
+      than that, they carry meaning, and can't be axed */
+  bool theseAreFullyImplicitQuadMeshSTs(ParamArray<float>::SP stArray)
+  {
+    if (!stArray) return false;
+    if (stArray->size() % 8) return false;
+    const float required_pattern[8] = { 0,0, 1,0, 1,1, 0,1 };
+    for (int quadID=0;quadID<stArray->size()/8;quadID++) {
+      for (int i=0;i<8;i++)
+        if ((*stArray)[8*quadID+i] != required_pattern[i]) return false;
+    }
+    return true;
+  }
+  
+  /*! tests if this is a 'indices' array suitable for a fully implicit
+      quad mesh. If it is, the array _must_ be a repeating sequence of
+      "(4*i,4*i+1,4*i+2,(first tri) 4*i,4*2+1,4*i+3(second tri)" */
+  bool theseAreFullyImplicitQuadMeshIndices(ParamArray<int>::SP indices)
+  {
+    if (!indices) return false;
+    if (indices->size() % 6) return false;
+    for (int quadID=0;quadID<indices->size()/6;quadID++) {
+      if ((*indices)[6*quadID+0] != (4*quadID+0)) return false;
+      if ((*indices)[6*quadID+1] != (4*quadID+1)) return false;
+      if ((*indices)[6*quadID+2] != (4*quadID+2)) return false;
+      if ((*indices)[6*quadID+3] != (4*quadID+0)) return false;
+      if ((*indices)[6*quadID+4] != (4*quadID+2)) return false;
+      if ((*indices)[6*quadID+5] != (4*quadID+3)) return false;
+    }
+    return true;
   }
 
+  /*! tests if this is a 'faceIndices' array suitable for a fully implicit
+      quad mesh. If it is, the array _must_ be a repeating sequence of
+      "(idx/2,idx/2)" */
+  bool theseAreFullyImplicitQuadMeshFaceIndices(ParamArray<int>::SP indices)
+  {
+    if (!indices) return false;
+    if (indices->size() % 2) return false;
+    for (int quadID=0;quadID<indices->size()/2;quadID++) {
+      if ((*indices)[2*quadID+0] != quadID) return false;
+      if ((*indices)[2*quadID+1] != quadID) return false;
+    }
+    return true;
+  }
+
+  void tryConvertFatTriMeshToImplicitQuadMesh(Shape::SP shape, size_t &savedBytes)
+  {
+    std::cout << "moana-pass: passing over " << shape->type << std::endl;
+    try {
+      
+      // check: is this even a triangle mesh!?
+      if (shape->type != "trianglemesh")
+        throw std::string("not a triangle mesh");
+      
+      // check: does it have a index field?
+      ParamArray<int>::SP indices = shape->findParam<int>("index");
+      if (!indices)
+        throw std::string("no 'indices' array found!?");
+      
+      // check: are all those indices fully implicit?
+      if (!theseAreFullyImplicitQuadMeshIndices(indices))
+        throw std::string("'indices' of triangle mesh are not fully implicit quad indices");
+      
+      ParamArray<int>::SP faceIndices = shape->findParam<int>("faceIndices");
+      if (faceIndices && !theseAreFullyImplicitQuadMeshFaceIndices(faceIndices))
+        throw std::string("has 'faceIndex' field that does not match our expectations!?");
+      
+      ParamArray<float>::SP stArray = shape->findParam<float>("st");
+      if (stArray && !theseAreFullyImplicitQuadMeshSTs(stArray))
+        throw std::string("has 'st' field that does not match our expectations!?");
+      
+      std::cout << "-> yay! looks like a implicit quad cage; killing redundant fields!" << std::endl;
+      shape->type = "implicitQuads";
+      
+      if (faceIndices) {
+        shape->removeParam("indices");
+        size_t numBytes = indices->getSize()*sizeof(int);
+        std::cout << " ... axing implicit 'indices' array (" << prettyNumber(numBytes) << "B)" << std::endl;
+        savedBytes += numBytes;
+      }
+      if (stArray) {
+        shape->removeParam("st");
+        size_t numBytes = stArray->getSize()*sizeof(float);
+        std::cout << " ... axing implicit 'st' array (" << prettyNumber(numBytes) << "B)" << std::endl;
+        savedBytes += numBytes;
+      }
+      if (faceIndices) {
+        shape->removeParam("faceIndices");
+        size_t numBytes = faceIndices->getSize()*sizeof(int);
+        std::cout << " ... axing implicit 'faceIndices' array (" << prettyNumber(numBytes) << "B)" << std::endl;
+        savedBytes += numBytes;
+      }
+
+      
+    } catch (std::string reason) {
+      std::cout << "-> did not convert: " << reason << std::endl;
+    }
+  }
+    
   /*! executes given lambda for every (unique) shape in the scene.
     Note that the shape parameter passed to the lambda is a reference
     to the variable in Object::shapes vector that contained that
@@ -114,9 +229,11 @@ namespace pbrt_parser {
       exit(1);
     }
     try {
+      size_t totalBytesSaved = 0;
       if (moana)
-        for_each_unique_shape(scene,[](Shape::SP &shape)
-                              {runMoanaOptimizationsOn(shape);});
+        for_each_unique_shape(scene,[&](Shape::SP &shape)
+                              {tryConvertFatTriMeshToImplicitQuadMesh(shape,totalBytesSaved);});
+      std::cout << "*** summary of moana pass: saved " << prettyNumber(totalBytesSaved) << "Bs" << std::endl;
     } catch (std::runtime_error e) {
       std::cerr << "**** ERROR IN RUNNING MOANA OPTIMIZATIONS ****" << std::endl << e.what() << std::endl;
       exit(1);
