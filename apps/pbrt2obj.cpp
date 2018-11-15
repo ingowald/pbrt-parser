@@ -127,7 +127,7 @@ namespace pbrt_parser {
                   param_indices->get(3*i+1),
                   param_indices->get(3*i+2));
           if (param_st) {
-            fprintf(out,"f %lu//%lu %lu//%lu %lu//%lu\n",
+            fprintf(out,"f %lz//%lz %lz//%lz %lz//%lz\n",
                     firstVertexID+v.x,
                     firstVertexID+v.x,
                     firstVertexID+v.y,
@@ -135,7 +135,7 @@ namespace pbrt_parser {
                     firstVertexID+v.z,
                     firstVertexID+v.z);
           } else {
-            fprintf(out,"f %lu %lu %lu\n",firstVertexID+v.x,firstVertexID+v.y,firstVertexID+v.z);
+            fprintf(out,"f %lz %lz %lz\n",firstVertexID+v.x,firstVertexID+v.y,firstVertexID+v.z);
           }
           numWritten++;
         }
@@ -173,7 +173,7 @@ namespace pbrt_parser {
 
     for (int i=0;i<idx.size();i++) {
       vec3i v = idx[i];
-      fprintf(out,"f %lu %lu %lu\n",
+      fprintf(out,"f %lz %lz %lz\n",
               firstVertexID+v.x,
               firstVertexID+v.y,
               firstVertexID+v.z);
