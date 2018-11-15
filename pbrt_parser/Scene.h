@@ -581,17 +581,30 @@ namespace pbrt_parser {
   
 } // ::pbrt_parser
 
-extern "C" void pbrtParser_saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName);
+extern "C" PBRT_PARSER_INTERFACE void pbrtParser_saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName);
 
 /*! given an already created scene, read given binary file, and populate this scene */
-extern "C" pbrt_parser::Scene::SP pbrtParser_readFromBinary(const std::string &fileName);
+extern "C" PBRT_PARSER_INTERFACE void pbrtParser_readFromBinary(pbrt_parser::Scene::SP &scene, const std::string &fileName);
 
 /*! load pbrt scene from a pbrt file */
-extern "C" pbrt_parser::Scene::SP pbrtParser_loadScene(const std::string &fileName);
+extern "C" PBRT_PARSER_INTERFACE void pbrtParser_loadScene(pbrt_parser::Scene::SP &scene, const std::string &fileName);
 
 /*! a helper function to load a ply file */
-extern "C" void pbrtParser_loadPlyTriangles(const std::string &fileName,
+extern "C" PBRT_PARSER_INTERFACE void pbrtParser_loadPlyTriangles(const std::string &fileName,
                                             std::vector<pbrt_parser::vec3f> &v,
                                             std::vector<pbrt_parser::vec3f> &n,
                                             std::vector<pbrt_parser::vec3i> &idx);
 
+namespace pbrt_parser {
+	/*! C++ function that uses the C entry point. We have to use this trick to make visual studio happy: in visual studio, the extern C declared C entry point cannot return a C++ std::shared_ptr; so that C entry point has to have it as a reference parameter - which requires an additional (inline'ed, and thus not linked) wrapper that reutrns this as a parameter */
+	inline Scene::SP readFromBinary(const std::string &fn)
+	{
+		Scene::SP scene; pbrtParser_readFromBinary(scene, fn); return scene; 
+	}
+
+	/*! C++ function that uses the C entry point. We have to use this trick to make visual studio happy: in visual studio, the extern C declared C entry point cannot return a C++ std::shared_ptr; so that C entry point has to have it as a reference parameter - which requires an additional (inline'ed, and thus not linked) wrapper that reutrns this as a parameter */
+	inline Scene::SP loadScene(const std::string &fn)
+	{
+		Scene::SP scene; pbrtParser_loadScene(scene, fn); return scene;
+	}
+}

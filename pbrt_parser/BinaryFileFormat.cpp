@@ -953,20 +953,16 @@ namespace pbrt_parser {
       }      
     }
   };
-    
   
-  pbrt_parser::Scene::SP readFromBinary(const std::string &fileName)
+  /*! given an already created scene, read given binary file, and populate this scene */
+  extern "C" PBRT_PARSER_INTERFACE void pbrtParser_readFromBinary(pbrt_parser::Scene::SP &scene, const std::string &fileName)
   {
-    BinaryReader reader(fileName);
-    return reader.readScene();    
+	  BinaryReader reader(fileName);
+	  scene = reader.readScene();
   }
-  
+
 }
 
-/*! given an already created scene, read given binary file, and populate this scene */
-extern "C" pbrt_parser::Scene::SP pbrtParser_readFromBinary(const std::string &fileName)
-{ return pbrt_parser::readFromBinary(fileName); }
-
-extern "C" void pbrtParser_saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName)
+extern "C" PBRT_PARSER_INTERFACE void pbrtParser_saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName)
 { pbrt_parser::saveToBinary(scene,fileName); }
   

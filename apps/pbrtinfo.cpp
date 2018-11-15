@@ -128,7 +128,7 @@ namespace pbrt_parser {
     try {
       scene
         = (endsWith(fileName,".pbff")||endsWith(fileName,".pb"))
-        ? pbrtParser_readFromBinary(fileName)
+        ? pbrt_parser::readFromBinary(fileName)
         : pbrt_parser::Scene::parseFromFile(fileName);
       std::cout << " => yay! parsing successful..." << std::endl;
       PBRTInfo info(scene);

@@ -253,9 +253,9 @@ namespace pbrt_parser {
 
 } // ::pbrt_parser
 
-extern "C" pbrt_parser::Scene::SP pbrtParser_loadScene(const std::string &fileName)
+extern "C" PBRT_PARSER_INTERFACE void pbrtParser_loadScene(pbrt_parser::Scene::SP &scene, const std::string &fileName)
 {
-  return pbrt_parser::Scene::parseFromFile(fileName);
+  scene = pbrt_parser::Scene::parseFromFile(fileName);
 }
   
   

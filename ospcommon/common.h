@@ -124,7 +124,7 @@ namespace ospcommon {
     else if (val >= 1e+09f) osp_snprintf(result,1000,"%.1f%c",val/1e09f,'G');
     else if (val >= 1e+06f) osp_snprintf(result,1000,"%.1f%c",val/1e06f,'M');
     else if (val >= 1e+03f) osp_snprintf(result,1000,"%.1f%c",val/1e03f,'k');
-    else osp_snprintf(result,1000,"%lu",s);
+    else osp_snprintf(result,1000,"%zu",s);
     return result;
   }
 #undef osp_snprintf
