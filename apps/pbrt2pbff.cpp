@@ -228,6 +228,56 @@ namespace pbrt_parser {
       std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
       exit(1);
     }
+
+    std::cout << "inlining ply triangle meshes ..." << std::endl;
+    for_each_unique_shape(scene,[&](Shape::SP &shape){
+        if (shape->type != "plymesh") return;
+        shape->type = "trianglemesh";
+        std::vector<vec3f> vertex, normal;
+        std::vector<vec3i> index;
+
+        const std::string fileName
+          = scene->makeGlobalFileName(shape->getParamString("filename"));
+        std::cout << "inlining " << fileName << std::endl;
+        pbrtParser_loadPlyTriangles(fileName,vertex,normal,index);
+        assert(!vertex.empty());
+        assert(!index.empty());
+        
+        if (!vertex.empty()) {
+          std::shared_ptr<ParamArray<float>>
+            param = std::make_shared<ParamArray<float>>("point3");
+          param->resize(3*vertex.size());
+          for (int i=0;i<vertex.size();i++) {
+            (*param)[3*i+0] = vertex[i].x;
+            (*param)[3*i+1] = vertex[i].y;
+            (*param)[3*i+2] = vertex[i].z;
+          }
+          shape->param["P"] = param;
+        }
+        if (!normal.empty()) {
+          std::shared_ptr<ParamArray<float>>
+            param = std::make_shared<ParamArray<float>>("normal");
+          param->resize(3*normal.size());
+          for (int i=0;i<normal.size();i++) {
+            (*param)[3*i+0] = normal[i].x;
+            (*param)[3*i+1] = normal[i].y;
+            (*param)[3*i+2] = normal[i].z;
+          }
+          shape->param["N"] = param;
+        }
+        if (!index.empty()) {
+          std::shared_ptr<ParamArray<int>>
+            param = std::make_shared<ParamArray<int>>("integer");
+          param->resize(3*index.size());
+          for (int i=0;i<index.size();i++) {
+            (*param)[3*i+0] = index[i].x;
+            (*param)[3*i+1] = index[i].y;
+            (*param)[3*i+2] = index[i].z;
+          }
+          shape->param["indices"] = param;
+        }
+      });
+    
     try {
       size_t totalBytesSaved = 0;
       if (moana)
