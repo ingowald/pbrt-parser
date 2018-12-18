@@ -533,19 +533,20 @@ namespace pbrt_parser {
   struct BinaryReader {
 
     struct Block {
-      Block() = default;
-      Block(Block &&) = default;
+      inline Block() = default;
+      inline Block(Block &&) = default;
+      
       std::vector<unsigned char> data;
       size_t pos = 0;
       
       template<typename T>
-      T read() {
+      inline T read() {
         T t;
         readRaw(&t,sizeof(t));
         return t;
       }
 
-      void readRaw(void *ptr, size_t size)
+      inline void readRaw(void *ptr, size_t size)
       {
         assert((pos + size) <= data.size());
         memcpy((char*)ptr,data.data()+pos,size);
@@ -563,7 +564,7 @@ namespace pbrt_parser {
       }
 
       template<typename T>
-      void readVec(std::vector<T> &v)
+      inline void readVec(std::vector<T> &v)
       {
         size_t size = read<size_t>();
         v.resize(size);
@@ -571,13 +572,15 @@ namespace pbrt_parser {
           readRaw((char*)v.data(),size*sizeof(T));
         }
       }
-      void readVec(std::vector<std::string> &v)
+      inline void readVec(std::vector<std::string> &v)
       {
         size_t size = read<size_t>();
+        v.resize(size);
         for (int i=0;i<size;i++)
-          v.push_back(readString());
+          v[i] = readString();
+          // v.push_back(readString());
       }
-      void readVec(std::vector<bool> &v)
+      inline void readVec(std::vector<bool> &v)
       {
         std::vector<unsigned char> asChar;
         readVec(asChar);
@@ -587,7 +590,7 @@ namespace pbrt_parser {
       }
 
       template<typename T>
-      std::vector<T> readVec()
+      inline std::vector<T> readVec()
       {
         std::vector<T> t;
         readVec(t);
@@ -595,9 +598,11 @@ namespace pbrt_parser {
       }
     };
     
-    BinaryReader(const std::string &fileName) : binFile(fileName)
+    inline BinaryReader(const std::string &fileName)
+      : binFile(fileName)
     {
       assert(binFile.good());
+      binFile.sync_with_stdio(false);
     }
 
     /*! our stack of output buffers - each object we're writing might
@@ -623,7 +628,7 @@ namespace pbrt_parser {
       return formatID;
     }
 
-    Block readBlock()
+    inline Block readBlock()
     {
       Block block;
       size_t size;
@@ -950,8 +955,9 @@ namespace pbrt_parser {
         default:
           throw std::runtime_error("unsupported type tag '"+std::to_string((int)typeTag)+"'");
         };
-      }      
+      }
     }
+    
   };
   
   /*! given an already created scene, read given binary file, and populate this scene */
