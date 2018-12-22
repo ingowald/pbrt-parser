@@ -181,7 +181,10 @@ namespace pbrt_parser {
     ParamSet() = default;
     ParamSet(ParamSet &&) = default;
     ParamSet(const ParamSet &) = default;
-    
+
+    /*! query parameter of 3f type, and if found, store in result and
+        return true; else return false */
+    bool getParam3f(float *result, const std::string &name) const;
     vec3f getParam3f(const std::string &name, const vec3f &fallBack) const;
     float getParam1f(const std::string &name, const float fallBack=0) const;
     int getParam1i(const std::string &name, const int fallBack=0) const;
@@ -259,15 +262,18 @@ namespace pbrt_parser {
         more concise, and easier to read */
     typedef std::shared_ptr<Texture> SP;
     
-    std::string name;
-    std::string texelType;
-    std::string mapType;
-
     Texture(const std::string &name,
             const std::string &texelType,
             const std::string &mapType) 
       : name(name), texelType(texelType), mapType(mapType)
     {};
+
+    /*! pretty-print this medium (for debugging) */
+    virtual std::string toString() const { return "Texture(name="+name+",texelType="+texelType+",mapType="+mapType+")"; }
+    
+    std::string name;
+    std::string texelType;
+    std::string mapType;
   };
 
   /*! base abstraction for any PBRT scene graph node - all shapes,
