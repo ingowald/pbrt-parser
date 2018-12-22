@@ -398,6 +398,7 @@ namespace pbrt_parser {
           = std::make_shared<Material>(type);
         parseParams(material->param);
         currentMaterial = material;
+        material->attributes = attributesStack.top();
         continue;
       }
 
@@ -423,6 +424,7 @@ namespace pbrt_parser {
         std::shared_ptr<Material> material
           = std::make_shared<Material>("<implicit>");
         attributesStack.top()->namedMaterial[name] = material;
+        // scene->namedMaterials[name] = material;
         parseParams(material->param);
 
         /* named material have the parameter type implicitly as a
