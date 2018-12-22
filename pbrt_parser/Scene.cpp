@@ -137,6 +137,23 @@ namespace pbrt_parser {
   // ==================================================================
   // ParamSet
   // ==================================================================
+  bool ParamSet::getParam3f(float *result, const std::string &name) const
+  {
+    std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+    if (it == param.end())
+      return 0;
+    std::shared_ptr<Param> pr = it->second;
+    const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
+    if (!p)
+      throw std::runtime_error("found param of given name, but of wrong type!");
+    if (p->getSize() != 3)
+      throw std::runtime_error("found param of given name and type, but wrong number of components!");
+    result[0] = p->get(0);
+    result[1] = p->get(1);
+    result[2] = p->get(2);
+    return true;
+  }
+
   vec3f ParamSet::getParam3f(const std::string &name, const vec3f &fallBack) const
   {
     std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
