@@ -43,6 +43,8 @@ namespace pbrt_parser {
       numTriangles.print("triangles");
       numCurves.print("curves");
       numCurveSegments.print("curve segments");
+      numLights.print("lights");
+      std::cout << "total num materials " << usedMaterials.size() << std::endl;
     }
 
     void traverseTriangleMesh(Shape::SP mesh, bool firstTime)
@@ -76,7 +78,8 @@ namespace pbrt_parser {
       numInstances.add(firstTime,object->objectInstances.size());
       
       for (auto shape : object->shapes) {
-        const std::string type = shape->type;
+        usedMaterials.insert(shape->material);
+          const std::string type = shape->type;
         if (type == "trianglemesh")
           traverseTriangleMesh(shape,firstTime);
         else if (type == "curve")
@@ -106,6 +109,7 @@ namespace pbrt_parser {
     };
 
     Counter numInstances, numTriangles, numObjects, numVertices, numCurves, numCurveSegments, numShapes, numLights, numVolumes;
+    std::set<Material::SP> usedMaterials;
   };
   
   void pbrtInfo(int ac, char **av)
