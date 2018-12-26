@@ -419,7 +419,7 @@ namespace pbrt_parser {
       // ------------------------------------------------------------------
       // MakeNamedMaterial
       // ------------------------------------------------------------------
-      if (token == "MakeNamedMaterial") {
+      if (token == "MakeNamedMaterial") {        
         std::string name = *next();
         std::shared_ptr<Material> material
           = std::make_shared<Material>("<implicit>");
@@ -470,7 +470,11 @@ namespace pbrt_parser {
       // ------------------------------------------------------------------
       if (token == "NamedMaterial") {
         std::string name = *next();
+        
         currentMaterial = attributesStack.top()->namedMaterial[name];
+
+        // std::cout << "#NamedMaterial " << name << " : " << (currentMaterial?currentMaterial->toString():std::string("null")) << std::endl;
+        
         continue;
       }
 
@@ -526,6 +530,9 @@ namespace pbrt_parser {
       // Shape
       // -------------------------------------------------------
       if (token == "Shape") {
+        // if (!currentMaterial) {
+        //   std::cout << "warning(pbrt_parser): shape, but no current material!" << std::endl;
+        // }
         std::shared_ptr<Shape> shape
           = std::make_shared<Shape>(next(),
                                     currentMaterial,
