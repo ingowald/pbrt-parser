@@ -24,6 +24,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <fstream>
 
 namespace pbrt_parser {
 
@@ -33,7 +34,8 @@ namespace pbrt_parser {
   using namespace ospcommon;
   
   // the output file we're writing.
-  FILE *out = NULL;
+  std::ofstream out;
+  // FILE *out = NULL;
 
   size_t numWritten = 0;
   size_t numVerticesWritten = 0;
@@ -87,7 +89,7 @@ namespace pbrt_parser {
     /*! call 'exportMateiral, which will return a string that properly
       defined and/or activates the given mateirla */
     std::string materialString = exportMaterial(shape->material);
-    fprintf(out,"%s\n",materialString.c_str());
+    out << materialString << std::endl;
 
     const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
     size_t firstVertexID = numVerticesWritten+1;
@@ -98,7 +100,7 @@ namespace pbrt_parser {
       for (int i=0;i<numPoints;i++) {
         vec2f v(param_st->get(2*i+0),
                 param_st->get(2*i+1));
-        fprintf(out,"vt %f %f\n",v.x,v.y);
+        out << "vt " << v.x << " " << v.y << std::endl;
       }
     }
     
@@ -111,7 +113,7 @@ namespace pbrt_parser {
                   param_P->get(3*i+1),
                   param_P->get(3*i+2));
           v = xfmPoint(xfm,v);
-          fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
+          out << "v  " << v.x << " " << v.y << " " << v.z << std::endl;
           numVerticesWritten++;
         }
       }
@@ -127,15 +129,15 @@ namespace pbrt_parser {
                   param_indices->get(3*i+1),
                   param_indices->get(3*i+2));
           if (param_st) {
-            fprintf(out,"f %lz//%lz %lz//%lz %lz//%lz\n",
-                    firstVertexID+v.x,
-                    firstVertexID+v.x,
-                    firstVertexID+v.y,
-                    firstVertexID+v.y,
-                    firstVertexID+v.z,
-                    firstVertexID+v.z);
+            out << "f " << (firstVertexID+v.x) << "//" << (firstVertexID+v.x)
+                << "\t" << (firstVertexID+v.y) << "//" << (firstVertexID+v.y)
+                << "\t" << (firstVertexID+v.z) << "//" << (firstVertexID+v.z)
+                << std::endl;
           } else {
-            fprintf(out,"f %lz %lz %lz\n",firstVertexID+v.x,firstVertexID+v.y,firstVertexID+v.z);
+            out << "f " << (firstVertexID+v.x)
+                << "\t" << (firstVertexID+v.y)
+                << "\t" << (firstVertexID+v.z)
+                << std::endl;
           }
           numWritten++;
         }
@@ -150,7 +152,8 @@ namespace pbrt_parser {
     /*! call 'exportMateiral, which will return a string that properly
       defined and/or activates the given mateirla */
     std::string materialString = exportMaterial(shape->material);
-    fprintf(out,"%s\n",materialString.c_str());
+    out << materialString << std::endl;
+    // fprintf(out,"%s\n",materialString.c_str());
 
 
     std::vector<vec3f> p, n;
@@ -167,38 +170,31 @@ namespace pbrt_parser {
 
     for (int i=0;i<p.size();i++) {
       vec3f v = xfmPoint(xfm,p[i]);
-      fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
+      out << "v  " << v.x << " " << v.y << " " << v.z << std::endl;
+      // fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
       numVerticesWritten++;
     }
 
     for (int i=0;i<idx.size();i++) {
       vec3i v = idx[i];
-      fprintf(out,"f %lz %lz %lz\n",
-              firstVertexID+v.x,
-              firstVertexID+v.y,
-              firstVertexID+v.z);
+      out << "f " << (firstVertexID+v.x)
+          << "\t" << (firstVertexID+v.y)
+          << "\t" << (firstVertexID+v.z)
+          << std::endl;
       numWritten++;
     }
-#if 0
-    static long numObjectsWritten = 0;
-    if (++numObjectsWritten > 100) {
-      std::cout << "written more than 100 objects .... exiting" << std::endl;
-      fflush(out); exit(0);
-    }
-#endif
-
   }
 
-  void defineDefaultMaterials(FILE *file)
+  void defineDefaultMaterials(std::ofstream &file)
   {
-    fprintf(file,"newmtl pbrt_parser_error_material\n");
-    fprintf(file,"Kd 1 0 0\n");
-    fprintf(file,"\n");
+    file << "newmtl pbrt_parser_error_material" << std::endl;
+    file << "Kd 1 0 0" << std::endl;
+    file << "" << std::endl;
 
-    fprintf(file,"newmtl pbrt_parser_default_material\n");
-    fprintf(file,"Kd .6 .6 .6\n");
-    fprintf(file,"Ka .1 .1 .1\n");
-    fprintf(file,"\n");
+    file << "newmtl pbrt_parser_default_material" << std::endl;
+    file << "Kd .6 .6 .6" << std::endl;
+    file << "Ka .1 .1 .1" << std::endl;
+    file << "" << std::endl;
   }
   
   void writeObject(Scene::SP scene,
@@ -238,8 +234,9 @@ namespace pbrt_parser {
         inFileName = arg;
       }          
     }
-    out = fopen(outFileName.c_str(),"w");
-    assert(out);
+    out = std::ofstream(outFileName);
+    // out = fopen(outFileName.c_str(),"w");
+    assert(out.good());
 
     defineDefaultMaterials(out);
     
@@ -252,7 +249,7 @@ namespace pbrt_parser {
       std::shared_ptr<Scene> scene = pbrt_parser::Scene::parseFromFile(inFileName);
       std::cout << "done parsing, now exporting (triangular geometry from) scene" << std::endl;
       writeObject(scene,scene->world,ospcommon::one);
-      fclose(out);
+      // fclose(out);
       cout << "Done exporting to OBJ; wrote a total of " << numWritten << " triangles" << endl;
     } catch (std::runtime_error e) {
       std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
