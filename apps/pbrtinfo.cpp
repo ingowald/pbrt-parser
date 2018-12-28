@@ -131,10 +131,13 @@ namespace pbrt {
     
       std::shared_ptr<Scene> scene;
       try {
-        scene
-          = (endsWith(fileName,".pbff")||endsWith(fileName,".pb"))
-          ? pbrt::syntax::readBinary(fileName)
-          : pbrt::syntax::parse(fileName);
+        if (endsWith(fileName,".pbsf"))
+          scene = pbrt::syntax::readBinary(fileName);
+        else if (endsWith(fileName,".pbrt"))
+          scene = pbrt::syntax::parse(fileName);
+        else
+          throw std::runtime_error("un-recognized input file extension");
+        
         std::cout << " => yay! parsing successful..." << std::endl;
         PBRTInfo info(scene);
       } catch (std::runtime_error e) {
