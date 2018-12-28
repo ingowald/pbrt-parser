@@ -189,11 +189,16 @@ namespace pbrt {
         std::cerr << "Error: " << msg << std::endl << std::endl;
       std::cout << "./pbrt2pbff inFile.pbrt <args>" << std::endl;
       std::cout << std::endl;
-      std::cout << "  -o <out.pbff>  : where to write the output to" << std::endl;
+      std::cout << "  -o <out.pbsf>  : where to write the output to" << std::endl;
       std::cout << "  --moana        : perform some moana-scene specific optimizations" << std::endl;
       std::cout << "                   (tris to quads, removing reundant fields, etc)" << std::endl;
     }
   
+    inline bool endsWith(const std::string &s, const std::string &suffix)
+    {
+      return s.substr(s.size()-suffix.size(),suffix.size()) == suffix;
+    }
+
     void pbrt2pbff(int ac, char **av)
     {
       std::string inFileName;
@@ -218,6 +223,11 @@ namespace pbrt {
       if (inFileName == "")
         usage("no input pbrt file specified");
 
+      if (!endsWith(outFileName,".pbsf")) {
+        std::cout << "output file name missing '.pbsf' extension - adding it ..." << std::endl;
+        outFileName = outFileName+".pbsf";
+      }
+      
       std::cout << "-------------------------------------------------------" << std::endl;
       std::cout << "parsing pbrt file " << inFileName << std::endl;
       std::shared_ptr<Scene> scene;
