@@ -15,47 +15,49 @@
 // ======================================================================== //
 
 // pbrt_parser
-#include "pbrt_parser/Scene.h"
+#include "pbrtParser/syntax/Scene.h"
 // stl
 #include <iostream>
 #include <vector>
 #include <sstream>
 
-namespace pbrt_parser {
+namespace pbrt {
+  namespace syntax {
+    
+    using std::cout;
+    using std::endl;
 
-  using std::cout;
-  using std::endl;
-
-  void pbrtLint(int ac, char **av)
-  {
-    std::vector<std::string> fileName;
-    for (int i=1;i<ac;i++) {
-      const std::string arg = av[i];
-      if (arg[0] == '-') {
+    void pbrtLint(int ac, char **av)
+    {
+      std::vector<std::string> fileName;
+      for (int i=1;i<ac;i++) {
+        const std::string arg = av[i];
+        if (arg[0] == '-') {
           throw std::runtime_error("invalid argument '"+arg+"'");
-      } else {
-        fileName.push_back(arg);
-      }          
-    }
-    std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << "pbrtlint - checking valid parsing(-only) on a pbrt file ..." << std::endl;
-    for (int i=0;i<fileName.size();i++) {
-      std::cout << " - " << fileName[i] << std::endl;
-      try {
-        std::shared_ptr<Scene> scene = pbrt_parser::Scene::parseFromFile(fileName[i]);
-        std::cout << " => yay! parsing successful..." << std::endl;
-      } catch (std::runtime_error e) {
-        std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
-        std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
-        exit(1);
+        } else {
+          fileName.push_back(arg);
+        }          
+      }
+      std::cout << "-------------------------------------------------------" << std::endl;
+      std::cout << "pbrtlint - checking valid parsing(-only) on a pbrt file ..." << std::endl;
+      for (int i=0;i<fileName.size();i++) {
+        std::cout << " - " << fileName[i] << std::endl;
+        try {
+          std::shared_ptr<Scene> scene = pbrt::syntax::parse(fileName[i]);
+          std::cout << " => yay! parsing successful..." << std::endl;
+        } catch (std::runtime_error e) {
+          std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
+          std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
+          exit(1);
+        }
       }
     }
-  }
 
-} // ::pbrt_parser
+    extern "C" int main(int ac, char **av)
+    {
+      pbrtLint(ac,av);
+      return 0;
+    }
 
-int main(int ac, char **av)
-{
-  pbrt_parser::pbrtLint(ac,av);
-  return 0;
-}
+  } // ::pbrt::syntax
+} // ::pbrt

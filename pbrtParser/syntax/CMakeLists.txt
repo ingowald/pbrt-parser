@@ -14,18 +14,18 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-ADD_LIBRARY(pbrt_parser SHARED
+ADD_LIBRARY(pbrtParser_syntax SHARED
   Lexer.cpp
   Parser.cpp
   Scene.cpp
-  BinaryFileFormat.cpp
+  BinaryIO.cpp
   parsePLY.cpp
-  ../3rdParty/ply.cpp
+  ../../3rdParty/ply.cpp
   )
-TARGET_LINK_LIBRARIES(pbrt_parser 
+TARGET_LINK_LIBRARIES(pbrtParser_syntax
 #  ospray_common
   )
 
-install(TARGETS pbrt_parser DESTINATION lib)
-install(FILES Scene.h DESTINATION include/pbrt_parser)
+install(TARGETS pbrtParser_syntax DESTINATION lib)
+install(FILES Scene.h DESTINATION include/pbrtParser/syntax)
 

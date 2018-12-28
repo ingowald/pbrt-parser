@@ -14,138 +14,123 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Parser.h"
-#include "Scene.h"
+#include "BinaryIO.h"
 // std
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <stack>
 
-namespace pbrt_parser {
-
-#define    FORMAT_MAJOR 0
-#define    FORMAT_MINOR 7
+/*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
+namespace pbrt {
+  /*! namespace for syntax-only parser - this allows to distringuish
+    high-level objects such as geometries from objects or transforms,
+    but does *not* make any difference between what types of
+    geometries, what their parameters mean, etc. Basically, at this
+    level a triangle mesh is nothing but a geometry that has a string
+    with a given name, and parameters of given names and types */
+  namespace syntax {
   
-  const uint32_t ourFormatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
+#define    FORMAT_MAJOR 1
+#define    FORMAT_MINOR 0
+  
+    const uint32_t ourFormatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
 
-  typedef enum : uint8_t {
-    Type_eof=0,
-      
-      // param types
-      Type_float=10,
-      Type_integer,
-      Type_bool,
-      Type_string,
-      Type_texture,
-      Type_rgb,
-      Type_spectrum,
-      Type_point,
-      Type_point2,
-      Type_point3,
-      Type_normal,
-      Type_color,
-      // object types
-      Type_object=100,
-      Type_instance,
-      Type_shape,
-      Type_material,
-      Type_camera,
-      Type_film,
-      Type_medium,
-      Type_sampler,
-      Type_pixelFilter,
-      Type_integrator,
-      Type_volumeIntegrator,
-      Type_surfaceIntegrator,
-      /* add more here */
-      } TypeTag;
+    typedef enum : uint8_t {
+      Type_eof=0,
+        
+        // param types
+        Type_float=10,
+        Type_integer,
+        Type_bool,
+        Type_string,
+        Type_texture,
+        Type_rgb,
+        Type_spectrum,
+        Type_point,
+        Type_point2,
+        Type_point3,
+        Type_normal,
+        Type_color,
+        // object types
+        Type_object=100,
+        Type_instance,
+        Type_shape,
+        Type_material,
+        Type_camera,
+        Type_film,
+        Type_medium,
+        Type_sampler,
+        Type_pixelFilter,
+        Type_integrator,
+        Type_volumeIntegrator,
+        Type_surfaceIntegrator,
+        /* add more here */
+        END_OF_LIST
+        } TypeTag;
 
-  TypeTag typeOf(const std::string &type)
-  {
-    if (type == "bool")     return Type_bool;
-    if (type == "integer")  return Type_integer;
+    TypeTag typeOf(const std::string &type)
+    {
+      if (type == "bool")     return Type_bool;
+      if (type == "integer")  return Type_integer;
 
-    if (type == "float")    return Type_float;
-    if (type == "point")    return Type_point;
-    if (type == "point2")   return Type_point2;
-    if (type == "point3")   return Type_point3;
-    if (type == "normal")   return Type_normal;
+      if (type == "float")    return Type_float;
+      if (type == "point")    return Type_point;
+      if (type == "point2")   return Type_point2;
+      if (type == "point3")   return Type_point3;
+      if (type == "normal")   return Type_normal;
 
-    if (type == "rgb")      return Type_rgb;
-    if (type == "color")    return Type_color;
-    if (type == "spectrum") return Type_spectrum;
+      if (type == "rgb")      return Type_rgb;
+      if (type == "color")    return Type_color;
+      if (type == "spectrum") return Type_spectrum;
 
-    if (type == "string")   return Type_string;
+      if (type == "string")   return Type_string;
 
-    if (type == "texture")  return Type_texture;
+      if (type == "texture")  return Type_texture;
 
-    throw std::runtime_error("un-recognized type '"+type+"'");
-  }
-
-  std::string typeToString(TypeTag tag)
-  {
-    switch(tag) {
-    default:
-    case Type_bool     : return "bool";
-    case Type_integer  : return "integer";
-    case Type_rgb      : return "rgb";
-    case Type_float    : return "float";
-    case Type_point    : return "point";
-    case Type_point2   : return "point2";
-    case Type_point3   : return "point3";
-    case Type_normal   : return "normal";
-    case Type_string   : return "string";
-    case Type_spectrum : return "spectrum";
-    case Type_texture  : return "texture";
-      throw std::runtime_error("typeToString() : type tag '"+std::to_string((int)tag)+"' not implmemented");
+      throw std::runtime_error("un-recognized type '"+type+"'");
     }
-  }
+
+    std::string typeToString(TypeTag tag)
+    {
+      switch(tag) {
+      default:
+      case Type_bool     : return "bool";
+      case Type_integer  : return "integer";
+      case Type_rgb      : return "rgb";
+      case Type_float    : return "float";
+      case Type_point    : return "point";
+      case Type_point2   : return "point2";
+      case Type_point3   : return "point3";
+      case Type_normal   : return "normal";
+      case Type_string   : return "string";
+      case Type_spectrum : return "spectrum";
+      case Type_texture  : return "texture";
+        throw std::runtime_error("typeToString() : type tag '"+std::to_string((int)tag)+"' not implmemented");
+      }
+    }
   
-  /*! a simple buffer for binary data */
-  struct OutBuffer : public std::vector<uint8_t>
-  {
-    typedef std::shared_ptr<OutBuffer> SP;
-  };
-  
-  /*! helper class that writes out a PBRT scene graph in a binary form
-    that is much faster to parse */
-  struct BinaryWriter {
-
-    BinaryWriter(const std::string &fileName) : binFile(fileName) {}
-
-    /*! our stack of output buffers - each object we're writing might
-      depend on other objects that it references in its paramset, so
-      we use a stack of such buffers - every object writes to its
-      own buffer, and if it needs to write another object before
-      itself that other object can simply push a new buffer on the
-      stack, and first write that one before the child completes its
-      own writes. */
-    std::stack<OutBuffer::SP> outBuffer;
-
-    /*! the file we'll be writing the buffers to */
-    std::ofstream binFile;
-
-    void writeRaw(const void *ptr, size_t size)
+    void BinaryWriter::writeRaw(const void *ptr, size_t size)
     {
       assert(ptr);
       outBuffer.top()->insert(outBuffer.top()->end(),(uint8_t*)ptr,(uint8_t*)ptr + size);
     }
     
+    
     template<typename T>
-    void write(const T &t)
+    void BinaryWriter::write(const T &t)
     {
       writeRaw(&t,sizeof(t));
     }
-
-    void write(const std::string &t)
+    
+    void BinaryWriter::write(const std::string &t)
     {
       write((int32_t)t.size());
       writeRaw(&t[0],t.size());
     }
-    
+
     template<typename T>
-    void writeVec(const std::vector<T> &t)
+    void BinaryWriter::writeVec(const std::vector<T> &t)
     {
       const void *ptr = (const void *)t.data();
       write(t.size());
@@ -153,7 +138,7 @@ namespace pbrt_parser {
         writeRaw(ptr,t.size()*sizeof(T));
     }
 
-    void writeVec(const std::vector<bool> &t)
+    void BinaryWriter::writeVec(const std::vector<bool> &t)
     {
       std::vector<unsigned char> asChar(t.size());
       for (int i=0;i<t.size();i++)
@@ -161,20 +146,20 @@ namespace pbrt_parser {
       writeVec(asChar);
     }
 
-    void writeVec(const std::vector<std::string> &t)
+    void BinaryWriter::writeVec(const std::vector<std::string> &t)
     {
       write(t.size());
       for (auto &s : t) {
         write(s);
       }
     }
-    
+
     /*! start a new write buffer on the stack - all future writes will go into this buffer */
-    void startNewWrite()
+    void BinaryWriter::startNewWrite()
     { outBuffer.push(std::make_shared<OutBuffer>()); }
-    
+
     /*! write the topmost write buffer to disk, and free its memory */
-    void executeWrite()
+    void BinaryWriter::executeWrite()
     {
       size_t size = outBuffer.top()->size();
       if (size) {
@@ -188,28 +173,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(Texture::SP texture)
-    {
-      if (!texture) return -1;
-      
-      static std::map<std::shared_ptr<Texture>,int> alreadyEmitted;
-      if (alreadyEmitted.find(texture) != alreadyEmitted.end())
-        return alreadyEmitted[texture];
-      
-      startNewWrite(); {
-        write(Type_texture);
-        write(texture->name);
-        write(texture->texelType);
-        write(texture->mapType);
-        writeParams(*texture);
-      } executeWrite();
-      return alreadyEmitted[texture] = alreadyEmitted.size();
-    }
-    
-    /*! if this object has already been written to file, return a
-      handle; else write it once, create a unique handle, and return
-      that */
-    int emitOnce(Camera::SP camera)
+    int BinaryWriter::emitOnce(Camera::SP camera)
     {
       if (!camera) return -1;
       
@@ -225,11 +189,11 @@ namespace pbrt_parser {
       } executeWrite();
       return alreadyEmitted[camera] = alreadyEmitted.size();
     }
-    
+
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(Integrator::SP integrator)
+    int BinaryWriter::emitOnce(Integrator::SP integrator)
     {
       if (!integrator) return -1;
 
@@ -248,7 +212,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(Shape::SP shape)
+    int BinaryWriter::emitOnce(Shape::SP shape)
     {
       if (!shape) return -1;
 
@@ -265,11 +229,11 @@ namespace pbrt_parser {
       } executeWrite();
       return alreadyEmitted[shape] = alreadyEmitted.size();
     }
-    
+
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(Material::SP material)
+    int BinaryWriter::emitOnce(Material::SP material)
     {
       if (!material) return -1;
 
@@ -284,11 +248,12 @@ namespace pbrt_parser {
       } executeWrite();
       return alreadyEmitted[material] = alreadyEmitted.size();
     }
+
     
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(VolumeIntegrator::SP volumeIntegrator)
+    int BinaryWriter::emitOnce(VolumeIntegrator::SP volumeIntegrator)
     {
       if (!volumeIntegrator) return -1;
 
@@ -303,11 +268,12 @@ namespace pbrt_parser {
       } executeWrite();
       return alreadyEmitted[volumeIntegrator] = alreadyEmitted.size();
     }
-    
+
+        
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(SurfaceIntegrator::SP surfaceIntegrator)
+    int BinaryWriter::emitOnce(SurfaceIntegrator::SP surfaceIntegrator)
     {
       if (!surfaceIntegrator) return -1;
 
@@ -326,7 +292,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(Sampler::SP sampler)
+    int BinaryWriter::emitOnce(Sampler::SP sampler)
     {
       if (!sampler) return -1;
       
@@ -345,7 +311,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(Film::SP film)
+    int BinaryWriter::emitOnce(Film::SP film)
     {
       if (!film) return -1;
 
@@ -364,7 +330,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(PixelFilter::SP pixelFilter)
+    int BinaryWriter::emitOnce(PixelFilter::SP pixelFilter)
     {
       if (!pixelFilter) return -1;
       
@@ -383,7 +349,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(Medium::SP medium)
+    int BinaryWriter::emitOnce(Medium::SP medium)
     {
       if (!medium) return -1;
       
@@ -402,7 +368,7 @@ namespace pbrt_parser {
     /*! if this instance has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(Object::Instance::SP instance)
+    int BinaryWriter::emitOnce(Object::Instance::SP instance)
     {
       if (!instance) return -1;
 
@@ -422,7 +388,7 @@ namespace pbrt_parser {
     /*! if this object has already been written to file, return a
       handle; else write it once, create a unique handle, and return
       that */
-    int emitOnce(Object::SP object)
+    int BinaryWriter::emitOnce(Object::SP object)
     {
       if (!object) return -1;
       
@@ -446,16 +412,16 @@ namespace pbrt_parser {
       return alreadyEmitted[object] = alreadyEmitted.size();
     }
     
-    void writeParams(const ParamSet &ps)
+
+    /*! write an enitity's set of parameters */
+    void BinaryWriter::writeParams(const ParamSet &ps)
     {
       write((uint16_t)ps.param.size());
-      // std::cout << " - writing " << ps.param.size() << " params" << std::endl;
       for (auto it : ps.param) {
         const std::string name = it.first;
         Param::SP param = it.second;
         
         TypeTag typeTag = typeOf(param->getType());
-        // std::cout << "   - writing " << param->getType() << " " << name << std::endl;
         write(typeTag);
         write(name);
 
@@ -489,7 +455,30 @@ namespace pbrt_parser {
         }
       }
     }
-    void emit(Scene::SP scene)
+
+    /*! if this object has already been written to file, return a
+      handle; else write it once, create a unique handle, and return
+      that */
+    int BinaryWriter::emitOnce(Texture::SP texture)
+    {
+      if (!texture) return -1;
+      
+      static std::map<std::shared_ptr<Texture>,int> alreadyEmitted;
+      if (alreadyEmitted.find(texture) != alreadyEmitted.end())
+        return alreadyEmitted[texture];
+      
+      startNewWrite(); {
+        write(Type_texture);
+        write(texture->name);
+        write(texture->texelType);
+        write(texture->mapType);
+        writeParams(*texture);
+      } executeWrite();
+      return alreadyEmitted[texture] = alreadyEmitted.size();
+    }
+
+    /*! write the root scene itself, by recusirvely writing all its entities */
+    void BinaryWriter::emit(Scene::SP scene)
     {
       uint32_t formatID = ourFormatID;
       binFile.write((const char *)&formatID,sizeof(formatID));
@@ -510,114 +499,94 @@ namespace pbrt_parser {
         write(eof);
       } executeWrite();
     }
-  };
-  
-  void saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName)
-  {
-    BinaryWriter writer(fileName);
-    writer.emit(scene);
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-  struct BinaryReader {
-
-    struct Block {
-      inline Block() = default;
-      inline Block(Block &&) = default;
-      
-      std::vector<unsigned char> data;
-      size_t pos = 0;
-      
-      template<typename T>
-      inline T read() {
-        T t;
-        readRaw(&t,sizeof(t));
-        return t;
-      }
-
-      inline void readRaw(void *ptr, size_t size)
-      {
-        assert((pos + size) <= data.size());
-        memcpy((char*)ptr,data.data()+pos,size);
-        pos += size;
-      };
-      
-      std::string readString()
-      {
-        // write((int32_t)t.size());
-        // writeRaw(&t[0],t.size());
-        int32_t size = read<int32_t>();
-        std::string s(size,' ');
-        readRaw(&s[0],size);
-        return s;
-      }
-
-      template<typename T>
-      inline void readVec(std::vector<T> &v)
-      {
-        size_t size = read<size_t>();
-        v.resize(size);
-        if (size) {
-          readRaw((char*)v.data(),size*sizeof(T));
-        }
-      }
-      inline void readVec(std::vector<std::string> &v)
-      {
-        size_t size = read<size_t>();
-        v.resize(size);
-        for (int i=0;i<size;i++)
-          v[i] = readString();
-          // v.push_back(readString());
-      }
-      inline void readVec(std::vector<bool> &v)
-      {
-        std::vector<unsigned char> asChar;
-        readVec(asChar);
-        v.resize(asChar.size());
-        for (int i=0;i<asChar.size();i++)
-          v[i] = asChar[i];
-      }
-
-      template<typename T>
-      inline std::vector<T> readVec()
-      {
-        std::vector<T> t;
-        readVec(t);
-        return t;
-      }
-    };
     
-    inline BinaryReader(const std::string &fileName)
+    void writeBinary(pbrt::syntax::Scene::SP scene,
+                     const std::string &fileName)
+    {
+      BinaryWriter writer(fileName);
+      writer.emit(scene);
+    }
+
+
+
+
+
+    // ==================================================================
+    // BinaryReader::Block
+    // ==================================================================
+
+    template<typename T>
+    inline T BinaryReader::Block::read() {
+      T t;
+      readRaw(&t,sizeof(t));
+      return t;
+    }
+
+    inline void BinaryReader::Block::readRaw(void *ptr, size_t size)
+    {
+      assert((pos + size) <= data.size());
+      memcpy((char*)ptr,data.data()+pos,size);
+      pos += size;
+    };
+      
+    std::string BinaryReader::Block::readString()
+    {
+      int32_t size = read<int32_t>();
+      std::string s(size,' ');
+      readRaw(&s[0],size);
+      return s;
+    }
+
+    template<typename T>
+    inline void BinaryReader::Block::readVec(std::vector<T> &v)
+    {
+      size_t size = read<size_t>();
+      v.resize(size);
+      if (size) {
+        readRaw((char*)v.data(),size*sizeof(T));
+      }
+    }
+    inline void BinaryReader::Block::readVec(std::vector<std::string> &v)
+    {
+      size_t size = read<size_t>();
+      v.resize(size);
+      for (int i=0;i<size;i++)
+        v[i] = readString();
+      // v.push_back(readString());
+    }
+    inline void BinaryReader::Block::readVec(std::vector<bool> &v)
+    {
+      std::vector<unsigned char> asChar;
+      readVec(asChar);
+      v.resize(asChar.size());
+      for (int i=0;i<asChar.size();i++)
+        v[i] = asChar[i];
+    }
+
+    template<typename T>
+    inline std::vector<T> BinaryReader::Block::readVec()
+    {
+      std::vector<T> t;
+      readVec(t);
+      return t;
+    }
+        
+
+
+    // ==================================================================
+    // BinaryReader
+    // ==================================================================
+
+
+    
+    BinaryReader::BinaryReader(const std::string &fileName)
       : binFile(fileName)
     {
       assert(binFile.good());
       binFile.sync_with_stdio(false);
     }
 
-    /*! our stack of output buffers - each object we're writing might
-      depend on other objects that it references in its paramset, so
-      we use a stack of such buffers - every object writes to its
-      own buffer, and if it needs to write another object before
-      itself that other object can simply push a new buffer on the
-      stack, and first write that one before the child completes its
-      own writes. */
-    std::stack<OutBuffer::SP> outBuffer;
-
-    /*! the file we'll be writing the buffers to */
-    std::ifstream binFile;
-
-    int readHeader()
+    int BinaryReader::readHeader()
     {
       int formatID;
       assert(binFile.good());
@@ -628,7 +597,7 @@ namespace pbrt_parser {
       return formatID;
     }
 
-    inline Block readBlock()
+    inline BinaryReader::Block BinaryReader::readBlock()
     {
       Block block;
       size_t size;
@@ -646,50 +615,15 @@ namespace pbrt_parser {
     }
     
     template<typename T>
-    typename ParamArray<T>::SP readParam(const std::string &type, Block &block)
+    typename ParamArray<T>::SP BinaryReader::readParam(const std::string &type, Block &block)
     {
       typename ParamArray<T>::SP param = std::make_shared<ParamArray<T>>(type);
       block.readVec(*param);
       return param;
     }
     
-    void readParams(ParamSet &paramSet, Block &block)
+    void BinaryReader::readParams(ParamSet &paramSet, Block &block)
     {
-      // write((uint16_t)ps.param.size());
-      // for (auto it : ps.param) {
-      //   const std::string name = it.first;
-      //   Param::SP param = it.second;
-        
-      //   TypeTag typeTag = typeOf(param->getType());
-      //   write(typeTag);
-      //   write(name);
-
-      //   switch(typeTag) {
-      //   case Type_float: 
-      //   case Type_rgb: 
-      //   case Type_color:
-      //   case Type_point:
-      //     writeVec(*param->as<float>());
-      //     break;
-      //   case Type_int: {
-      //     writeVec(*param->as<int>());
-      //   } break;
-      //   case Type_bool: {
-      //     writeVec(*param->as<bool>());
-      //   } break;
-      //   case Type_spectrum:
-      //   case Type_string: 
-      //     writeVec(*param->as<std::string>());
-      //     break;
-      //   case Type_texture: {
-      //     int32_t texID = emitOnce(param->as<Texture>()->texture);
-      //     write(texID);
-      //   } break;
-      //   default:
-      //     throw std::runtime_error("save-to-binary of parameter type '"
-      //                              +param->getType()+"' not implemented yet");
-      //   }
-      // }
       uint16_t numParams = block.read<uint16_t>();
       for (int paramID=0;paramID<numParams;paramID++) {
         TypeTag typeTag = block.read<TypeTag>();
@@ -728,7 +662,7 @@ namespace pbrt_parser {
       }
     }
     
-    Camera::SP readCamera(Block &block)
+    Camera::SP BinaryReader::readCamera(Block &block)
     {
       std::string type = block.readString();
       Transform transform = block.read<Transform>();
@@ -739,7 +673,7 @@ namespace pbrt_parser {
       return camera;
     }
     
-    Integrator::SP readIntegrator(Block &block)
+    Integrator::SP BinaryReader::readIntegrator(Block &block)
     {
       std::string type = block.readString();
       
@@ -749,13 +683,8 @@ namespace pbrt_parser {
       return integrator;
     }
     
-    Shape::SP readShape(Block &block)
+    Shape::SP BinaryReader::readShape(Block &block)
     {
-      // write(Type_shape);
-      // write(shape->type);
-      // write(shape->transform);
-      // write((int)emitOnce(shape->material));
-      // writeParams(*shape);
       std::string type = block.readString();
       Attributes::SP attributes = std::make_shared<Attributes>(); // not stored or read right now!?
       Transform transform = block.read<Transform>();
@@ -771,7 +700,7 @@ namespace pbrt_parser {
       return shape;
     }
     
-    Material::SP readMaterial(Block &block)
+    Material::SP BinaryReader::readMaterial(Block &block)
     {
       std::string type = block.readString();
       
@@ -781,13 +710,8 @@ namespace pbrt_parser {
       return material;
     }
     
-    Texture::SP readTexture(Block &block)
+    Texture::SP BinaryReader::readTexture(Block &block)
     {
-      // write(Type_texture);
-      // write(texture->name);
-      // write(texture->texelType);
-      // write(texture->mapType);
-      // writeParams(*texture);
       std::string name = block.readString();
       std::string texelType = block.readString();
       std::string mapType = block.readString();
@@ -798,7 +722,7 @@ namespace pbrt_parser {
       return texture;
     }
     
-    SurfaceIntegrator::SP readSurfaceIntegrator(Block &block)
+    SurfaceIntegrator::SP BinaryReader::readSurfaceIntegrator(Block &block)
     {
       std::string type = block.readString();
       
@@ -808,7 +732,7 @@ namespace pbrt_parser {
       return surfaceIntegrator;
     }
     
-    PixelFilter::SP readPixelFilter(Block &block)
+    PixelFilter::SP BinaryReader::readPixelFilter(Block &block)
     {
       std::string type = block.readString();
       
@@ -818,7 +742,7 @@ namespace pbrt_parser {
       return pixelFilter;
     }
     
-    VolumeIntegrator::SP readVolumeIntegrator(Block &block)
+    VolumeIntegrator::SP BinaryReader::readVolumeIntegrator(Block &block)
     {
       std::string type = block.readString();
       
@@ -828,7 +752,7 @@ namespace pbrt_parser {
       return volumeIntegrator;
     }
     
-    Sampler::SP readSampler(Block &block)
+    Sampler::SP BinaryReader::readSampler(Block &block)
     {
       std::string type = block.readString();
       Sampler::SP sampler = std::make_shared<Sampler>(type);
@@ -837,11 +761,8 @@ namespace pbrt_parser {
       return sampler;
     }
     
-    Film::SP readFilm(Block &block)
+    Film::SP BinaryReader::readFilm(Block &block)
     {
-      // write(Type_film);
-      // write(film->type);
-      // writeParams(*film);
       std::string type = block.readString();
       Film::SP film = std::make_shared<Film>(type);
 
@@ -849,18 +770,8 @@ namespace pbrt_parser {
       return film;
     }
 
-    Object::SP readObject(Block &block)
+    Object::SP BinaryReader::readObject(Block &block)
     {
-      // write(Type_object);
-      
-      // std::vector<int> shapeIDs;
-      // for (auto shape : object->shapes) shapeIDs.push_back(emitOnce(shape));
-      // writeVec(shapeIDs);
-      
-      // std::vector<int> instanceIDs;
-      // for (auto instance : object->objectInstances) instanceIDs.push_back(emitOnce(instance));
-      // writeVec(instanceIDs);
-
       const std::string name = block.readString();
       Object::SP object = std::make_shared<Object>(name);
 
@@ -871,18 +782,13 @@ namespace pbrt_parser {
       for (int instanceID : instanceIDs)
         object->objectInstances.push_back(instances[instanceID]);
       
-      // readParams(*object,block);
       return object;
     }
 
 
 
-    Object::Instance::SP readInstance(Block &block)
+    Object::Instance::SP BinaryReader::readInstance(Block &block)
     {
-      // write(Type_instance);
-      // write(instance->xfm);
-      // write((int)emitOnce(instance->object));
-
       Transform transform = block.read<Transform>();
       int objectID = block.read<int>();
       Object::SP object = objects[objectID];
@@ -892,15 +798,7 @@ namespace pbrt_parser {
     
 
 
-    
-    std::vector<Object::SP> objects;
-    std::vector<Material::SP> materials;
-    std::vector<Shape::SP> shapes;
-    std::vector<Object::Instance::SP> instances;
-    std::vector<Texture::SP> textures;
-    
-    
-    Scene::SP readScene()
+    Scene::SP BinaryReader::readScene()
     {
       Scene::SP scene = std::make_shared<Scene>();
       readHeader();
@@ -909,7 +807,6 @@ namespace pbrt_parser {
         BinaryReader::Block block = readBlock();
         TypeTag typeTag = block.read<TypeTag>();
 
-        
         switch(typeTag) {
         case Type_camera:
           scene->cameras.push_back(readCamera(block));
@@ -957,18 +854,33 @@ namespace pbrt_parser {
         };
       }
     }
+
+
+
+
+
+
+
+
     
-  };
-  
-  /*! given an already created scene, read given binary file, and populate this scene */
-  extern "C" PBRT_PARSER_INTERFACE void pbrtParser_readFromBinary(pbrt_parser::Scene::SP &scene, const std::string &fileName)
-  {
-	  BinaryReader reader(fileName);
-	  scene = reader.readScene();
-  }
 
-}
 
-extern "C" PBRT_PARSER_INTERFACE void pbrtParser_saveToBinary(pbrt_parser::Scene::SP scene, const std::string &fileName)
-{ pbrt_parser::saveToBinary(scene,fileName); }
+
+    /*! given an already created scene, read given binary file, and populate this scene */
+    extern "C" PBRT_PARSER_INTERFACE
+    void pbrt_syntax_readBinary(pbrt::syntax::Scene::SP &scene,
+                                const std::string &fileName)
+    {
+      BinaryReader reader(fileName);
+      scene = reader.readScene();
+    }
+
+
+    extern "C" PBRT_PARSER_INTERFACE
+    void pbrt_syntax_writeBinary(pbrt::syntax::Scene::SP scene,
+                                 const std::string &fileName)
+    { pbrt::syntax::writeBinary(scene,fileName); }
   
+    
+  } // ::pbrt::syntax
+} // ::pbrt

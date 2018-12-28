@@ -35,11 +35,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 ADD_SUBDIRECTORY(ospcommon)
 
-set(pbrt-parser_VERSION_MAJOR 0)
-set(pbrt-parser_VERSION_MINOR 1)
+set(pbrt-parser_VERSION_MAJOR 1)
+set(pbrt-parser_VERSION_MINOR 0)
 set(pbrt-parser_VERSION_PATCH 0)
 
-ADD_SUBDIRECTORY(pbrt_parser)
+# syntax-only parser
+ADD_SUBDIRECTORY(pbrtParser/syntax)
+
 ADD_SUBDIRECTORY(apps)
 
 

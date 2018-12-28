@@ -15,13 +15,13 @@
 ## ======================================================================== ##
 
 ADD_EXECUTABLE(pbrtlint pbrtlint.cpp)
-TARGET_LINK_LIBRARIES(pbrtlint pbrt_parser)
+TARGET_LINK_LIBRARIES(pbrtlint pbrtParser_syntax)
 
 ADD_EXECUTABLE(pbrtinfo pbrtinfo.cpp)
-TARGET_LINK_LIBRARIES(pbrtinfo pbrt_parser)
+TARGET_LINK_LIBRARIES(pbrtinfo pbrtParser_syntax)
 
 ADD_EXECUTABLE(pbrt2obj pbrt2obj.cpp)
-TARGET_LINK_LIBRARIES(pbrt2obj pbrt_parser)
+TARGET_LINK_LIBRARIES(pbrt2obj pbrtParser_syntax)
 
 ADD_EXECUTABLE(pbrt2pbff pbrt2pbff.cpp)
-TARGET_LINK_LIBRARIES(pbrt2pbff pbrt_parser)
+TARGET_LINK_LIBRARIES(pbrt2pbff pbrtParser_syntax)
