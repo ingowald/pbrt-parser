@@ -40,7 +40,7 @@ namespace pbrt {
       /*! get name of the file */
       std::string getFileName() const { return name; }
 
-      friend class Lexer;
+      friend struct Lexer;
 
     private:
       std::string name;
@@ -59,7 +59,7 @@ namespace pbrt {
       //! pretty-print
       std::string toString() const;
 
-      friend class Lexer;
+      friend struct Lexer;
     private:
       std::shared_ptr<File> file;
       int line { -1 };
@@ -92,7 +92,7 @@ namespace pbrt {
       const Type        type;
     };
 
-    struct TokenHandle : public std::shared_ptr<Token> {
+    struct PBRT_PARSER_INTERFACE TokenHandle : public std::shared_ptr<Token> {
       TokenHandle() = default;
       TokenHandle(std::shared_ptr<Token> handle) : std::shared_ptr<Token>(handle) {}
       TokenHandle(const TokenHandle &other) : std::shared_ptr<Token>(other) {}

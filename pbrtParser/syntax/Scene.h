@@ -26,7 +26,7 @@
 #include <assert.h>
 
 #ifdef _WIN32
-#  ifdef pbrt_parser_EXPORTS
+#  ifdef pbrtParser_syntax_EXPORTS
 #    define PBRT_PARSER_INTERFACE __declspec(dllexport)
 #  else
 #    define PBRT_PARSER_INTERFACE __declspec(dllimport)
@@ -118,6 +118,10 @@ namespace pbrt {
     template<typename T>
     struct ParamArray;
 
+#ifdef WIN32
+# pragma warning (disable : 4251)
+#endif
+
     /*! base abstraction for any type of parameter - typically,
       parameters in pbrt can be either single values or
       arbitrarily-sized arrays of values, so we will eventually
@@ -141,7 +145,7 @@ namespace pbrt {
     };
 
     template<typename T>
-    struct PBRT_PARSER_INTERFACE ParamArray : public Param, public std::vector<T> {
+    struct PBRT_PARSER_INTERFACE ParamArray : public Param, std::vector<T> {
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
       typedef std::shared_ptr<ParamArray<T>> SP;

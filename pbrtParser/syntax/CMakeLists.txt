@@ -22,9 +22,11 @@ ADD_LIBRARY(pbrtParser_syntax SHARED
   parsePLY.cpp
   ../../3rdParty/ply.cpp
   )
+#TARGET_COMPILE_DEFINITIONS(pbrtParser_syntax PUBLIC pbrtParser_syntax_EXPORTS=1)
 TARGET_LINK_LIBRARIES(pbrtParser_syntax
 #  ospray_common
   )
+ 
 
 install(TARGETS pbrtParser_syntax DESTINATION lib)
 install(FILES Scene.h DESTINATION include/pbrtParser/syntax)
