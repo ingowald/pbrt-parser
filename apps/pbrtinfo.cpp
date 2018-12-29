@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // pbrt_parser
-#include "pbrtParser/syntax/Scene.h"
+#include "pbrtParser/syntactic/Scene.h"
 // ospcommon
 #include "ospcommon/common.h"
 // stl
@@ -25,7 +25,7 @@
 #include <set>
 
 namespace pbrt {
-  namespace syntax {
+  namespace syntactic {
     
     using std::cout;
     using std::endl;
@@ -116,9 +116,12 @@ namespace pbrt {
     void pbrtInfo(int ac, char **av)
     {
       std::string fileName;
+      bool parseOnly = false;
       for (int i=1;i<ac;i++) {
         const std::string arg = av[i];
-        if (arg[0] == '-') {
+        if (arg == "--lint" || arg == "-lint") {
+          parseOnly = true;
+        } else if (arg[0] == '-') {
           throw std::runtime_error("invalid argument '"+arg+"'");
         } else {
           fileName = arg;
@@ -132,13 +135,14 @@ namespace pbrt {
       std::shared_ptr<Scene> scene;
       try {
         if (endsWith(fileName,".pbsf"))
-          scene = pbrt::syntax::readBinary(fileName);
+          scene = pbrt::syntactic::readBinary(fileName);
         else if (endsWith(fileName,".pbrt"))
-          scene = pbrt::syntax::parse(fileName);
+          scene = pbrt::syntactic::parse(fileName);
         else
           throw std::runtime_error("un-recognized input file extension");
         
         std::cout << " => yay! parsing successful..." << std::endl;
+        if (parseOnly) exit(0);
         PBRTInfo info(scene);
       } catch (std::runtime_error e) {
         std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
@@ -153,5 +157,5 @@ namespace pbrt {
       return 0;
     }
     
-  } // ::pbrt::syntax
+  } // ::pbrt::syntactic
 } // ::pbrt

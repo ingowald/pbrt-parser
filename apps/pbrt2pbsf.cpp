@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // pbrt_parser
-#include "pbrtParser/syntax/Scene.h"
+#include "pbrtParser/syntactic/Scene.h"
 // stl
 #include <iostream>
 #include <vector>
@@ -26,7 +26,7 @@
 #include <stack>
 
 namespace pbrt {
-  namespace syntax {
+  namespace syntactic {
     
     using std::cout;
     using std::endl;
@@ -232,7 +232,7 @@ namespace pbrt {
       std::cout << "parsing pbrt file " << inFileName << std::endl;
       std::shared_ptr<Scene> scene;
       try {
-        scene = pbrt::syntax::parse(inFileName);
+        scene = pbrt::syntactic::parse(inFileName);
         std::cout << " => yay! parsing successful..." << std::endl;
       } catch (std::runtime_error e) {
         std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
@@ -300,7 +300,7 @@ namespace pbrt {
         exit(1);
       }
       std::cout << "writing to binary file " << outFileName << std::endl;
-      pbrt_syntax_writeBinary(scene,outFileName);
+      pbrt_syntactic_writeBinary(scene,outFileName);
       std::cout << " => yay! writing successful..." << std::endl;
     }
 
@@ -310,5 +310,5 @@ namespace pbrt {
       return 0;
     }
 
-  } // ::pbrt::syntax
+  } // ::pbrt::syntactic
 } // ::pbrt

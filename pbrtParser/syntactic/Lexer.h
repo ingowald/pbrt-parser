@@ -24,13 +24,13 @@
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
-  /*! namespace for syntax-only parser - this allows to distringuish
+  /*! namespace for syntactic-only parser - this allows to distringuish
     high-level objects such as geometries from objects or transforms,
     but does *not* make any difference between what types of
     geometries, what their parameters mean, etc. Basically, at this
     level a triangle mesh is nothing but a geometry that has a string
     with a given name, and parameters of given names and types */
-  namespace syntax {
+  namespace syntactic {
   
     /*! file name and handle, to be used by tokenizer and loc */
     struct PBRT_PARSER_INTERFACE File {
@@ -124,5 +124,5 @@ namespace pbrt {
       int peekedChar;
     };
 
-  } // ::pbrt::syntax
+  } // ::pbrt::syntactic
 } // ::pbrt

@@ -19,7 +19,7 @@
 #include "ospcommon/AffineSpace.h"
 // pbrt-parser
 #define PBRT_PARSER_VECTYPE_NAMESPACE    ospcommon
-#include "pbrtParser/syntax/Scene.h"
+#include "pbrtParser/syntactic/Scene.h"
 // stl
 #include <iostream>
 #include <vector>
@@ -27,7 +27,7 @@
 #include <fstream>
 
 namespace pbrt {
-  namespace syntax {
+  namespace syntactic {
     
     using std::cout;
     using std::endl;
@@ -247,7 +247,7 @@ namespace pbrt {
       
       try {
         std::cout << "==> parsing successful (grammar only for now)" << std::endl;
-        std::shared_ptr<Scene> scene = pbrt::syntax::parse(inFileName);
+        std::shared_ptr<Scene> scene = pbrt::syntactic::parse(inFileName);
         std::cout << "done parsing, now exporting (triangular geometry from) scene" << std::endl;
         writeObject(scene,scene->world,ospcommon::one);
         // fclose(out);
@@ -264,5 +264,5 @@ namespace pbrt {
       return 0;
     }
 
-  } // ::pbrt::syntax
+  } // ::pbrt::syntactic
 } // ::pbrt

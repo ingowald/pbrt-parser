@@ -28,13 +28,13 @@
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
-  /*! namespace for syntax-only parser - this allows to distringuish
+  /*! namespace for syntactic-only parser - this allows to distringuish
     high-level objects such as geometries from objects or transforms,
     but does *not* make any difference between what types of
     geometries, what their parameters mean, etc. Basically, at this
     level a triangle mesh is nothing but a geometry that has a string
     with a given name, and parameters of given names and types */
-  namespace syntax {
+  namespace syntactic {
   
     using std::cout;
     using std::endl;
@@ -89,15 +89,15 @@ namespace pbrt {
       } Face;
 
       PlyProperty vert_props[] = { /* list of property information for a vertex */
-        {(char*)"x", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntax::ply::Vertex,coord[X]), 0, 0, 0, 0},
-        {(char*)"y", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntax::ply::Vertex,coord[Y]), 0, 0, 0, 0},
-        {(char*)"z", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntax::ply::Vertex,coord[Z]), 0, 0, 0, 0},
-        {(char*)"nx", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntax::ply::Vertex,normal[X]), 0, 0, 0, 0},
-        {(char*)"ny", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntax::ply::Vertex,normal[Y]), 0, 0, 0, 0},
-        {(char*)"nz", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntax::ply::Vertex,normal[Z]), 0, 0, 0, 0},
-        {(char*)"diffuse_red", PLY_UCHAR, PLY_UCHAR, offsetof(::pbrt::syntax::ply::Vertex,red), 0, 0, 0, 0},
-        {(char*)"diffuse_green", PLY_UCHAR, PLY_UCHAR, offsetof(::pbrt::syntax::ply::Vertex,green), 0, 0, 0, 0},
-        {(char*)"diffuse_blue", PLY_UCHAR, PLY_UCHAR, offsetof(::pbrt::syntax::ply::Vertex,blue), 0, 0, 0, 0},
+        {(char*)"x", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntactic::ply::Vertex,coord[X]), 0, 0, 0, 0},
+        {(char*)"y", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntactic::ply::Vertex,coord[Y]), 0, 0, 0, 0},
+        {(char*)"z", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntactic::ply::Vertex,coord[Z]), 0, 0, 0, 0},
+        {(char*)"nx", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntactic::ply::Vertex,normal[X]), 0, 0, 0, 0},
+        {(char*)"ny", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntactic::ply::Vertex,normal[Y]), 0, 0, 0, 0},
+        {(char*)"nz", PLY_FLOAT, PLY_FLOAT, offsetof(::pbrt::syntactic::ply::Vertex,normal[Z]), 0, 0, 0, 0},
+        {(char*)"diffuse_red", PLY_UCHAR, PLY_UCHAR, offsetof(::pbrt::syntactic::ply::Vertex,red), 0, 0, 0, 0},
+        {(char*)"diffuse_green", PLY_UCHAR, PLY_UCHAR, offsetof(::pbrt::syntactic::ply::Vertex,green), 0, 0, 0, 0},
+        {(char*)"diffuse_blue", PLY_UCHAR, PLY_UCHAR, offsetof(::pbrt::syntactic::ply::Vertex,blue), 0, 0, 0, 0},
       };
       enum {
         VTX_X = 0,
@@ -378,18 +378,18 @@ namespace pbrt {
         // return mesh;
       }
 
-    } // ::pbrt::syntax::ply
+    } // ::pbrt::syntactic::ply
 
     
-  } // ::pbrt::syntax
+  } // ::pbrt::syntactic
 } // ::pbrt
 
 extern "C" 
 void pbrt_helper_loadPlyTriangles(const std::string &fileName,
-                                  std::vector<pbrt::syntax::vec3f> &v,
-                                  std::vector<pbrt::syntax::vec3f> &n,
-                                  std::vector<pbrt::syntax::vec3i> &idx)
+                                  std::vector<pbrt::syntactic::vec3f> &v,
+                                  std::vector<pbrt::syntactic::vec3f> &n,
+                                  std::vector<pbrt::syntactic::vec3i> &idx)
 {
-  pbrt::syntax::ply::parse(fileName,v,n,idx);
+  pbrt::syntactic::ply::parse(fileName,v,n,idx);
 }
 

@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2009-2018 Ingo Wald                                            ##
+## Copyright 2015-2018 Ingo Wald                                            ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -14,16 +14,17 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-ADD_EXECUTABLE(pbrtinfo pbrtinfo.cpp)
-TARGET_LINK_LIBRARIES(pbrtinfo pbrtParser_syntactic)
+ADD_LIBRARY(pbrtParser_semantic SHARED
+  Scene.cpp
+  BinaryFileFormat.cpp
+  importPBRT.cpp
+  )
+#TARGET_COMPILE_DEFINITIONS(pbrtParser_semantic PUBLIC pbrtParser_semantic_EXPORTS=1)
+TARGET_LINK_LIBRARIES(pbrtParser_semantic
+  pbrtParser_syntactic
+  )
+ 
 
-ADD_EXECUTABLE(pbrt2obj pbrt2obj.cpp)
-TARGET_LINK_LIBRARIES(pbrt2obj pbrtParser_syntactic)
+install(TARGETS pbrtParser_semantic DESTINATION lib)
+install(FILES Scene.h DESTINATION include/pbrtParser/semantic)
 
-# '.pbrt' to '.pbsf' (pbrt binary syntactic file) converter
-ADD_EXECUTABLE(pbrt2pbsf pbrt2pbsf.cpp)
-TARGET_LINK_LIBRARIES(pbrt2pbsf pbrtParser_syntactic)
-
-# '.pbrt' to '.pbf' (pbrt binary format) converter
-ADD_EXECUTABLE(pbrt2pbf pbrt2pbf.cpp)
-TARGET_LINK_LIBRARIES(pbrt2pbf pbrtParser_semantic)

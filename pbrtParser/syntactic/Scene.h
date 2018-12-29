@@ -16,8 +16,8 @@
 
 #pragma once
 
-/*! \file pbrt/Scene.h Defines the root pbrt scene to be
-  created/parsed by this parser */
+/*! \file pbrt/sytax/Scene.h Defines the root pbrt scene - at least
+  the *syntactci* part of it - to be created/parsed by this parser */
 
 // stl
 #include <map>
@@ -26,7 +26,7 @@
 #include <assert.h>
 
 #ifdef _WIN32
-#  ifdef pbrtParser_syntax_EXPORTS
+#  ifdef pbrtParser_syntactic_EXPORTS
 #    define PBRT_PARSER_INTERFACE __declspec(dllexport)
 #  else
 #    define PBRT_PARSER_INTERFACE __declspec(dllimport)
@@ -43,7 +43,7 @@ namespace pbrt {
     geometries, what their parameters mean, etc. Basically, at this
     level a triangle mesh is nothing but a geometry that has a string
     with a given name, and parameters of given names and types */
-  namespace syntax {
+  namespace syntactic {
   
     struct Object;
     struct Material;
@@ -56,8 +56,8 @@ namespace pbrt {
       use. 
 
       - if PBRT_PARSER_VECTYPE_NAMESPACE is _not defined_, we will
-      define our own pbrt::syntax::vec3f, pbrt::syntax::vec3i, and
-      pbrt::syntax::affine3f types as plain structs. Vec3i and vec3f
+      define our own pbrt::syntactic::vec3f, pbrt::syntactic::vec3i, and
+      pbrt::syntactic::affine3f types as plain structs. Vec3i and vec3f
       are three 32-bit ints and floats, respectively, and affine3f is
       a 4xvec3f matrix as defined below.
 
@@ -84,15 +84,23 @@ namespace pbrt {
       app use a different data layout will create trouble
     */
 #if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
-    using vec3f = PBRT_PARSER_VECTYPE_NAMESPACE::vec3f;
-    using vec3i = PBRT_PARSER_VECTYPE_NAMESPACE::vec3i;
+    using vec2f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2f;
+    using vec3f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3f;
+    using vec3i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3i;
+    using vec4i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4i;
     using affine3f = PBRT_PARSER_VECTYPE_NAMESPACE::affine3f;
 #else
+    struct vec2f {
+      float x, y;
+    };
     struct vec3f {
       float x, y, z;
     };
     struct vec3i {
       int x, y, z;
+    };
+    struct vec4i {
+      int x, y, z, w;
     };
     struct affine3f {
       /*! x-basis vector of affine transform matrix */
@@ -498,16 +506,16 @@ namespace pbrt {
     //! what's in a objectbegin/objectned, as well as the root object
     struct PBRT_PARSER_INTERFACE Object {
     
-      /*! allows for writing pbrt::syntax::Scene::SP, which is somewhat
-        more concise than std::shared_ptr<pbrt::syntax::Scene> */
+      /*! allows for writing pbrt::syntactic::Scene::SP, which is somewhat
+        more concise than std::shared_ptr<pbrt::syntactic::Scene> */
       typedef std::shared_ptr<Object> SP;
     
       Object(const std::string &name) : name(name) {}
     
       struct PBRT_PARSER_INTERFACE Instance {
 
-        /*! allows for writing pbrt::syntax::Scene::SP, which is somewhat
-          more concise than std::shared_ptr<pbrt::syntax::Scene> */
+        /*! allows for writing pbrt::syntactic::Scene::SP, which is somewhat
+          more concise than std::shared_ptr<pbrt::syntactic::Scene> */
         typedef std::shared_ptr<Instance> SP;
       
         Instance(const std::shared_ptr<Object> &object,
@@ -543,8 +551,8 @@ namespace pbrt {
       use, etc, plus some geometry. */
     struct PBRT_PARSER_INTERFACE Scene {
 
-      /*! allows for writing pbrt::syntax::Scene::SP, which is somewhat more concise
-        than std::shared_ptr<pbrt::syntax::Scene> */
+      /*! allows for writing pbrt::syntactic::Scene::SP, which is somewhat more concise
+        than std::shared_ptr<pbrt::syntactic::Scene> */
       typedef std::shared_ptr<Scene> SP;
     
       /*! default constructor - creates a new (and at first, empty) scene */
@@ -613,35 +621,35 @@ namespace pbrt {
 } // ::pbrt
 
 extern "C" PBRT_PARSER_INTERFACE
-void pbrt_syntax_writeBinary(pbrt::syntax::Scene::SP scene,
+void pbrt_syntactic_writeBinary(pbrt::syntactic::Scene::SP scene,
                              const std::string &fileName);
 
 /*! given an already created scene, read given binary file, and populate this scene */
 extern "C" PBRT_PARSER_INTERFACE
-void pbrt_syntax_readBinary(pbrt::syntax::Scene::SP &scene,
+void pbrt_syntactic_readBinary(pbrt::syntactic::Scene::SP &scene,
                             const std::string &fileName);
 
 /*! load pbrt scene from a pbrt file */
 extern "C" PBRT_PARSER_INTERFACE
-void pbrt_syntax_parse(pbrt::syntax::Scene::SP &scene,
+void pbrt_syntactic_parse(pbrt::syntactic::Scene::SP &scene,
                        const std::string &fileName);
 
 /*! a helper function to load a ply file */
 extern "C" PBRT_PARSER_INTERFACE
 void pbrt_helper_loadPlyTriangles(const std::string &fileName,
-                                  std::vector<pbrt::syntax::vec3f> &v,
-                                  std::vector<pbrt::syntax::vec3f> &n,
-                                  std::vector<pbrt::syntax::vec3i> &idx);
+                                  std::vector<pbrt::syntactic::vec3f> &v,
+                                  std::vector<pbrt::syntactic::vec3f> &n,
+                                  std::vector<pbrt::syntactic::vec3i> &idx);
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
-  /*! namespace for syntax-only parser - this allows to distringuish
+  /*! namespace for syntactic-only parser - this allows to distringuish
     high-level objects such as geometries from objects or transforms,
     but does *not* make any difference between what types of
     geometries, what their parameters mean, etc. Basically, at this
     level a triangle mesh is nothing but a geometry that has a string
     with a given name, and parameters of given names and types */
-  namespace syntax {
+  namespace syntactic {
   
     /*! C++ function that uses the C entry point. We have to use this
         trick to make visual studio happy: in visual studio, the
@@ -653,7 +661,7 @@ namespace pbrt {
     inline Scene::SP readBinary(const std::string &fn)
     {
       Scene::SP scene;
-      pbrt_syntax_readBinary(scene, fn);
+      pbrt_syntactic_readBinary(scene, fn);
       return scene; 
     }
 
@@ -667,9 +675,9 @@ namespace pbrt {
     inline Scene::SP parse(const std::string &fn)
     {
       Scene::SP scene;
-      pbrt_syntax_parse(scene, fn);
+      pbrt_syntactic_parse(scene, fn);
       return scene;
     }
   
-  } // ::pbrt::syntax
+  } // ::pbrt::syntactic
 } // ::pbrt

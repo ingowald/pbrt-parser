@@ -39,8 +39,9 @@ set(pbrt-parser_VERSION_MAJOR 1)
 set(pbrt-parser_VERSION_MINOR 0)
 set(pbrt-parser_VERSION_PATCH 0)
 
-# syntax-only parser
-ADD_SUBDIRECTORY(pbrtParser/syntax)
+# syntactic-only parser
+ADD_SUBDIRECTORY(pbrtParser/syntactic)
+ADD_SUBDIRECTORY(pbrtParser/semantic)
 
 ADD_SUBDIRECTORY(apps)
 

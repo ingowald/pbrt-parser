@@ -23,13 +23,13 @@
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
-  /*! namespace for syntax-only parser - this allows to distringuish
+  /*! namespace for syntactic-only parser - this allows to distringuish
     high-level objects such as geometries from objects or transforms,
     but does *not* make any difference between what types of
     geometries, what their parameters mean, etc. Basically, at this
     level a triangle mesh is nothing but a geometry that has a string
     with a given name, and parameters of given names and types */
-  namespace syntax {
+  namespace syntactic {
   
 #define    FORMAT_MAJOR 1
 #define    FORMAT_MINOR 0
@@ -500,7 +500,7 @@ namespace pbrt {
       } executeWrite();
     }
     
-    void writeBinary(pbrt::syntax::Scene::SP scene,
+    void writeBinary(pbrt::syntactic::Scene::SP scene,
                      const std::string &fileName)
     {
       BinaryWriter writer(fileName);
@@ -868,7 +868,7 @@ namespace pbrt {
 
     /*! given an already created scene, read given binary file, and populate this scene */
     extern "C" PBRT_PARSER_INTERFACE
-    void pbrt_syntax_readBinary(pbrt::syntax::Scene::SP &scene,
+    void pbrt_syntactic_readBinary(pbrt::syntactic::Scene::SP &scene,
                                 const std::string &fileName)
     {
       BinaryReader reader(fileName);
@@ -877,10 +877,10 @@ namespace pbrt {
 
 
     extern "C" PBRT_PARSER_INTERFACE
-    void pbrt_syntax_writeBinary(pbrt::syntax::Scene::SP scene,
+    void pbrt_syntactic_writeBinary(pbrt::syntactic::Scene::SP scene,
                                  const std::string &fileName)
-    { pbrt::syntax::writeBinary(scene,fileName); }
+    { pbrt::syntactic::writeBinary(scene,fileName); }
   
     
-  } // ::pbrt::syntax
+  } // ::pbrt::syntactic
 } // ::pbrt
