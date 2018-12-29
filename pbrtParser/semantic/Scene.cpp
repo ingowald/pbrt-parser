@@ -71,6 +71,70 @@ namespace pbrt {
 
 
 
+
+    box3f Sphere::getPrimBounds(const size_t primID, const affine3f &xfm) 
+    {
+      box3f ob(vec3f(-radius),vec3f(+radius));
+      affine3f _xfm = xfm * transform;
+      
+      box3f bounds;
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.upper.y,ob.upper.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.upper.x,ob.lower.y,ob.lower.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.upper.x,ob.lower.y,ob.upper.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.upper.x,ob.upper.y,ob.lower.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
+      return bounds;
+    }
+    
+    box3f Sphere::getPrimBounds(const size_t primID) 
+    {
+      return getPrimBounds(primID,affine3f(ospcommon::one));
+    }
+    
+    box3f Sphere::getBounds() 
+    {
+      return getPrimBounds(0);
+    }
+    
+
+
+
+
+
+    box3f Disk::getPrimBounds(const size_t primID, const affine3f &xfm) 
+    {
+      box3f ob(vec3f(-radius,-radius,0),vec3f(+radius,+radius,height));
+      affine3f _xfm = xfm * transform;
+      
+      box3f bounds;
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.upper.y,ob.upper.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.upper.x,ob.lower.y,ob.lower.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.upper.x,ob.lower.y,ob.upper.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.upper.x,ob.upper.y,ob.lower.z)));
+      bounds.extend(xfmPoint(_xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
+      return bounds;
+    }
+    
+    box3f Disk::getPrimBounds(const size_t primID) 
+    {
+      return getPrimBounds(primID,affine3f(ospcommon::one));
+    }
+    
+    box3f Disk::getBounds() 
+    {
+      return getPrimBounds(0);
+    }
+    
+
+
+
+    
     box3f QuadMesh::getPrimBounds(const size_t primID, const affine3f &xfm) 
     {
       box3f primBounds;

@@ -66,6 +66,8 @@ namespace pbrt {
       TYPE_WRINKLED_TEXTURE,
       TYPE_FRAME_BUFFER,
       TYPE_TRIANGLE_MESH,
+      TYPE_SPHERE,
+      TYPE_DISK,
     };
     
     /*! a simple buffer for binary data */
@@ -180,6 +182,10 @@ namespace pbrt {
           return std::make_shared<Camera>();
         case TYPE_TRIANGLE_MESH:
           return std::make_shared<TriangleMesh>();
+        case TYPE_SPHERE:
+          return std::make_shared<Sphere>();
+        case TYPE_DISK:
+          return std::make_shared<Disk>();
         case TYPE_INSTANCE:
           return std::make_shared<Instance>();
         case TYPE_OBJECT:
@@ -454,6 +460,48 @@ namespace pbrt {
       binary.read(vertex);
       binary.read(normal);
       binary.read(index);
+    }
+
+
+    /*! serialize out to given binary writer */
+    int Disk::writeTo(BinaryWriter &binary) 
+    {
+      Geometry::writeTo(binary);
+      binary.write(radius);
+      binary.write(height);
+      binary.write(transform);
+      return TYPE_DISK;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void Disk::readFrom(BinaryReader &binary) 
+    {
+      Geometry::readFrom(binary);
+      binary.read(radius);
+      binary.read(height);
+      binary.read(transform);
+    }
+
+
+
+
+    
+
+    /*! serialize out to given binary writer */
+    int Sphere::writeTo(BinaryWriter &binary) 
+    {
+      Geometry::writeTo(binary);
+      binary.write(radius);
+      binary.write(transform);
+      return TYPE_SPHERE;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void Sphere::readFrom(BinaryReader &binary) 
+    {
+      Geometry::readFrom(binary);
+      binary.read(radius);
+      binary.read(transform);
     }
 
 
@@ -905,10 +953,14 @@ namespace pbrt {
     int MetalMaterial::writeTo(BinaryWriter &binary) 
     {
       binary.write(roughness);
+      binary.write(uRoughness);
+      binary.write(vRoughness);
       binary.write(spectrum_eta);
       binary.write(spectrum_k);
       binary.write(binary.serialize(map_bump));
       binary.write(binary.serialize(map_roughness));
+      binary.write(binary.serialize(map_uRoughness));
+      binary.write(binary.serialize(map_vRoughness));
       return TYPE_METAL_MATERIAL;
     }
   
@@ -917,10 +969,14 @@ namespace pbrt {
     {
       Material::readFrom(binary);
       binary.read(roughness);
+      binary.read(uRoughness);
+      binary.read(vRoughness);
       binary.read(spectrum_eta);
       binary.read(spectrum_k);
       binary.read(map_bump);
       binary.read(map_roughness);
+      binary.read(map_uRoughness);
+      binary.read(map_vRoughness);
     }
 
 
@@ -954,6 +1010,7 @@ namespace pbrt {
       binary.write(kd);
       binary.write(ks);
       binary.write(roughness);
+      binary.write(remapRoughness);
       binary.write(binary.serialize(map_roughness));
       binary.write(binary.serialize(map_bump));
       return TYPE_PLASTIC_MATERIAL;
@@ -968,6 +1025,7 @@ namespace pbrt {
       binary.read(kd);
       binary.read(ks);
       binary.read(roughness);
+      binary.read(remapRoughness);
       binary.read(map_roughness);
       binary.read(map_bump);
     }

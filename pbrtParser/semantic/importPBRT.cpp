@@ -193,6 +193,9 @@ namespace pbrt {
               else
                 mat->roughness = in->getParam1f(name);
             }
+            else if (name == "remaproughness") {
+              mat->remapRoughness = in->getParamBool(name);
+            }
             else if (name == "bumpmap") {
               mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
             }
@@ -243,6 +246,18 @@ namespace pbrt {
                 mat->map_roughness = findOrCreateTexture(in->getParamTexture(name));
               else
                 mat->roughness = in->getParam1f(name);
+            }
+            else if (name == "uroughness") {
+              if (in->hasParamTexture(name))
+                mat->map_uRoughness = findOrCreateTexture(in->getParamTexture(name));
+              else
+                mat->uRoughness = in->getParam1f(name);
+            }
+            else if (name == "vroughness") {
+              if (in->hasParamTexture(name))
+                mat->map_vRoughness = findOrCreateTexture(in->getParamTexture(name));
+              else
+                mat->vRoughness = in->getParam1f(name);
             }
             else if (name == "eta") {
               mat->spectrum_eta = in->getParamString(name);
@@ -608,12 +623,42 @@ namespace pbrt {
         return ours;
       }
 
+      Geometry::SP emitSphere(pbrt::syntactic::Shape::SP shape)
+      {
+        Sphere::SP ours = std::make_shared<Sphere>(findOrCreateMaterial(shape->material));
+
+        ours->transform = shape->transform.atStart;
+        ours->radius    = shape->getParam1f("radius");
+        extractTextures(ours,shape);
+      
+        return ours;
+      }
+
+      Geometry::SP emitDisk(pbrt::syntactic::Shape::SP shape)
+      {
+        Disk::SP ours = std::make_shared<Disk>(findOrCreateMaterial(shape->material));
+
+        ours->transform = shape->transform.atStart;
+        ours->radius    = shape->getParam1f("radius");
+        
+        if (shape->hasParam1f("height"))
+          ours->height    = shape->getParam1f("height");
+        
+        extractTextures(ours,shape);
+      
+        return ours;
+      }
+
       Geometry::SP emitGeometry(pbrt::syntactic::Shape::SP shape)
       {
         if (shape->type == "plymesh") 
           return emitPlyMesh(shape);
         if (shape->type == "trianglemesh")
           return emitTriangleMesh(shape);
+        if (shape->type == "sphere")
+          return emitSphere(shape);
+        if (shape->type == "disk")
+          return emitDisk(shape);
 
         // throw std::runtime_error("un-handled shape "+shape->type);
         unhandledShapeTypeCounter[shape->type]++;

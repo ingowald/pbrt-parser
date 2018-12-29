@@ -289,11 +289,15 @@ namespace pbrt {
       /*! serialize _in_ from given binary file reader */
       virtual void readFrom(BinaryReader &) override;
 
-      float roughness;
+      float roughness  { 0.f };
+      Texture::SP map_roughness;
+      float uRoughness { 0.f };
+      Texture::SP map_uRoughness;
+      float vRoughness { 0.f };
+      Texture::SP map_vRoughness;
       std::string spectrum_eta;
       std::string spectrum_k;
       Texture::SP map_bump;
-      Texture::SP map_roughness;
     };
     
     struct TranslucentMaterial : public Material
@@ -330,7 +334,8 @@ namespace pbrt {
       Texture::SP map_ks;
       Texture::SP map_bump;
       float roughness { 0.00030000001f };
-      Texture::SP map_roughness; 
+      Texture::SP map_roughness;
+      bool remapRoughness { false };
    };
     
     struct SubstrateMaterial : public Material
@@ -557,6 +562,73 @@ namespace pbrt {
       box3f bounds;
     };
   
+    /*! a single sphere, with a radius and a transform. note we do
+        _not_ yet apply the transform to update ratius and center, and
+        use the pbrt way of storing them individually (in thoery this
+        allows ellipsoins, too!?) */
+    struct Sphere : public Geometry {
+      typedef std::shared_ptr<Sphere> SP;
+
+      /*! constructor */
+      Sphere(Material::SP material=Material::SP()) : Geometry(material) {}
+    
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "Sphere"; }
+
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+    
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+    
+      virtual size_t getNumPrims() const override
+      {
+        return 1;
+      }
+      virtual box3f getPrimBounds(const size_t primID, const affine3f &xfm) override;
+      virtual box3f getPrimBounds(const size_t primID) override;
+    
+      virtual box3f getBounds() override;
+
+      affine3f transform;
+      float radius { 1.f };
+    };
+
+
+    /*! a single unit disk, with a radius and a transform. note we do
+        _not_ yet apply the transform to update ratius and center, and
+        use the pbrt way of storing them individually (in thoery this
+        allows ellipsoins, too!?) */
+    struct Disk : public Geometry {
+      typedef std::shared_ptr<Disk> SP;
+
+      /*! constructor */
+      Disk(Material::SP material=Material::SP()) : Geometry(material) {}
+    
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "Disk"; }
+
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+    
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+    
+      virtual size_t getNumPrims() const override
+      {
+        return 1;
+      }
+      virtual box3f getPrimBounds(const size_t primID, const affine3f &xfm) override;
+      virtual box3f getPrimBounds(const size_t primID) override;
+    
+      virtual box3f getBounds() override;
+
+      affine3f transform;
+      float radius { 1.f };
+      float height { 0.f };
+    };
+
+
     struct Instance : public Entity {
       Instance() {}
       Instance(const std::shared_ptr<Object> &object,
