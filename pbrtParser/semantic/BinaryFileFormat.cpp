@@ -59,6 +59,8 @@ namespace pbrt {
       TYPE_PTEX_FILE_TEXTURE,
       TYPE_CONSTANT_TEXTURE,
       TYPE_WINDY_TEXTURE,
+      TYPE_MIX_TEXTURE,
+      TYPE_WRINKLED_TEXTURE,
       TYPE_FRAME_BUFFER,
       TYPE_TRIANGLE_MESH,
     };
@@ -137,6 +139,10 @@ namespace pbrt {
           return std::make_shared<ConstantTexture>();
         case TYPE_WINDY_TEXTURE:
           return std::make_shared<WindyTexture>();
+        case TYPE_MIX_TEXTURE:
+          return std::make_shared<MixTexture>();
+        case TYPE_WRINKLED_TEXTURE:
+          return std::make_shared<WrinkledTexture>();
         case TYPE_MATERIAL:
           return std::make_shared<Material>();
         case TYPE_DISNEY_MATERIAL:
@@ -521,6 +527,32 @@ namespace pbrt {
     }
 
 
+    /*! serialize out to given binary writer */
+    int MixTexture::writeTo(BinaryWriter &binary) 
+    {
+      Texture::writeTo(binary);
+      binary.write(binary.serialize(map_amount));
+      binary.write(binary.serialize(tex1));
+      binary.write(binary.serialize(tex2));
+      binary.write(scale1);
+      binary.write(scale2);
+      binary.write(amount);
+      return TYPE_MIX_TEXTURE;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void MixTexture::readFrom(BinaryReader &binary) 
+    {
+      Texture::readFrom(binary);
+      binary.read(map_amount);
+      binary.read(tex1);
+      binary.read(tex2);
+      binary.read(scale1);
+      binary.read(scale2);
+      binary.read(amount);
+    }
+
+
 
 
     /*! serialize out to given binary writer */
@@ -541,7 +573,7 @@ namespace pbrt {
 
 
 
-    /*! serialize out to given binary writer */
+   /*! serialize out to given binary writer */
     int WindyTexture::writeTo(BinaryWriter &binary) 
     {
       Texture::writeTo(binary);
@@ -550,6 +582,23 @@ namespace pbrt {
   
     /*! serialize _in_ from given binary file reader */
     void WindyTexture::readFrom(BinaryReader &binary) 
+    {
+      Texture::readFrom(binary);
+    }
+
+
+
+
+
+    /*! serialize out to given binary writer */
+    int WrinkledTexture::writeTo(BinaryWriter &binary) 
+    {
+      Texture::writeTo(binary);
+      return TYPE_WRINKLED_TEXTURE;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void WrinkledTexture::readFrom(BinaryReader &binary) 
     {
       Texture::readFrom(binary);
     }
@@ -698,6 +747,7 @@ namespace pbrt {
       binary.write(binary.serialize(map_kd));
       binary.write(reflect);
       binary.write(transmit);
+      binary.write(kd);
       return TYPE_TRANSLUCENT_MATERIAL;
     }
   
@@ -708,6 +758,7 @@ namespace pbrt {
       binary.read(map_kd);
       binary.read(reflect);
       binary.read(transmit);
+      binary.read(kd);
     }
 
 

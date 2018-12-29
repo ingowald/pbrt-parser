@@ -198,7 +198,7 @@ namespace pbrt {
       std::shared_ptr<Param> pr = it->second;
       const std::shared_ptr<ParamArray<int>> p = std::dynamic_pointer_cast<ParamArray<int>>(pr);
       if (!p)
-        throw std::runtime_error("1i: found param of given name, but of wrong type!");
+        throw std::runtime_error("1i: found param of given name ("+name+"), but of wrong type!");
       if (p->getSize() != 1) {
         throw std::runtime_error("found param of given name and type, but wrong number of components! (1i, name='"+name+"'");
       }
@@ -213,7 +213,7 @@ namespace pbrt {
       std::shared_ptr<Param> pr = it->second;
       const std::shared_ptr<ParamArray<std::string>> p = std::dynamic_pointer_cast<ParamArray<std::string>>(pr);
       if (!p)
-        throw std::runtime_error("str: found param of given name, but of wrong type!");
+        throw std::runtime_error("str: found param of given name ("+name+"), but of wrong type!");
       if (p->getSize() != 1)
         throw std::runtime_error("found param of given name and type, but wrong number of components! (str, name='"+name+"'");
       return p->get(0);
@@ -227,7 +227,7 @@ namespace pbrt {
       std::shared_ptr<Param> pr = it->second;
       const std::shared_ptr<ParamArray<Texture>> p = std::dynamic_pointer_cast<ParamArray<Texture>>(pr);
       if (!p)
-        throw std::runtime_error("tex: found param of given name, but of wrong type!");
+        throw std::runtime_error("tex: found param of given name ("+name+"), but of wrong type!");
       if (p->getSize() != 1)
         throw std::runtime_error("found param of given name and type, but wrong number of components! (tex, name='"+name+"'");
       return p->texture;
@@ -241,7 +241,7 @@ namespace pbrt {
       std::shared_ptr<Param> pr = it->second;
       const std::shared_ptr<ParamArray<bool>> p = std::dynamic_pointer_cast<ParamArray<bool>>(pr);
       if (!p)
-        throw std::runtime_error("bool: found param of given name, but of wrong type!");
+        throw std::runtime_error("bool: found param of given name ("+name+"), but of wrong type!");
       if (p->getSize() != 1)
         throw std::runtime_error("found param of given name and type, but wrong number of components! (bool, name='"+name+"'");
       return p->get(0);

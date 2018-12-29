@@ -70,6 +70,10 @@ namespace pbrt {
           WindyTexture::SP tex = std::make_shared<WindyTexture>();
           return tex;
         }
+        if (in->mapType == "wrinkled") {
+          WrinkledTexture::SP tex = std::make_shared<WrinkledTexture>();
+          return tex;
+        }
         if (in->mapType == "scale") {
           ScaleTexture::SP tex = std::make_shared<ScaleTexture>();
 #if 1
@@ -92,6 +96,31 @@ namespace pbrt {
           tex->tex1 = findOrCreateTexture(in->attributes->namedTexture[tex1_name]);
           tex->tex2 = findOrCreateTexture(in->attributes->namedTexture[tex2_name]);
 #endif
+          return tex;
+        }
+        if (in->mapType == "mix") {
+          MixTexture::SP tex = std::make_shared<MixTexture>();
+
+          if (in->hasParam3f("amount"))
+            in->getParam3f(&tex->amount.x,"amount");
+          else if (in->hasParam1f("amount"))
+            tex->amount = vec3f(in->getParam1f("amount"));
+          else 
+            tex->map_amount = findOrCreateTexture(in->getParamTexture("amount"));
+          
+          if (in->hasParamTexture("tex1"))
+            tex->tex1 = findOrCreateTexture(in->getParamTexture("tex1"));
+          else if (in->hasParam3f("tex1"))
+            in->getParam3f(&tex->scale1.x,"tex1");
+          else
+            tex->scale1 = vec3f(in->getParam1f("tex1"));
+          
+          if (in->hasParamTexture("tex2"))
+            tex->tex2 = findOrCreateTexture(in->getParamTexture("tex2"));
+          else if (in->hasParam3f("tex2"))
+            in->getParam3f(&tex->scale2.x,"tex2");
+          else
+            tex->scale2 = vec3f(in->getParam1f("tex2"));
           return tex;
         }
         if (in->mapType == "ptex") {
@@ -377,9 +406,11 @@ namespace pbrt {
 
           in->getParam3f(&mat->transmit.x,"transmit");
           in->getParam3f(&mat->reflect.x,"reflect");
-          mat->map_kd = findOrCreateTexture(in->getParamTexture("Kd"));
-          assert(mat->map_kd);
-        
+          if (in->hasParamTexture("Kd"))
+            mat->map_kd = findOrCreateTexture(in->getParamTexture("Kd"));
+          else
+            in->getParam3f(&mat->kd.x,"Kd");
+          
           return mat;
         }
 

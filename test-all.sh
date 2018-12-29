@@ -4,42 +4,6 @@ PBRT_SCENE_PATH=/home/wald/models/pbrt-v3-scenes
 OUTPUT_PATH=/space/pbf/
 
 PBRT_SCENES=" \
-./dambreak/dambreak0.pbrt \
-./dambreak/dambreak1.pbrt \
-./sportscar/f7-37b.pbrt \
-./sportscar/sportscar.pbrt \
-./sportscar/f12-20b.pbrt \
-./sportscar/f12-20a.pbrt \
-./sportscar/f12-19b.pbrt \
-./sportscar/f12-19a.pbrt \
-./sportscar/f7-37a.pbrt \
-./pbrt-book/book.pbrt \
-./volume-caustic/caustic.pbrt \
-./volume-caustic/f16-22b.pbrt \
-./volume-caustic/f16-22a.pbrt \
-./coffee-splash/f15-5.pbrt \
-./coffee-splash/splash.pbrt \
-./caustic-glass/f16-9a.pbrt \
-./caustic-glass/f16-9b.pbrt \
-./caustic-glass/f16-11a.pbrt \
-./caustic-glass/glass.pbrt \
-./caustic-glass/f16-11b.pbrt \
-./caustic-glass/f16-9c.pbrt \
-./sanmiguel/f10-8.pbrt \
-./sanmiguel/f16-21a.pbrt \
-./sanmiguel/f6-17.pbrt \
-./sanmiguel/sanmiguel_cam25.pbrt \
-./sanmiguel/f6-25.pbrt \
-./sanmiguel/sanmiguel_cam3.pbrt \
-./sanmiguel/f16-21b.pbrt \
-./sanmiguel/sanmiguel_cam18.pbrt \
-./sanmiguel/sanmiguel_cam15.pbrt \
-./sanmiguel/sanmiguel_cam14.pbrt \
-./sanmiguel/sanmiguel_cam1.pbrt \
-./sanmiguel/f16-21c.pbrt \
-./sanmiguel/sanmiguel_cam4.pbrt \
-./sanmiguel/sanmiguel_cam20.pbrt \
-./sanmiguel/sanmiguel.pbrt \
 ./villa/villa-photons.pbrt \
 ./villa/f16-20b.pbrt \
 ./villa/villa-lights-on.pbrt \
@@ -171,6 +135,42 @@ PBRT_SCENES=" \
 ./lte-orb/lte-orb-roughglass.pbrt \
 ./lte-orb/lte-orb-silver.pbrt \
 ./tt/tt.pbrt \
+./dambreak/dambreak0.pbrt \
+./dambreak/dambreak1.pbrt \
+./sportscar/f7-37b.pbrt \
+./sportscar/sportscar.pbrt \
+./sportscar/f12-20b.pbrt \
+./sportscar/f12-20a.pbrt \
+./sportscar/f12-19b.pbrt \
+./sportscar/f12-19a.pbrt \
+./sportscar/f7-37a.pbrt \
+./pbrt-book/book.pbrt \
+./volume-caustic/caustic.pbrt \
+./volume-caustic/f16-22b.pbrt \
+./volume-caustic/f16-22a.pbrt \
+./coffee-splash/f15-5.pbrt \
+./coffee-splash/splash.pbrt \
+./caustic-glass/f16-9a.pbrt \
+./caustic-glass/f16-9b.pbrt \
+./caustic-glass/f16-11a.pbrt \
+./caustic-glass/glass.pbrt \
+./caustic-glass/f16-11b.pbrt \
+./caustic-glass/f16-9c.pbrt \
+./sanmiguel/f10-8.pbrt \
+./sanmiguel/f16-21a.pbrt \
+./sanmiguel/f6-17.pbrt \
+./sanmiguel/sanmiguel_cam25.pbrt \
+./sanmiguel/f6-25.pbrt \
+./sanmiguel/sanmiguel_cam3.pbrt \
+./sanmiguel/f16-21b.pbrt \
+./sanmiguel/sanmiguel_cam18.pbrt \
+./sanmiguel/sanmiguel_cam15.pbrt \
+./sanmiguel/sanmiguel_cam14.pbrt \
+./sanmiguel/sanmiguel_cam1.pbrt \
+./sanmiguel/f16-21c.pbrt \
+./sanmiguel/sanmiguel_cam4.pbrt \
+./sanmiguel/sanmiguel_cam20.pbrt \
+./sanmiguel/sanmiguel.pbrt \
 "
 
 
@@ -181,5 +181,6 @@ for scene in $PBRT_SCENES; do
     mkdir -p $OUTPUT_PATH/$dir
     base=`basename $scene .pbrt`
     ./pbrt2pbf $PBRT_SCENE_PATH/$scene -o $OUTPUT_PATH/$dir/$base.pbf
+    ./pbfInfo $OUTPUT_PATH/$dir/$base.pbf
 done
 

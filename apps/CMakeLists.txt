@@ -27,3 +27,7 @@ TARGET_LINK_LIBRARIES(pbrt2pbsf pbrtParser_syntactic)
 # '.pbrt' to '.pbf' (pbrt binary format) converter
 ADD_EXECUTABLE(pbrt2pbf pbrt2pbf.cpp)
 TARGET_LINK_LIBRARIES(pbrt2pbf pbrtParser_semantic)
+
+ADD_EXECUTABLE(pbfInfo pbfInfo.cpp)
+TARGET_LINK_LIBRARIES(pbfInfo pbrtParser_semantic)
+

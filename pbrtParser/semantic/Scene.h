@@ -155,6 +155,17 @@ namespace pbrt {
       virtual void readFrom(BinaryReader &) override;
     };
   
+    struct WrinkledTexture : public Texture {
+      typedef std::shared_ptr<WrinkledTexture> SP;
+
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "WrinkledTexture"; }
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+    };
+  
     struct ScaleTexture : public Texture {
       typedef std::shared_ptr<ScaleTexture> SP;
 
@@ -165,6 +176,23 @@ namespace pbrt {
       /*! serialize _in_ from given binary file reader */
       virtual void readFrom(BinaryReader &) override;
 
+      Texture::SP tex1, tex2;
+      vec3f scale1 { 1.f };
+      vec3f scale2 { 1.f };
+    };
+  
+    struct MixTexture : public Texture {
+      typedef std::shared_ptr<MixTexture> SP;
+
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "MixTexture"; }
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+
+      vec3f amount { 1.f };
+      Texture::SP map_amount;
       Texture::SP tex1, tex2;
       vec3f scale1 { 1.f };
       vec3f scale2 { 1.f };
@@ -254,6 +282,7 @@ namespace pbrt {
 
       vec3f transmit { 1.f, 1.f, 1.f };
       vec3f reflect  { 0.f, 0.f, 0.f };
+      vec3f kd;
       Texture::SP map_kd;
     };
     
