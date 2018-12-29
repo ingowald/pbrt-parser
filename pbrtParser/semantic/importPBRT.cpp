@@ -73,8 +73,19 @@ namespace pbrt {
         if (in->mapType == "scale") {
           ScaleTexture::SP tex = std::make_shared<ScaleTexture>();
 #if 1
-          tex->tex1 = findOrCreateTexture(in->getParamTexture("tex1"));
-          tex->tex2 = findOrCreateTexture(in->getParamTexture("tex2"));
+          if (in->hasParamTexture("tex1"))
+            tex->tex1 = findOrCreateTexture(in->getParamTexture("tex1"));
+          else if (in->hasParam3f("tex1"))
+            in->getParam3f(&tex->scale1.x,"tex1");
+          else
+            tex->scale1 = vec3f(in->getParam1f("tex1"));
+          
+          if (in->hasParamTexture("tex2"))
+            tex->tex2 = findOrCreateTexture(in->getParamTexture("tex2"));
+          else if (in->hasParam3f("tex2"))
+            in->getParam3f(&tex->scale2.x,"tex2");
+          else
+            tex->scale2 = vec3f(in->getParam1f("tex2"));
 #else
           std::string tex1_name = in->getParamString("tex1");
           std::string tex2_name = in->getParamString("tex2");
@@ -138,7 +149,10 @@ namespace pbrt {
                 in->getParam3f(&mat->ks.x,name);
             }
             else if (name == "roughness") {
-              mat->roughness = in->getParam1f(name);
+              if (in->hasParamTexture(name))
+                mat->map_roughness = findOrCreateTexture(in->getParamTexture(name));
+              else
+                mat->roughness = in->getParam1f(name);
             }
             else if (name == "bumpmap") {
               mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
@@ -164,10 +178,16 @@ namespace pbrt {
                 in->getParam3f(&mat->kd.x,name);
             }
             else if (name == "sigma") {
-              mat->sigma = in->getParam1f(name);
+              if (in->hasParam1f(name))
+                mat->sigma = in->getParam1f(name);
+              else 
+                mat->map_sigma = findOrCreateTexture(in->getParamTexture(name));
             }
             else if (name == "type") {
               /* ignore */
+            }
+            else if (name == "bumpmap") {
+              mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
             } else
               throw std::runtime_error("un-handled matte-material parameter '"+it.first+"'");
           };

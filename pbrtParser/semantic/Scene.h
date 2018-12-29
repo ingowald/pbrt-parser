@@ -166,6 +166,8 @@ namespace pbrt {
       virtual void readFrom(BinaryReader &) override;
 
       Texture::SP tex1, tex2;
+      vec3f scale1 { 1.f };
+      vec3f scale2 { 1.f };
     };
   
     struct ConstantTexture : public Texture {
@@ -272,7 +274,8 @@ namespace pbrt {
       Texture::SP map_ks;
       Texture::SP map_bump;
       float roughness { 0.00030000001f };
-    };
+      Texture::SP map_roughness; 
+   };
     
     struct MirrorMaterial : public Material
     {
@@ -318,6 +321,8 @@ namespace pbrt {
       vec3f kd { .65f };
       Texture::SP map_kd;
       float sigma { 10 };
+      Texture::SP map_sigma;
+      Texture::SP map_bump;
     };
     
     struct GlassMaterial : public Material

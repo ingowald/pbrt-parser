@@ -505,6 +505,8 @@ namespace pbrt {
       Texture::writeTo(binary);
       binary.write(binary.serialize(tex1));
       binary.write(binary.serialize(tex2));
+      binary.write(scale1);
+      binary.write(scale2);
       return TYPE_SCALE_TEXTURE;
     }
   
@@ -514,6 +516,8 @@ namespace pbrt {
       Texture::readFrom(binary);
       binary.read(tex1);
       binary.read(tex2);
+      binary.read(scale1);
+      binary.read(scale2);
     }
 
 
@@ -736,6 +740,8 @@ namespace pbrt {
       binary.write(binary.serialize(map_kd));
       binary.write(kd);
       binary.write(sigma);
+      binary.write(binary.serialize(map_sigma));
+      binary.write(binary.serialize(map_bump));
       return TYPE_MATTE_MATERIAL;
     }
   
@@ -746,6 +752,8 @@ namespace pbrt {
       binary.read(map_kd);
       binary.read(kd);
       binary.read(sigma);
+      binary.read(map_sigma);
+      binary.read(map_bump);
     }
 
 
@@ -817,6 +825,7 @@ namespace pbrt {
       binary.write(kd);
       binary.write(ks);
       binary.write(roughness);
+      binary.write(binary.serialize(map_roughness));
       binary.write(binary.serialize(map_bump));
       return TYPE_PLASTIC_MATERIAL;
     }
@@ -830,6 +839,7 @@ namespace pbrt {
       binary.read(kd);
       binary.read(ks);
       binary.read(roughness);
+      binary.read(map_roughness);
       binary.read(map_bump);
     }
 

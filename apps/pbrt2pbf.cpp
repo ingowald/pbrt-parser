@@ -74,11 +74,16 @@ namespace pbrt {
       
       std::cout << "-------------------------------------------------------" << std::endl;
       std::cout << "parsing pbrt file " << inFileName << std::endl;
-      Scene::SP scene = importPBRT(inFileName);
-      std::cout << "done importing scene." << std::endl;
-      std::cout << "writing to binary file " << outFileName << std::endl;
-      scene->saveTo(outFileName);
-      std::cout << " => yay! writing successful..." << std::endl;
+      // try {
+        Scene::SP scene = importPBRT(inFileName);
+        std::cout << "\033[1;32m done importing scene.\033[0m" << std::endl;
+        std::cout << "writing to binary file " << outFileName << std::endl;
+        scene->saveTo(outFileName);
+        std::cout << "\033[1;32m => yay! writing successful...\033[0m" << std::endl;
+      // } catch (std::runtime_error &e) {
+      //   cout << "\033[1;31mError in parsing: " << e.what() << "\033[0m\n";
+      //   throw e;
+      // }
     }
 
     extern "C" int main(int ac, char **av)

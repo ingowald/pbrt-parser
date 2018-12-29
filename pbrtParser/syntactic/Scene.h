@@ -241,6 +241,14 @@ namespace pbrt {
           findParam<float>(name)->size() == 1
           ;
       }
+      bool hasParam3f(const std::string &name) const
+      {
+        return
+          (bool)findParam<float>(name)
+          &&
+          findParam<float>(name)->size() == 3
+          ;
+      }
     
       template<typename T>
         std::shared_ptr<ParamArray<T> > findParam(const std::string &name) const {
