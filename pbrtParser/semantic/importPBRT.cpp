@@ -70,6 +70,12 @@ namespace pbrt {
           WindyTexture::SP tex = std::make_shared<WindyTexture>();
           return tex;
         }
+        if (in->mapType == "marble") {
+          MarbleTexture::SP tex = std::make_shared<MarbleTexture>();
+          if (in->hasParam1f("scale"))
+            tex->scale = in->getParam1f("scale");
+          return tex;
+        }
         if (in->mapType == "wrinkled") {
           WrinkledTexture::SP tex = std::make_shared<WrinkledTexture>();
           return tex;

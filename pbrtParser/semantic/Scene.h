@@ -155,6 +155,19 @@ namespace pbrt {
       virtual void readFrom(BinaryReader &) override;
     };
   
+    struct MarbleTexture : public Texture {
+      typedef std::shared_ptr<MarbleTexture> SP;
+
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "MarbleTexture"; }
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+
+      float scale { 1.f };
+    };
+  
     struct WrinkledTexture : public Texture {
       typedef std::shared_ptr<WrinkledTexture> SP;
 
