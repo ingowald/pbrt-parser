@@ -53,7 +53,7 @@ namespace pbrt {
       TYPE_TRANSLUCENT_MATERIAL,
       TYPE_TEXTURE,
       TYPE_IMAGE_TEXTURE,
-      TYPE_PTEX_TEXTURE,
+      TYPE_PTEX_FILE_TEXTURE,
       TYPE_CONSTANT_TEXTURE,
       TYPE_WINDY_TEXTURE,
       TYPE_FRAME_BUFFER,
@@ -126,8 +126,8 @@ namespace pbrt {
           return std::make_shared<Texture>();
         case TYPE_IMAGE_TEXTURE:
           return std::make_shared<ImageTexture>();
-        case TYPE_PTEX_TEXTURE:
-          return std::make_shared<PtexTexture>();
+        case TYPE_PTEX_FILE_TEXTURE:
+          return std::make_shared<PtexFileTexture>();
         case TYPE_CONSTANT_TEXTURE:
           return std::make_shared<ConstantTexture>();
         case TYPE_WINDY_TEXTURE:
@@ -491,15 +491,15 @@ namespace pbrt {
 
 
     /*! serialize out to given binary writer */
-    int PtexTexture::writeTo(BinaryWriter &binary) 
+    int PtexFileTexture::writeTo(BinaryWriter &binary) 
     {
       Texture::writeTo(binary);
       binary.write(fileName);
-      return TYPE_PTEX_TEXTURE;
+      return TYPE_PTEX_FILE_TEXTURE;
     }
   
     /*! serialize _in_ from given binary file reader */
-    void PtexTexture::readFrom(BinaryReader &binary) 
+    void PtexFileTexture::readFrom(BinaryReader &binary) 
     {
       Texture::readFrom(binary);
       binary.read(fileName);

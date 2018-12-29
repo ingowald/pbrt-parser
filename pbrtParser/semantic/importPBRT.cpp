@@ -71,7 +71,7 @@ namespace pbrt {
           const std::string fileName = in->getParamString("filename");
           if (fileName == "")
             std::cerr << "warning: pbrt image texture, but no filename!?" << std::endl;
-          return std::make_shared<PtexTexture>(fileName);
+          return std::make_shared<PtexFileTexture>(fileName);
         }
         throw std::runtime_error("un-handled pbrt texture type '"+in->toString()+"'");
         return std::make_shared<Texture>();

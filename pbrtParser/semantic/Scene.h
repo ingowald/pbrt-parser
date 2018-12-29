@@ -129,13 +129,13 @@ namespace pbrt {
     /*! a texture defined by a disney ptex file. these are kind-of like
       image textures, but also kind-of not, so we handle them
       separately */
-    struct PtexTexture : public Texture {
-      typedef std::shared_ptr<PtexTexture> SP;
+    struct PtexFileTexture : public Texture {
+      typedef std::shared_ptr<PtexFileTexture> SP;
 
-      PtexTexture(const std::string &fileName="") : fileName(fileName) {}
+      PtexFileTexture(const std::string &fileName="") : fileName(fileName) {}
     
       /*! pretty-printer, for debugging */
-      virtual std::string toString() const override { return "PtexTexture"; }
+      virtual std::string toString() const override { return "PtexFileTexture"; }
       /*! serialize out to given binary writer */
       virtual int writeTo(BinaryWriter &) override;
       /*! serialize _in_ from given binary file reader */
