@@ -229,13 +229,19 @@ namespace pbrt {
           for (auto it : in->param) {
             std::string name = it.first;
             if (name == "roughness") {
-              mat->roughness = in->getParam1f(name);
+              if (in->hasParamTexture(name))
+                mat->map_roughness = findOrCreateTexture(in->getParamTexture(name));
+              else
+                mat->roughness = in->getParam1f(name);
             }
             else if (name == "eta") {
               mat->spectrum_eta = in->getParamString(name);
             }
             else if (name == "k") {
               mat->spectrum_k = in->getParamString(name);
+            }
+            else if (name == "bumpmap") {
+              mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
             }
             else if (name == "type") {
               /* ignore */
@@ -414,9 +420,12 @@ namespace pbrt {
         // ==================================================================
         if (type == "mix") {
           MixMaterial::SP mat = std::make_shared<MixMaterial>();
-
-          in->getParam3f(&mat->mix.x,"amount");
-
+          
+          if (in->hasParamTexture("amount"))
+            mat->map_amount = findOrCreateTexture(in->getParamTexture("amount"));
+          else
+            in->getParam3f(&mat->amount.x,"amount");
+          
           const std::string name0 = in->getParamString("namedmaterial1");
           if (name0 == "")
             throw std::runtime_error("mix material w/o 'namedmaterial1' parameter");

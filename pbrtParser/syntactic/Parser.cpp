@@ -436,7 +436,8 @@ namespace pbrt {
           attributesStack.top()->namedMaterial[name] = material;
           // scene->namedMaterials[name] = material;
           parseParams(material->param);
-
+          material->attributes = attributesStack.top();
+          
           /* named material have the parameter type implicitly as a
              parameter rather than explicitly on the
              'makenamedmaterial' command; so let's parse this here */

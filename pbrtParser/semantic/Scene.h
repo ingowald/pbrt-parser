@@ -250,7 +250,8 @@ namespace pbrt {
       virtual void readFrom(BinaryReader &) override;
 
       Material::SP material0, material1;
-      vec3f mix;
+      vec3f amount;
+      Texture::SP map_amount;
     };
     
     struct MetalMaterial : public Material
@@ -267,6 +268,8 @@ namespace pbrt {
       float roughness;
       std::string spectrum_eta;
       std::string spectrum_k;
+      Texture::SP map_bump;
+      Texture::SP map_roughness;
     };
     
     struct TranslucentMaterial : public Material

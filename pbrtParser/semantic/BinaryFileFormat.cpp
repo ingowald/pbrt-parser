@@ -160,6 +160,8 @@ namespace pbrt {
           return std::make_shared<PlasticMaterial>();
         case TYPE_MIRROR_MATERIAL:
           return std::make_shared<MirrorMaterial>();
+        case TYPE_SUBSTRATE_MATERIAL:
+          return std::make_shared<SubstrateMaterial>();
         case TYPE_MATTE_MATERIAL:
           return std::make_shared<MatteMaterial>();
         case TYPE_FOURIER_MATERIAL:
@@ -754,7 +756,8 @@ namespace pbrt {
     {
       binary.write(binary.serialize(material0));
       binary.write(binary.serialize(material1));
-      binary.write(mix);
+      binary.write(binary.serialize(map_amount));
+      binary.write(amount);
       return TYPE_MIX_MATERIAL;
     }
   
@@ -764,7 +767,8 @@ namespace pbrt {
       Material::readFrom(binary);
       binary.read(material0);
       binary.read(material1);
-      binary.read(mix);
+      binary.read(map_amount);
+      binary.read(amount);
     }
 
 
@@ -863,6 +867,8 @@ namespace pbrt {
       binary.write(roughness);
       binary.write(spectrum_eta);
       binary.write(spectrum_k);
+      binary.write(binary.serialize(map_bump));
+      binary.write(binary.serialize(map_roughness));
       return TYPE_METAL_MATERIAL;
     }
   
@@ -873,6 +879,8 @@ namespace pbrt {
       binary.read(roughness);
       binary.read(spectrum_eta);
       binary.read(spectrum_k);
+      binary.read(map_bump);
+      binary.read(map_roughness);
     }
 
 

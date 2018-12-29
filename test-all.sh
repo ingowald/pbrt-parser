@@ -4,15 +4,6 @@ PBRT_SCENE_PATH=/home/wald/models/pbrt-v3-scenes
 OUTPUT_PATH=/space/pbf/
 
 PBRT_SCENES=" \
-./villa/villa-photons.pbrt \
-./villa/f16-20b.pbrt \
-./villa/villa-lights-on.pbrt \
-./villa/f16-20c.pbrt \
-./villa/villa-daylight.pbrt \
-./villa/f16-20a.pbrt \
-./contemporary-bathroom/contemporary-bathroom.pbrt \
-./barcelona-pavilion/pavilion-night.pbrt \
-./barcelona-pavilion/pavilion-day.pbrt \
 ./crown/crown.pbrt \
 ./vw-van/vw-van.pbrt \
 ./ecosys/ecosys.pbrt \
@@ -171,6 +162,15 @@ PBRT_SCENES=" \
 ./sanmiguel/sanmiguel_cam4.pbrt \
 ./sanmiguel/sanmiguel_cam20.pbrt \
 ./sanmiguel/sanmiguel.pbrt \
+./villa/villa-photons.pbrt \
+./villa/f16-20b.pbrt \
+./villa/villa-lights-on.pbrt \
+./villa/f16-20c.pbrt \
+./villa/villa-daylight.pbrt \
+./villa/f16-20a.pbrt \
+./contemporary-bathroom/contemporary-bathroom.pbrt \
+./barcelona-pavilion/pavilion-night.pbrt \
+./barcelona-pavilion/pavilion-day.pbrt \
 "
 
 
