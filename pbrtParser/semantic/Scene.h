@@ -144,6 +144,17 @@ namespace pbrt {
       std::string fileName;
     };
   
+    struct FbmTexture : public Texture {
+      typedef std::shared_ptr<FbmTexture> SP;
+
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "FbmTexture"; }
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+    };
+  
     struct WindyTexture : public Texture {
       typedef std::shared_ptr<WindyTexture> SP;
 

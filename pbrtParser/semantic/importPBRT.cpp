@@ -66,6 +66,10 @@ namespace pbrt {
             in->getParam3f(&tex->value.x,"value");
           return tex;
         }
+        if (in->mapType == "fbm") {
+          FbmTexture::SP tex = std::make_shared<FbmTexture>();
+          return tex;
+        }
         if (in->mapType == "windy") {
           WindyTexture::SP tex = std::make_shared<WindyTexture>();
           return tex;

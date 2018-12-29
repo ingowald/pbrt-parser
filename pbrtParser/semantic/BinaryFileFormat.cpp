@@ -60,6 +60,7 @@ namespace pbrt {
       TYPE_PTEX_FILE_TEXTURE,
       TYPE_CONSTANT_TEXTURE,
       TYPE_WINDY_TEXTURE,
+      TYPE_FBM_TEXTURE,
       TYPE_MARBLE_TEXTURE,
       TYPE_MIX_TEXTURE,
       TYPE_WRINKLED_TEXTURE,
@@ -141,6 +142,8 @@ namespace pbrt {
           return std::make_shared<ConstantTexture>();
         case TYPE_WINDY_TEXTURE:
           return std::make_shared<WindyTexture>();
+        case TYPE_FBM_TEXTURE:
+          return std::make_shared<FbmTexture>();
         case TYPE_MARBLE_TEXTURE:
           return std::make_shared<MarbleTexture>();
         case TYPE_MIX_TEXTURE:
@@ -588,6 +591,22 @@ namespace pbrt {
   
     /*! serialize _in_ from given binary file reader */
     void WindyTexture::readFrom(BinaryReader &binary) 
+    {
+      Texture::readFrom(binary);
+    }
+
+
+
+
+   /*! serialize out to given binary writer */
+    int FbmTexture::writeTo(BinaryWriter &binary) 
+    {
+      Texture::writeTo(binary);
+      return TYPE_FBM_TEXTURE;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void FbmTexture::readFrom(BinaryReader &binary) 
     {
       Texture::readFrom(binary);
     }
