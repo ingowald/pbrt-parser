@@ -49,6 +49,7 @@ namespace pbrt {
       TYPE_GLASS_MATERIAL,
       TYPE_MIRROR_MATERIAL,
       TYPE_MATTE_MATERIAL,
+      TYPE_SUBSTRATE_MATERIAL,
       TYPE_FOURIER_MATERIAL,
       TYPE_METAL_MATERIAL,
       TYPE_PLASTIC_MATERIAL,
@@ -714,6 +715,35 @@ namespace pbrt {
       binary.read(index);
       binary.read(roughness);
       binary.read(map_bump);
+    }
+
+
+
+
+    /*! serialize out to given binary writer */
+    int SubstrateMaterial::writeTo(BinaryWriter &binary) 
+    {
+      binary.write(kd);
+      binary.write(binary.serialize(map_kd));
+      binary.write(ks);
+      binary.write(binary.serialize(map_ks));
+      binary.write(binary.serialize(map_bump));
+      binary.write(uRoughness);
+      binary.write(vRoughness);
+      return TYPE_SUBSTRATE_MATERIAL;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void SubstrateMaterial::readFrom(BinaryReader &binary) 
+    {
+      Material::readFrom(binary);
+      binary.read(kd);
+      binary.read(map_kd);
+      binary.read(ks);
+      binary.read(map_ks);
+      binary.read(map_bump);
+      binary.read(uRoughness);
+      binary.read(vRoughness);
     }
 
 

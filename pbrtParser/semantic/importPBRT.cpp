@@ -355,6 +355,42 @@ namespace pbrt {
         }
       
         // ==================================================================
+        if (type == "substrate") {
+          SubstrateMaterial::SP mat = std::make_shared<SubstrateMaterial>();
+          for (auto it : in->param) {
+            std::string name = it.first;
+            if (name == "Kd") {
+              if (in->hasParamTexture(name)) {
+                mat->kd = vec3f(1.f);
+                mat->map_kd = findOrCreateTexture(in->getParamTexture(name));
+              } else
+                in->getParam3f(&mat->kd.x,name);
+            }
+            else if (name == "Ks") {
+              if (in->hasParamTexture(name)) {
+                mat->ks = vec3f(1.f);
+                mat->map_ks = findOrCreateTexture(in->getParamTexture(name));
+              } else
+                in->getParam3f(&mat->ks.x,name);
+            }
+            else if (name == "uroughness") {
+              mat->uRoughness = in->getParam1f(name);
+            }
+            else if (name == "vroughness") {
+              mat->vRoughness = in->getParam1f(name);
+            }
+            else if (name == "bumpmap") {
+              mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
+            }
+            else if (name == "type") {
+              /* ignore */
+            } else
+              throw std::runtime_error("un-handled substrate-material parameter '"+it.first+"'");
+          };
+          return mat;
+        }
+      
+        // ==================================================================
         if (type == "disney") {
           DisneyMaterial::SP mat = std::make_shared<DisneyMaterial>();
 

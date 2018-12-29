@@ -306,6 +306,27 @@ namespace pbrt {
       Texture::SP map_roughness; 
    };
     
+    struct SubstrateMaterial : public Material
+    {
+      typedef std::shared_ptr<SubstrateMaterial> SP;
+    
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "SubstrateMaterial"; }
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+
+      float uRoughness { .001 };
+      float vRoughness { .001 };
+
+      vec3f kd { .65f };
+      Texture::SP map_kd;
+      vec3f ks { .0f };
+      Texture::SP map_ks;
+      Texture::SP map_bump;
+   };
+    
     struct MirrorMaterial : public Material
     {
       typedef std::shared_ptr<MirrorMaterial> SP;
