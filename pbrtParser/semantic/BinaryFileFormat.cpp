@@ -49,10 +49,13 @@ namespace pbrt {
       TYPE_GLASS_MATERIAL,
       TYPE_MIRROR_MATERIAL,
       TYPE_MATTE_MATERIAL,
+      TYPE_FOURIER_MATERIAL,
+      TYPE_METAL_MATERIAL,
       TYPE_PLASTIC_MATERIAL,
       TYPE_TRANSLUCENT_MATERIAL,
       TYPE_TEXTURE,
       TYPE_IMAGE_TEXTURE,
+      TYPE_SCALE_TEXTURE,
       TYPE_PTEX_FILE_TEXTURE,
       TYPE_CONSTANT_TEXTURE,
       TYPE_WINDY_TEXTURE,
@@ -126,6 +129,8 @@ namespace pbrt {
           return std::make_shared<Texture>();
         case TYPE_IMAGE_TEXTURE:
           return std::make_shared<ImageTexture>();
+        case TYPE_SCALE_TEXTURE:
+          return std::make_shared<ScaleTexture>();
         case TYPE_PTEX_FILE_TEXTURE:
           return std::make_shared<PtexFileTexture>();
         case TYPE_CONSTANT_TEXTURE:
@@ -150,6 +155,10 @@ namespace pbrt {
           return std::make_shared<MirrorMaterial>();
         case TYPE_MATTE_MATERIAL:
           return std::make_shared<MatteMaterial>();
+        case TYPE_FOURIER_MATERIAL:
+          return std::make_shared<FourierMaterial>();
+        case TYPE_METAL_MATERIAL:
+          return std::make_shared<MetalMaterial>();
         case TYPE_FRAME_BUFFER:
           return std::make_shared<FrameBuffer>(vec2i(0));
         case TYPE_CAMERA:
@@ -491,6 +500,26 @@ namespace pbrt {
 
 
     /*! serialize out to given binary writer */
+    int ScaleTexture::writeTo(BinaryWriter &binary) 
+    {
+      Texture::writeTo(binary);
+      binary.write(binary.serialize(tex1));
+      binary.write(binary.serialize(tex2));
+      return TYPE_SCALE_TEXTURE;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void ScaleTexture::readFrom(BinaryReader &binary) 
+    {
+      Texture::readFrom(binary);
+      binary.read(tex1);
+      binary.read(tex2);
+    }
+
+
+
+
+    /*! serialize out to given binary writer */
     int PtexFileTexture::writeTo(BinaryWriter &binary) 
     {
       Texture::writeTo(binary);
@@ -592,17 +621,21 @@ namespace pbrt {
     int UberMaterial::writeTo(BinaryWriter &binary) 
     {
       binary.write(kd);
+      binary.write(binary.serialize(map_kd));
       binary.write(ks);
+      binary.write(binary.serialize(map_ks));
       binary.write(kr);
+      binary.write(binary.serialize(map_kr));
+      binary.write(kt);
+      binary.write(binary.serialize(map_kt));
+      binary.write(opacity);
+      binary.write(binary.serialize(map_opacity));
       binary.write(alpha);
+      binary.write(binary.serialize(map_alpha));
+      binary.write(shadowAlpha);
+      binary.write(binary.serialize(map_shadowAlpha));
       binary.write(index);
       binary.write(roughness);
-      binary.write(shadowAlpha);
-      binary.write(binary.serialize(map_kd));
-      binary.write(binary.serialize(map_kr));
-      binary.write(binary.serialize(map_ks));
-      binary.write(binary.serialize(map_alpha));
-      binary.write(binary.serialize(map_shadowAlpha));
       binary.write(binary.serialize(map_bump));
       return TYPE_UBER_MATERIAL;
     }
@@ -612,17 +645,21 @@ namespace pbrt {
     {
       Material::readFrom(binary);
       binary.read(kd);
+      binary.read(map_kd);
       binary.read(ks);
+      binary.read(map_ks);
       binary.read(kr);
+      binary.read(map_kr);
+      binary.read(kt);
+      binary.read(map_kt);
+      binary.read(opacity);
+      binary.read(map_opacity);
       binary.read(alpha);
+      binary.read(map_alpha);
+      binary.read(shadowAlpha);
+      binary.read(map_shadowAlpha);
       binary.read(index);
       binary.read(roughness);
-      binary.read(shadowAlpha);
-      binary.read(map_kd);
-      binary.read(map_kr);
-      binary.read(map_ks);
-      binary.read(map_alpha);
-      binary.read(map_shadowAlpha);
       binary.read(map_bump);
     }
 
@@ -698,6 +735,7 @@ namespace pbrt {
     {
       binary.write(binary.serialize(map_kd));
       binary.write(kd);
+      binary.write(sigma);
       return TYPE_MATTE_MATERIAL;
     }
   
@@ -707,6 +745,45 @@ namespace pbrt {
       Material::readFrom(binary);
       binary.read(map_kd);
       binary.read(kd);
+      binary.read(sigma);
+    }
+
+
+
+
+    /*! serialize out to given binary writer */
+    int FourierMaterial::writeTo(BinaryWriter &binary) 
+    {
+      binary.write(fileName);
+      return TYPE_FOURIER_MATERIAL;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void FourierMaterial::readFrom(BinaryReader &binary) 
+    {
+      Material::readFrom(binary);
+      binary.read(fileName);
+    }
+
+
+
+
+    /*! serialize out to given binary writer */
+    int MetalMaterial::writeTo(BinaryWriter &binary) 
+    {
+      binary.write(roughness);
+      binary.write(spectrum_eta);
+      binary.write(spectrum_k);
+      return TYPE_METAL_MATERIAL;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void MetalMaterial::readFrom(BinaryReader &binary) 
+    {
+      Material::readFrom(binary);
+      binary.read(roughness);
+      binary.read(spectrum_eta);
+      binary.read(spectrum_k);
     }
 
 
@@ -739,6 +816,8 @@ namespace pbrt {
       binary.write(binary.serialize(map_ks));
       binary.write(kd);
       binary.write(ks);
+      binary.write(roughness);
+      binary.write(binary.serialize(map_bump));
       return TYPE_PLASTIC_MATERIAL;
     }
   
@@ -750,6 +829,8 @@ namespace pbrt {
       binary.read(map_ks);
       binary.read(kd);
       binary.read(ks);
+      binary.read(roughness);
+      binary.read(map_bump);
     }
 
 

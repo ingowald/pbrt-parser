@@ -35,7 +35,7 @@ namespace pbrt {
     {
       if (msg != "")
         std::cerr << "Error: " << msg << std::endl << std::endl;
-      std::cout << "./pbrt2pbf inFile.pbrt|inFile.pbsf <args>" << std::endl;
+      std::cout << "./pbrt2pbf inFile.pbrt|inFile.pbf <args>" << std::endl;
       std::cout << std::endl;
       std::cout << "  -o <out.pbf>   : where to write the output to" << std::endl;
       std::cout << "                   (tris to quads, removing reundant fields, etc)" << std::endl;
@@ -67,9 +67,9 @@ namespace pbrt {
       if (inFileName == "")
         usage("no input pbrt file specified");
 
-      if (!endsWith(outFileName,".pbsf")) {
+      if (!endsWith(outFileName,".pbf")) {
         std::cout << "output file name missing '.pbsf' extension - adding it ..." << std::endl;
-        outFileName = outFileName+".pbsf";
+        outFileName = outFileName+".pbf";
       }
       
       std::cout << "-------------------------------------------------------" << std::endl;

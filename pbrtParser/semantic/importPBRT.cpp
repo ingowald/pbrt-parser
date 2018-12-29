@@ -60,11 +60,27 @@ namespace pbrt {
         }
         if (in->mapType == "constant") {
           ConstantTexture::SP tex = std::make_shared<ConstantTexture>();
-          in->getParam3f(&tex->value.x,"value");
+          if (in->hasParam1f("value"))
+            tex->value = vec3f(in->getParam1f("value"));
+          else
+            in->getParam3f(&tex->value.x,"value");
           return tex;
         }
         if (in->mapType == "windy") {
           WindyTexture::SP tex = std::make_shared<WindyTexture>();
+          return tex;
+        }
+        if (in->mapType == "scale") {
+          ScaleTexture::SP tex = std::make_shared<ScaleTexture>();
+#if 1
+          tex->tex1 = findOrCreateTexture(in->getParamTexture("tex1"));
+          tex->tex2 = findOrCreateTexture(in->getParamTexture("tex2"));
+#else
+          std::string tex1_name = in->getParamString("tex1");
+          std::string tex2_name = in->getParamString("tex2");
+          tex->tex1 = findOrCreateTexture(in->attributes->namedTexture[tex1_name]);
+          tex->tex2 = findOrCreateTexture(in->attributes->namedTexture[tex2_name]);
+#endif
           return tex;
         }
         if (in->mapType == "ptex") {
@@ -121,6 +137,12 @@ namespace pbrt {
               } else
                 in->getParam3f(&mat->ks.x,name);
             }
+            else if (name == "roughness") {
+              mat->roughness = in->getParam1f(name);
+            }
+            else if (name == "bumpmap") {
+              mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
+            }
             else if (name == "type") {
               /* ignore */
             } else
@@ -141,10 +163,51 @@ namespace pbrt {
               } else
                 in->getParam3f(&mat->kd.x,name);
             }
+            else if (name == "sigma") {
+              mat->sigma = in->getParam1f(name);
+            }
             else if (name == "type") {
               /* ignore */
             } else
               throw std::runtime_error("un-handled matte-material parameter '"+it.first+"'");
+          };
+          return mat;
+        }
+      
+        // ==================================================================
+        if (type == "metal") {
+          MetalMaterial::SP mat = std::make_shared<MetalMaterial>();
+          for (auto it : in->param) {
+            std::string name = it.first;
+            if (name == "roughness") {
+              mat->roughness = in->getParam1f(name);
+            }
+            else if (name == "eta") {
+              mat->spectrum_eta = in->getParamString(name);
+            }
+            else if (name == "k") {
+              mat->spectrum_k = in->getParamString(name);
+            }
+            else if (name == "type") {
+              /* ignore */
+            } else
+              throw std::runtime_error("un-handled metal-material parameter '"+it.first+"'");
+          };
+          return mat;
+        }
+      
+        // ==================================================================
+        if (type == "fourier") {
+          FourierMaterial::SP mat = std::make_shared<FourierMaterial>();
+          for (auto it : in->param) {
+            std::string name = it.first;
+            if (name == "bsdffile") {
+              mat->fileName = in->getParamString(name);
+            }
+            else if (name == "type") {
+              /* ignore */
+            } else
+              throw std::runtime_error("un-handled fourier-material parameter '"+it.first+"'");
           };
           return mat;
         }
@@ -162,6 +225,9 @@ namespace pbrt {
             }
             else if (name == "bumpmap") {
               mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
+            }
+            else if (name == "type") {
+              /* ignore */
             } else
               throw std::runtime_error("un-handled mirror-material parameter '"+it.first+"'");
           };
@@ -187,6 +253,13 @@ namespace pbrt {
               } else
                 in->getParam3f(&mat->kr.x,name);
             }
+            else if (name == "Kt") {
+              if (in->hasParamTexture(name)) {
+                mat->kt = vec3f(1.f);
+                mat->map_kt = findOrCreateTexture(in->getParamTexture(name));
+              } else
+                in->getParam3f(&mat->kt.x,name);
+            }
             else if (name == "Ks") {
               if (in->hasParamTexture(name)) {
                 mat->ks = vec3f(1.f);
@@ -200,6 +273,13 @@ namespace pbrt {
                 mat->map_alpha = findOrCreateTexture(in->getParamTexture(name));
               } else
                 mat->alpha = in->getParam1f(name);
+            }
+            else if (name == "opacity") {
+              if (in->hasParamTexture(name)) {
+                mat->opacity = vec3f(1.f);
+                mat->map_opacity = findOrCreateTexture(in->getParamTexture(name));
+              } else
+                in->getParam3f(&mat->opacity.x,name);
             }
             else if (name == "index") {
               mat->index = in->getParam1f(name);

@@ -122,6 +122,24 @@ namespace pbrt {
       affine3f atEnd;
     };
 
+    struct PBRT_PARSER_INTERFACE Attributes {
+
+      /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
+        more concise, and easier to read */
+      typedef std::shared_ptr<Attributes> SP;
+    
+      Attributes();
+      Attributes(Attributes &&other) = default;
+      Attributes(const Attributes &other) = default;
+
+      virtual std::shared_ptr<Attributes> clone() const { return std::make_shared<Attributes>(*this); }
+
+      std::pair<std::string,std::string>               mediumInterface;
+      std::map<std::string,std::shared_ptr<Material> > namedMaterial;
+      std::map<std::string,std::shared_ptr<Medium> >   namedMedium;
+      std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
+    };
+
     /*! forward definition of a typed parameter */
     template<typename T>
     struct ParamArray;
@@ -215,6 +233,14 @@ namespace pbrt {
       {
         return (bool)findParam<Texture>(name);
       }
+      bool hasParam1f(const std::string &name) const
+      {
+        return
+          (bool)findParam<float>(name)
+          &&
+          findParam<float>(name)->size() == 1
+          ;
+      }
     
       template<typename T>
         std::shared_ptr<ParamArray<T> > findParam(const std::string &name) const {
@@ -224,24 +250,6 @@ namespace pbrt {
       }
 
       std::map<std::string,std::shared_ptr<Param> > param;
-    };
-
-    struct PBRT_PARSER_INTERFACE Attributes {
-
-      /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
-        more concise, and easier to read */
-      typedef std::shared_ptr<Attributes> SP;
-    
-      Attributes();
-      Attributes(Attributes &&other) = default;
-      Attributes(const Attributes &other) = default;
-
-      virtual std::shared_ptr<Attributes> clone() const { return std::make_shared<Attributes>(*this); }
-
-      std::pair<std::string,std::string>               mediumInterface;
-      std::map<std::string,std::shared_ptr<Material> > namedMaterial;
-      std::map<std::string,std::shared_ptr<Medium> >   namedMedium;
-      std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
     };
 
     struct PBRT_PARSER_INTERFACE Material : public ParamSet {
@@ -300,6 +308,10 @@ namespace pbrt {
       std::string name;
       std::string texelType;
       std::string mapType;
+      /*! the attributes active when this was created - some texture
+          use implicitly named textures, so have to keep this
+          around */
+      Attributes::SP attributes;
     };
 
     /*! base abstraction for any PBRT scene graph node - all shapes,

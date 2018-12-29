@@ -421,6 +421,7 @@ namespace pbrt {
           std::shared_ptr<Texture> texture
             = std::make_shared<Texture>(name,texelType,mapType);
           attributesStack.top()->namedTexture[name] = texture;
+          texture->attributes = attributesStack.top();
           parseParams(texture->param);
           continue;
         }

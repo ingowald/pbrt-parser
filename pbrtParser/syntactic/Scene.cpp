@@ -153,9 +153,9 @@ namespace pbrt {
       std::shared_ptr<Param> pr = it->second;
       const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
       if (!p)
-        throw std::runtime_error("found param of given name, but of wrong type!");
+        throw std::runtime_error("found param of given name, but of wrong type! (name was '"+name+"'");
       if (p->getSize() != 3)
-        throw std::runtime_error("found param of given name and type, but wrong number of components!");
+        throw std::runtime_error("found param of given name and type, but wrong number of components! (3f, name='"+name+"'");
       result[0] = p->get(0);
       result[1] = p->get(1);
       result[2] = p->get(2);
@@ -170,9 +170,9 @@ namespace pbrt {
       std::shared_ptr<Param> pr = it->second;
       const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
       if (!p)
-        throw std::runtime_error("found param of given name, but of wrong type!");
+        throw std::runtime_error("found param of given name, but of wrong type! (name was '"+name+"'");
       if (p->getSize() != 3)
-        throw std::runtime_error("found param of given name and type, but wrong number of components!");
+        throw std::runtime_error("found param of given name and type, but wrong number of components! (3f, name='"+name+"'");
       return vec3f(p->get(0),p->get(1),p->get(2));
     }
 
@@ -184,7 +184,7 @@ namespace pbrt {
       std::shared_ptr<Param> pr = it->second;
       const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
       if (!p)
-        throw std::runtime_error("found param of given name, but of wrong type!");
+        throw std::runtime_error("found param of given name, but of wrong type! (name was '"+name+"'");
       if (p->getSize() != 1)
         throw std::runtime_error("found param of given name and type, but wrong number of components!");
       return p->get(0);
@@ -199,8 +199,9 @@ namespace pbrt {
       const std::shared_ptr<ParamArray<int>> p = std::dynamic_pointer_cast<ParamArray<int>>(pr);
       if (!p)
         throw std::runtime_error("found param of given name, but of wrong type!");
-      if (p->getSize() != 1)
-        throw std::runtime_error("found param of given name and type, but wrong number of components!");
+      if (p->getSize() != 1) {
+        throw std::runtime_error("found param of given name and type, but wrong number of components! (1i, name='"+name+"'");
+      }
       return p->get(0);
     }
 
@@ -214,7 +215,7 @@ namespace pbrt {
       if (!p)
         throw std::runtime_error("found param of given name, but of wrong type!");
       if (p->getSize() != 1)
-        throw std::runtime_error("found param of given name and type, but wrong number of components!");
+        throw std::runtime_error("found param of given name and type, but wrong number of components! (str, name='"+name+"'");
       return p->get(0);
     }
 
@@ -228,7 +229,7 @@ namespace pbrt {
       if (!p)
         throw std::runtime_error("found param of given name, but of wrong type!");
       if (p->getSize() != 1)
-        throw std::runtime_error("found param of given name and type, but wrong number of components!");
+        throw std::runtime_error("found param of given name and type, but wrong number of components! (tex, name='"+name+"'");
       return p->texture;
     }
 
@@ -242,7 +243,7 @@ namespace pbrt {
       if (!p)
         throw std::runtime_error("found param of given name, but of wrong type!");
       if (p->getSize() != 1)
-        throw std::runtime_error("found param of given name and type, but wrong number of components!");
+        throw std::runtime_error("found param of given name and type, but wrong number of components! (bool, name='"+name+"'");
       return p->get(0);
     }
 

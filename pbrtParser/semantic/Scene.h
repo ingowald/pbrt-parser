@@ -155,6 +155,19 @@ namespace pbrt {
       virtual void readFrom(BinaryReader &) override;
     };
   
+    struct ScaleTexture : public Texture {
+      typedef std::shared_ptr<ScaleTexture> SP;
+
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "ScaleTexture"; }
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+
+      Texture::SP tex1, tex2;
+    };
+  
     struct ConstantTexture : public Texture {
       typedef std::shared_ptr<ConstantTexture> SP;
 
@@ -210,6 +223,22 @@ namespace pbrt {
       vec3f mix;
     };
     
+    struct MetalMaterial : public Material
+    {
+      typedef std::shared_ptr<MetalMaterial> SP;
+    
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "MixMaterial"; }
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+
+      float roughness;
+      std::string spectrum_eta;
+      std::string spectrum_k;
+    };
+    
     struct TranslucentMaterial : public Material
     {
       typedef std::shared_ptr<TranslucentMaterial> SP;
@@ -241,6 +270,8 @@ namespace pbrt {
       Texture::SP map_kd;
       vec3f ks { .0f };
       Texture::SP map_ks;
+      Texture::SP map_bump;
+      float roughness { 0.00030000001f };
     };
     
     struct MirrorMaterial : public Material
@@ -259,6 +290,20 @@ namespace pbrt {
     };
     
     
+    struct FourierMaterial : public Material
+    {
+      typedef std::shared_ptr<FourierMaterial> SP;
+    
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "FourierMaterial"; }
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+
+      std::string fileName;
+    };
+    
     struct MatteMaterial : public Material
     {
       typedef std::shared_ptr<MatteMaterial> SP;
@@ -272,6 +317,7 @@ namespace pbrt {
 
       vec3f kd { .65f };
       Texture::SP map_kd;
+      float sigma { 10 };
     };
     
     struct GlassMaterial : public Material
@@ -307,13 +353,22 @@ namespace pbrt {
       Texture::SP map_ks;
     
       vec3f kr { 0.f };
+      Texture::SP map_kr;
+      
+      vec3f kt { 0.f };
+      Texture::SP map_kt;
+      
+      vec3f opacity { 0.f };
+      Texture::SP map_opacity;
+      
       float alpha { 0.f };
+      Texture::SP map_alpha;
+
+      float shadowAlpha { 0.f };
+      Texture::SP map_shadowAlpha;
+
       float index { 1.33333f };
       float roughness { 0.5f };
-      float shadowAlpha { 0.f };
-      Texture::SP map_kr;
-      Texture::SP map_alpha;
-      Texture::SP map_shadowAlpha;
       Texture::SP map_bump;
     };
 
