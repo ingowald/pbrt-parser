@@ -283,7 +283,7 @@ namespace pbrt {
       typedef std::shared_ptr<MetalMaterial> SP;
     
       /*! pretty-printer, for debugging */
-      virtual std::string toString() const override { return "MixMaterial"; }
+      virtual std::string toString() const override { return "MetalMaterial"; }
       /*! serialize out to given binary writer */
       virtual int writeTo(BinaryWriter &) override;
       /*! serialize _in_ from given binary file reader */

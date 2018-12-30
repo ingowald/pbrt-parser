@@ -586,7 +586,6 @@ namespace pbrt {
           v = xfmVector(xfm,v);
 
         extractTextures(ours,shape);
-      
         return ours;
       }
 
@@ -598,7 +597,7 @@ namespace pbrt {
         if (param) {
 
           int dims = sizeof(T)/sizeof(typename T::scalar_t);
-          size_t num = param->size();// / T::dims;
+          size_t num = param->size() / dims;// / T::dims;
           const T *const data = (const T*)param->data();
         
           result.resize(num);
@@ -609,6 +608,9 @@ namespace pbrt {
     
       Geometry::SP emitTriangleMesh(pbrt::syntactic::Shape::SP shape)
       {
+
+        PING;
+        
         TriangleMesh::SP ours = std::make_shared<TriangleMesh>(findOrCreateMaterial(shape->material));
 
         // vertices - param "P", 3x float each
