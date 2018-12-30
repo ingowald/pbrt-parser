@@ -260,7 +260,10 @@ namespace pbrt {
                 mat->vRoughness = in->getParam1f(name);
             }
             else if (name == "eta") {
-              mat->spectrum_eta = in->getParamString(name);
+              if (in->hasParam3f(name))
+                in->getParam3f(&mat->eta.x,name);
+              else
+                mat->spectrum_eta = in->getParamString(name);
             }
             else if (name == "k") {
               mat->spectrum_k = in->getParamString(name);
