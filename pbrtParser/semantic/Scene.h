@@ -671,7 +671,7 @@ namespace pbrt {
       typedef std::shared_ptr<Instance> SP;
       
       std::shared_ptr<Object> object;
-      affine3f                xfm;
+      affine3f                xfm { PBRT_PARSER_VECTYPE_NAMESPACE::one };
     };
 
     /*! a logical "NamedObject" that can be instanced */

@@ -41,7 +41,7 @@ namespace pbrt {
 
     box3f TriangleMesh::getPrimBounds(const size_t primID, const affine3f &xfm) 
     {
-      box3f primBounds;
+      box3f primBounds = ospcommon::empty;
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].x]));
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].y]));
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].z]));
@@ -50,7 +50,7 @@ namespace pbrt {
     
     box3f TriangleMesh::getPrimBounds(const size_t primID) 
     {
-      box3f primBounds;
+      box3f primBounds = ospcommon::empty;
       primBounds.extend(vertex[index[primID].x]);
       primBounds.extend(vertex[index[primID].y]);
       primBounds.extend(vertex[index[primID].z]);
@@ -77,7 +77,7 @@ namespace pbrt {
       box3f ob(vec3f(-radius),vec3f(+radius));
       affine3f _xfm = xfm * transform;
       
-      box3f bounds;
+      box3f bounds = ospcommon::empty;
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
@@ -109,7 +109,7 @@ namespace pbrt {
       box3f ob(vec3f(-radius,-radius,0),vec3f(+radius,+radius,height));
       affine3f _xfm = xfm * transform;
       
-      box3f bounds;
+      box3f bounds = ospcommon::empty;
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
@@ -137,7 +137,7 @@ namespace pbrt {
     
     box3f QuadMesh::getPrimBounds(const size_t primID, const affine3f &xfm) 
     {
-      box3f primBounds;
+      box3f primBounds = ospcommon::empty;
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].x]));
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].y]));
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].z]));
@@ -147,7 +147,7 @@ namespace pbrt {
 
     box3f QuadMesh::getPrimBounds(const size_t primID) 
     {
-      box3f primBounds;
+      box3f primBounds = ospcommon::empty;
       primBounds.extend(vertex[index[primID].x]);
       primBounds.extend(vertex[index[primID].y]);
       primBounds.extend(vertex[index[primID].z]);
@@ -171,11 +171,26 @@ namespace pbrt {
 
     box3f Object::getBounds() const
     {
-      box3f bounds;
-      for (auto inst : instances)
-        if (inst) bounds.extend(inst->getBounds());
-      for (auto geom : geometries)
-        if (geom) bounds.extend(geom->getBounds());
+      box3f bounds = ospcommon::empty;
+      PING;
+      PRINT(bounds);
+      for (auto inst : instances) {
+        if (inst) {
+          const box3f ib = inst->getBounds();
+          PING; PRINT(ib); 
+          bounds.extend(ib);
+          PRINT(bounds);
+        }
+      }
+      for (auto geom : geometries) {
+        if (geom) {
+          const box3f gb = geom->getBounds();
+          PING; PRINT(gb);
+          bounds.extend(gb);
+          PRINT(bounds);
+        }
+      }
+      PING; PRINT(bounds);
       return bounds;
     };
 
@@ -186,7 +201,7 @@ namespace pbrt {
     box3f Instance::getBounds() const
     {
       box3f ob = object->getBounds();
-      box3f bounds;
+      box3f bounds = ospcommon::empty;
       bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
       bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
       bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
@@ -195,6 +210,7 @@ namespace pbrt {
       bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.upper.z)));
       bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.lower.z)));
       bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
+      PING; PRINT(bounds);
       return bounds;
     };
     /* compute some _rough_ storage cost esimate for a scene. this will
