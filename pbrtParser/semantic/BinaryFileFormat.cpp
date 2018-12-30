@@ -50,6 +50,7 @@ namespace pbrt {
       TYPE_MIRROR_MATERIAL,
       TYPE_MATTE_MATERIAL,
       TYPE_SUBSTRATE_MATERIAL,
+      TYPE_SUBSURFACE_MATERIAL,
       TYPE_FOURIER_MATERIAL,
       TYPE_METAL_MATERIAL,
       TYPE_PLASTIC_MATERIAL,
@@ -170,6 +171,8 @@ namespace pbrt {
           return std::make_shared<MirrorMaterial>();
         case TYPE_SUBSTRATE_MATERIAL:
           return std::make_shared<SubstrateMaterial>();
+        case TYPE_SUBSURFACE_MATERIAL:
+          return std::make_shared<SubSurfaceMaterial>();
         case TYPE_MATTE_MATERIAL:
           return std::make_shared<MatteMaterial>();
         case TYPE_FOURIER_MATERIAL:
@@ -834,6 +837,29 @@ namespace pbrt {
       binary.read(map_bump);
       binary.read(uRoughness);
       binary.read(vRoughness);
+    }
+
+
+
+
+        /*! serialize out to given binary writer */
+    int SubSurfaceMaterial::writeTo(BinaryWriter &binary) 
+    {
+      binary.write(uRoughness);
+      binary.write(vRoughness);
+      binary.write(remapRoughness);
+      binary.write(name);
+      return TYPE_SUBSURFACE_MATERIAL;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void SubSurfaceMaterial::readFrom(BinaryReader &binary) 
+    {
+      Material::readFrom(binary);
+      binary.read(uRoughness);
+      binary.read(vRoughness);
+      binary.read(remapRoughness);
+      binary.read(name);
     }
 
 

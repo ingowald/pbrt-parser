@@ -169,11 +169,11 @@ PBRT_SCENES=" \
 
 for scene in $PBRT_SCENES; do
     echo ====================== parsing $scene ======================
-    ./pbrtinfo --lint $PBRT_SCENE_PATH/$scene
+#    ./pbrtinfo --lint $PBRT_SCENE_PATH/$scene
     dir=`dirname $scene`
     mkdir -p $OUTPUT_PATH/$dir
     base=`basename $scene .pbrt`
     ./pbrt2pbf $PBRT_SCENE_PATH/$scene -o $OUTPUT_PATH/$dir/$base.pbf
-    ./pbfInfo $OUTPUT_PATH/$dir/$base.pbf
+#    ./pbfInfo $OUTPUT_PATH/$dir/$base.pbf
 done
 

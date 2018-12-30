@@ -169,6 +169,11 @@ namespace pbrt {
         const std::string type = in->type=="" ? in->getParamString("type") : in->type;
 
         // ==================================================================
+        if (type == "") {
+          return std::make_shared<Material>();
+        }
+        
+        // ==================================================================
         if (type == "plastic") {
           PlasticMaterial::SP mat = std::make_shared<PlasticMaterial>();
           for (auto it : in->param) {

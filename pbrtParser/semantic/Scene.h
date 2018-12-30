@@ -86,7 +86,8 @@ namespace pbrt {
         syntactic material type that we couldn't parse/recognize. This
         allows the app to eventually find non-recognized mateirals and
         replace them with whatever that app wants to use as a default
-        material */
+        material. Note at least one pbrt-v3 model uses a un-named
+        material type, which will return this (empty) base class */
     struct Material : public Entity {
       typedef std::shared_ptr<Material> SP;
     
@@ -357,7 +358,23 @@ namespace pbrt {
       vec3f ks { .0f };
       Texture::SP map_ks;
       Texture::SP map_bump;
-   };
+    };
+    
+    struct SubsurfaceMaterial : public Material
+    {
+      typedef std::shared_ptr<SubstrateMaterial> SP;
+    
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "SubsurfaceMaterial"; }
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+
+      float uRoughness { .001 };
+      float vRoughness { .001 };
+      bool  remapRoughness { false };
+    };
     
     struct MirrorMaterial : public Material
     {
