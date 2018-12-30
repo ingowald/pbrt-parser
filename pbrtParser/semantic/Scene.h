@@ -297,6 +297,7 @@ namespace pbrt {
       Texture::SP map_vRoughness;
       vec3f       eta  { 1.f, 1.f, 1.f };
       std::string spectrum_eta;
+      vec3f       k    { 1.f, 1.f, 1.f };
       std::string spectrum_k;
       Texture::SP map_bump;
     };

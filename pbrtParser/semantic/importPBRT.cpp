@@ -266,6 +266,9 @@ namespace pbrt {
                 mat->spectrum_eta = in->getParamString(name);
             }
             else if (name == "k") {
+              if (in->hasParam3f(name))
+                in->getParam3f(&mat->k.x,name);
+              else
               mat->spectrum_k = in->getParamString(name);
             }
             else if (name == "bumpmap") {
