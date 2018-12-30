@@ -983,6 +983,8 @@ namespace pbrt {
       binary.write(vRoughness);
       binary.write(spectrum_eta);
       binary.write(spectrum_k);
+      binary.write(eta);
+      binary.write(k);
       binary.write(binary.serialize(map_bump));
       binary.write(binary.serialize(map_roughness));
       binary.write(binary.serialize(map_uRoughness));
@@ -999,6 +1001,8 @@ namespace pbrt {
       binary.read(vRoughness);
       binary.read(spectrum_eta);
       binary.read(spectrum_k);
+      binary.read(eta);
+      binary.read(k);
       binary.read(map_bump);
       binary.read(map_roughness);
       binary.read(map_uRoughness);

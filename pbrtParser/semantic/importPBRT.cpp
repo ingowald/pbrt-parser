@@ -265,9 +265,15 @@ namespace pbrt {
                 mat->vRoughness = in->getParam1f(name);
             }
             else if (name == "eta") {
-              mat->spectrum_eta = in->getParamString(name);
+              if (in->hasParam3f(name))
+                in->getParam3f(&mat->eta.x,name);
+              else
+                mat->spectrum_eta = in->getParamString(name);
             }
             else if (name == "k") {
+              if (in->hasParam3f(name))
+                in->getParam3f(&mat->k.x,name);
+              else
               mat->spectrum_k = in->getParamString(name);
             }
             else if (name == "bumpmap") {
@@ -585,7 +591,6 @@ namespace pbrt {
           v = xfmVector(xfm,v);
 
         extractTextures(ours,shape);
-      
         return ours;
       }
 
@@ -597,7 +602,7 @@ namespace pbrt {
         if (param) {
 
           int dims = sizeof(T)/sizeof(typename T::scalar_t);
-          size_t num = param->size();// / T::dims;
+          size_t num = param->size() / dims;// / T::dims;
           const T *const data = (const T*)param->data();
         
           result.resize(num);
@@ -608,6 +613,9 @@ namespace pbrt {
     
       Geometry::SP emitTriangleMesh(pbrt::syntactic::Shape::SP shape)
       {
+
+        PING;
+        
         TriangleMesh::SP ours = std::make_shared<TriangleMesh>(findOrCreateMaterial(shape->material));
 
         // vertices - param "P", 3x float each
