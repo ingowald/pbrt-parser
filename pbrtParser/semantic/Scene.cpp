@@ -172,25 +172,18 @@ namespace pbrt {
     box3f Object::getBounds() const
     {
       box3f bounds = ospcommon::empty;
-      PING;
-      PRINT(bounds);
       for (auto inst : instances) {
         if (inst) {
           const box3f ib = inst->getBounds();
-          PING; PRINT(ib); 
           bounds.extend(ib);
-          PRINT(bounds);
         }
       }
       for (auto geom : geometries) {
         if (geom) {
           const box3f gb = geom->getBounds();
-          PING; PRINT(gb);
           bounds.extend(gb);
-          PRINT(bounds);
         }
       }
-      PING; PRINT(bounds);
       return bounds;
     };
 
@@ -210,7 +203,6 @@ namespace pbrt {
       bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.upper.z)));
       bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.lower.z)));
       bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
-      PING; PRINT(bounds);
       return bounds;
     };
     /* compute some _rough_ storage cost esimate for a scene. this will
