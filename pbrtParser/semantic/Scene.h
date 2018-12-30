@@ -362,12 +362,12 @@ namespace pbrt {
       Texture::SP map_bump;
     };
     
-    struct SubsurfaceMaterial : public Material
+    struct SubSurfaceMaterial : public Material
     {
-      typedef std::shared_ptr<SubstrateMaterial> SP;
+      typedef std::shared_ptr<SubSurfaceMaterial> SP;
     
       /*! pretty-printer, for debugging */
-      virtual std::string toString() const override { return "SubsurfaceMaterial"; }
+      virtual std::string toString() const override { return "SubSurfaceMaterial"; }
       /*! serialize out to given binary writer */
       virtual int writeTo(BinaryWriter &) override;
       /*! serialize _in_ from given binary file reader */
@@ -376,6 +376,10 @@ namespace pbrt {
       float uRoughness { .001 };
       float vRoughness { .001 };
       bool  remapRoughness { false };
+      /*! in the one pbrt v3 model that uses that, these materials
+          carry 'name' fields like "Apple" etc - not sure if that's
+          supposed to specify some sub-surface medium properties!? */
+      std::string name;
     };
     
     struct MirrorMaterial : public Material
