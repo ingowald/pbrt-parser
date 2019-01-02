@@ -43,6 +43,8 @@ set(pbrt-parser_VERSION_PATCH 0)
 ADD_SUBDIRECTORY(pbrtParser/syntactic)
 ADD_SUBDIRECTORY(pbrtParser/semantic)
 
+ADD_SUBDIRECTORY(rib)
+
 ADD_SUBDIRECTORY(apps)
 
 
