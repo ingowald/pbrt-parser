@@ -31,7 +31,7 @@ namespace pbrt {
   namespace semantic {
 
 #define    FORMAT_MAJOR 0
-#define    FORMAT_MINOR 3
+#define    FORMAT_MINOR 4
   
     const uint32_t ourFormatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
 
@@ -783,6 +783,7 @@ namespace pbrt {
       binary.write(binary.serialize(map_shadowAlpha));
       binary.write(index);
       binary.write(roughness);
+      binary.write(binary.serialize(map_roughness));
       binary.write(binary.serialize(map_bump));
       return TYPE_UBER_MATERIAL;
     }
@@ -807,6 +808,7 @@ namespace pbrt {
       binary.read(map_shadowAlpha);
       binary.read(index);
       binary.read(roughness);
+      binary.read(map_roughness);
       binary.read(map_bump);
     }
 
@@ -822,7 +824,9 @@ namespace pbrt {
       binary.write(binary.serialize(map_ks));
       binary.write(binary.serialize(map_bump));
       binary.write(uRoughness);
+      binary.write(binary.serialize(map_uRoughness));
       binary.write(vRoughness);
+      binary.write(binary.serialize(map_vRoughness));
       return TYPE_SUBSTRATE_MATERIAL;
     }
   
@@ -836,7 +840,9 @@ namespace pbrt {
       binary.read(map_ks);
       binary.read(map_bump);
       binary.read(uRoughness);
+      binary.read(map_uRoughness);
       binary.read(vRoughness);
+      binary.read(map_vRoughness);
     }
 
 

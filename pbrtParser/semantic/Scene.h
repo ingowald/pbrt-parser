@@ -70,9 +70,12 @@ namespace pbrt {
     /*! base abstraction for any entity in the pbrt scene graph that's
         not a paramter type (eg, it's a geometry/shape, a object, a
         instance, matierla, tetxture, etc */
-    struct Entity {
+    struct Entity : public std::enable_shared_from_this<Entity> {
       typedef std::shared_ptr<Entity> SP;
-    
+
+      template<typename T>
+      std::shared_ptr<T> as() { return std::dynamic_pointer_cast<T>(shared_from_this()); }
+      
       /*! pretty-printer, for debugging */
       virtual std::string toString() const = 0; // { return "Entity"; }
       /*! serialize out to given binary writer */
@@ -353,7 +356,9 @@ namespace pbrt {
       virtual void readFrom(BinaryReader &) override;
 
       float uRoughness { .001 };
+      Texture::SP map_uRoughness;
       float vRoughness { .001 };
+      Texture::SP map_vRoughness;
 
       vec3f kd { .65f };
       Texture::SP map_kd;
@@ -479,6 +484,7 @@ namespace pbrt {
 
       float index { 1.33333f };
       float roughness { 0.5f };
+      Texture::SP map_roughness;
       Texture::SP map_bump;
     };
 
@@ -763,7 +769,8 @@ namespace pbrt {
     /*! the complete scene - pretty much the 'root' object that
         contains the WorldBegin/WorldEnd entities, plus high-level
         stuff like camera, frame buffer specification, etc */
-    struct Scene : public Entity, public std::enable_shared_from_this<Scene> {
+    struct Scene : public Entity //, public std::enable_shared_from_this<Scene>
+    {
       typedef std::shared_ptr<Scene> SP;
 
 

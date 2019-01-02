@@ -376,7 +376,14 @@ namespace pbrt {
               mat->index = in->getParam1f(name);
             }
             else if (name == "roughness") {
-              mat->roughness = in->getParam1f(name);
+              if (in->hasParamTexture(name))
+                mat->map_roughness = findOrCreateTexture(in->getParamTexture(name));
+              else if (in->hasParam1f(name))
+                mat->roughness = in->getParam1f(name);
+              else
+                throw std::runtime_error("uber::roughness in un-recognized format...");
+              // else
+              //   in->getParam3f(&mat->roughness.x,name);
             }
             else if (name == "shadowalpha") {
               if (in->hasParamTexture(name)) {
@@ -416,10 +423,18 @@ namespace pbrt {
                 in->getParam3f(&mat->ks.x,name);
             }
             else if (name == "uroughness") {
-              mat->uRoughness = in->getParam1f(name);
+              if (in->hasParamTexture(name)) {
+                mat->uRoughness = 1.f;
+                mat->map_uRoughness = findOrCreateTexture(in->getParamTexture(name));
+              } else
+                mat->uRoughness = in->getParam1f(name);
             }
             else if (name == "vroughness") {
-              mat->vRoughness = in->getParam1f(name);
+              if (in->hasParamTexture(name)) {
+                mat->vRoughness = 1.f;
+                mat->map_vRoughness = findOrCreateTexture(in->getParamTexture(name));
+              } else
+                mat->vRoughness = in->getParam1f(name);
             }
             else if (name == "bumpmap") {
               mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
@@ -613,9 +628,6 @@ namespace pbrt {
     
       Geometry::SP emitTriangleMesh(pbrt::syntactic::Shape::SP shape)
       {
-
-        PING;
-        
         TriangleMesh::SP ours = std::make_shared<TriangleMesh>(findOrCreateMaterial(shape->material));
 
         // vertices - param "P", 3x float each
@@ -690,9 +702,7 @@ namespace pbrt {
     
       Object::SP findOrEmitObject(pbrt::syntactic::Object::SP pbrtObject)
       {
-        // PING;
         if (emittedObjects.find(pbrtObject) != emittedObjects.end()) {
-          // std::cout << "FOUND OBJECT INSTANCE " << pbrtObject->name << std::endl;
           return emittedObjects[pbrtObject];
         }
       
@@ -714,7 +724,6 @@ namespace pbrt {
       std::map<pbrt::syntactic::Shape::SP,Geometry::SP> emittedGeometries;
     
       PBRTScene::SP pbrtScene;
-      // Scene::SP ours;
     };
 
     vec2i createFrameBuffer(Scene::SP ours, pbrt::syntactic::Scene::SP pbrt)
