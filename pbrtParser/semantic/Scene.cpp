@@ -262,6 +262,12 @@ namespace pbrt {
             ++i;
             continue;
           }
+          if (idx1.x == idx0.z && idx1.z == idx0.x) {
+            // could merge!!!
+            out->index.push_back(vec4i(idx0.x,idx0.y,idx0.z,idx1.y));
+            ++i;
+            continue;
+          }
         }
         // could not merge :-( - emit tri as degenerate quad
         out->index.push_back(vec4i(idx0.x,idx0.y,idx0.z,idx0.z));
