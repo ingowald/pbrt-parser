@@ -62,6 +62,7 @@ namespace pbrt {
       if (!haveComputedBounds) {
         std::lock_guard<std::mutex> lock(mutex);
         if (haveComputedBounds) return bounds;
+        bounds = ospcommon::empty;
         for (auto v : vertex) bounds.extend(v);
         haveComputedBounds = true;
         return bounds;
@@ -160,6 +161,7 @@ namespace pbrt {
       if (!haveComputedBounds) {
         std::lock_guard<std::mutex> lock(mutex);
         if (haveComputedBounds) return bounds;
+        bounds = ospcommon::empty;
         for (auto v : vertex) bounds.extend(v);
         haveComputedBounds = true;
         return bounds;
