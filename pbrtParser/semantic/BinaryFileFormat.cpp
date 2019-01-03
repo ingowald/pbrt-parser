@@ -31,7 +31,7 @@ namespace pbrt {
   namespace semantic {
 
 #define    FORMAT_MAJOR 0
-#define    FORMAT_MINOR 4
+#define    FORMAT_MINOR 5
   
     const uint32_t ourFormatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
 
@@ -67,6 +67,7 @@ namespace pbrt {
       TYPE_WRINKLED_TEXTURE,
       TYPE_FRAME_BUFFER,
       TYPE_TRIANGLE_MESH,
+      TYPE_QUAD_MESH,
       TYPE_SPHERE,
       TYPE_DISK,
     };
@@ -184,6 +185,8 @@ namespace pbrt {
           return std::make_shared<Camera>();
         case TYPE_TRIANGLE_MESH:
           return std::make_shared<TriangleMesh>();
+        case TYPE_QUAD_MESH:
+          return std::make_shared<QuadMesh>();
         case TYPE_SPHERE:
           return std::make_shared<Sphere>();
         case TYPE_DISK:
@@ -432,6 +435,7 @@ namespace pbrt {
         binary.write((int)-1);
       else
         binary.write(binary.serialize(material));
+      binary.write(textures);
       return TYPE_GEOMETRY;
     }
   
@@ -440,6 +444,7 @@ namespace pbrt {
     {
       int matID = binary.read<int>();
       material = binary.getEntity<Material>(matID);
+      binary.read(textures);
     }
 
 
@@ -457,6 +462,26 @@ namespace pbrt {
   
     /*! serialize _in_ from given binary file reader */
     void TriangleMesh::readFrom(BinaryReader &binary) 
+    {
+      Geometry::readFrom(binary);
+      binary.read(vertex);
+      binary.read(normal);
+      binary.read(index);
+    }
+
+
+    /*! serialize out to given binary writer */
+    int QuadMesh::writeTo(BinaryWriter &binary) 
+    {
+      Geometry::writeTo(binary);
+      binary.write(vertex);
+      binary.write(normal);
+      binary.write(index);
+      return TYPE_QUAD_MESH;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void QuadMesh::readFrom(BinaryReader &binary) 
     {
       Geometry::readFrom(binary);
       binary.read(vertex);
