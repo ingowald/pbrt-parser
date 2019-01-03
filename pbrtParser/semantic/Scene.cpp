@@ -236,22 +236,65 @@ namespace pbrt {
         costEstimate += geom->getNumPrims() * primWeight;
       return costEstimate;
     }
-  
-  
+
+    // inline bool operator<(const ospcommon::vec_t<float,3> a,
+    //                       const ospcommon::vec_t<float,3> b)
+    // {
+    //   return memcmp(&a,&b,sizeof(a)) < 0;
+    // }
+
+    struct FatVertex {
+      vec3f p, n;
+    };
+    inline bool operator<(const FatVertex &a, const FatVertex &b)
+    { return memcmp(&a,&b,sizeof(a))<0; }
+    
+    QuadMesh::SP remeshVertices(QuadMesh::SP in)
+    {
+      QuadMesh::SP out = std::make_shared<QuadMesh>(in->material);
+      out->textures = in->textures;
+
+      std::vector<int> indexRemap(in->vertex.size());
+      std::map<FatVertex,int> vertexID;
+      for (int i=0;i<in->vertex.size();i++) {
+        FatVertex oldVertex;
+        oldVertex.p = in->vertex[i];
+        oldVertex.n = in->normal.empty()?vec3f(0.f):in->normal[i];
+
+        auto it = vertexID.find(oldVertex);
+        if (it == vertexID.end()) {
+          int newID = out->vertex.size();
+          out->vertex.push_back(in->vertex[i]);
+          if (!in->normal.empty())
+            out->normal.push_back(in->normal[i]);
+          // if (!in->texcoord.empty())
+          //   out->texcoord.push_back(in->texcoord[i]);
+          vertexID[oldVertex] = newID;
+          indexRemap[i] = newID;
+        } else {
+          indexRemap[i] = it->second;
+        }
+      }
+      for (auto idx : in->index) 
+        out->index.push_back(vec4i(idx.x < 0 ? -1 : indexRemap[idx.x],
+                                   idx.y < 0 ? -1 : indexRemap[idx.y],
+                                   idx.z < 0 ? -1 : indexRemap[idx.z],
+                                   idx.w < 0 ? -1 : indexRemap[idx.w]));
+      std::cout << "#pbrt:semantic: done remapping quad mesh. #verts: " << in->vertex.size() << " -> " << out->vertex.size() << std::endl;
+      return out;
+    }
+    
     /*! create a new quad mesh by merging triangle pairs in given
       triangle mesh. triangles that cannot be merged into quads will
       be stored as degenerate quads */
     QuadMesh::SP QuadMesh::makeFrom(TriangleMesh::SP tris)
     {
       QuadMesh::SP out = std::make_shared<QuadMesh>(tris->material);
-      out->vertex   = tris->vertex;
-      out->normal   = tris->normal;
       out->textures = tris->textures;
       // out->texcoord = in->texcoord;
-
-      if (tris->vertex.size() == 3*tris->index.size())
-        std::cout << "warning: this looks like a 'fat' triangle mesh - optimize???" << std::endl;
-    
+      out->vertex   = tris->vertex;
+      out->normal   = tris->normal;
+      
       for (int i=0;i<tris->index.size();i++) {
         vec3i idx0 = tris->index[i+0];
         if ((i+1) < tris->index.size()) {
@@ -272,7 +315,12 @@ namespace pbrt {
         // could not merge :-( - emit tri as degenerate quad
         out->index.push_back(vec4i(idx0.x,idx0.y,idx0.z,idx0.z));
       }
-      return out;
+      
+      if (tris->vertex.size() == 3*tris->index.size()) {
+        return remeshVertices(out);
+      }
+      else
+        return out;
     }
     
 
