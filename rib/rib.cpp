@@ -20,8 +20,14 @@ extern FILE *yyin;
 extern int yydebug;
 extern int yyparse();
 
+namespace rib {
+  RIBParser *parser = nullptr;
+}
+
 int main(int ac, char **av)
 {
+  rib::parser = new rib::RIBParser();
+  
   const std::string fileName = av[1];
   
   yydebug = 0; //1;
