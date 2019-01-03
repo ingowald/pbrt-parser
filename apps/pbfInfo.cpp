@@ -42,6 +42,7 @@ namespace pbrt {
         numObjects.print("objects");
         numShapes.print("shapes");
         numTriangles.print("triangles");
+        numQuads.print("quads");
         numDisks.print("disks");
         numSpheres.print("spheres");
         numCurves.print("curves");
@@ -65,6 +66,8 @@ namespace pbrt {
           usedMaterials.insert(geom->material);
           if (TriangleMesh::SP mesh=std::dynamic_pointer_cast<TriangleMesh>(geom)){
             numTriangles.add(firstTime,mesh->index.size());
+          } else if (QuadMesh::SP mesh=std::dynamic_pointer_cast<QuadMesh>(geom)){
+            numQuads.add(firstTime,mesh->index.size());
           } else if (Sphere::SP sphere=std::dynamic_pointer_cast<Sphere>(geom)){
             numSpheres.add(firstTime,1);
           } else if (Disk::SP disk=std::dynamic_pointer_cast<Disk>(geom)){
@@ -93,7 +96,7 @@ namespace pbrt {
         size_t instanced = 0;
       };
 
-      Counter numInstances, numTriangles, numSpheres, numDisks, numObjects, numVertices, numCurves, numCurveSegments, numShapes, numLights, numVolumes;
+      Counter numInstances, numTriangles, numQuads, numSpheres, numDisks, numObjects, numVertices, numCurves, numCurveSegments, numShapes, numLights, numVolumes;
       std::set<Material::SP> usedMaterials;
     };
   

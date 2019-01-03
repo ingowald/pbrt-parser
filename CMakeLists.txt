@@ -27,6 +27,8 @@ ENDIF(COMMAND cmake_policy)
 
 SET(CMAKE_CXX_STANDARD 11)
 
+option(EXP_RIB_IMPORTER "Build experimental rib importer?" OFF)
+
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -43,7 +45,9 @@ set(pbrt-parser_VERSION_PATCH 0)
 ADD_SUBDIRECTORY(pbrtParser/syntactic)
 ADD_SUBDIRECTORY(pbrtParser/semantic)
 
-ADD_SUBDIRECTORY(rib)
+if(EXP_RIB_IMPORTER)
+  ADD_SUBDIRECTORY(experimental/rib)
+endif()
 
 ADD_SUBDIRECTORY(apps)
 
