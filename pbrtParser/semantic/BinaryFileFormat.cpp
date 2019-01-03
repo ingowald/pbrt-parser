@@ -100,7 +100,6 @@ namespace pbrt {
           currentEntityOffset = 0;
         
           Entity::SP newEntity = createEntity(tag);
-          // std::cout << "entity #" << readEntities.size() << " is " << (newEntity?newEntity->toString():std::string("<null>")) << std::endl;
           readEntities.push_back(newEntity);
           if (newEntity) newEntity->readFrom(*this);
           currentEntityData.clear();
