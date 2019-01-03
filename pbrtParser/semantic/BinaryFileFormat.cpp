@@ -121,7 +121,21 @@ namespace pbrt {
       template<typename T> std::vector<T> readVector();
       template<typename T> void read(std::vector<T> &vt) { vt = readVector<T>(); }
       template<typename T> void read(T &t) { t = read<T>(); }
-    
+
+
+      template<typename T1, typename T2>
+      void read(std::map<T1,T2> &result)
+      {
+        int size = read<int>();
+        result.clear();
+        for (int i=0;i<size;i++) {
+          T1 t1; T2 t2;
+          read(t1);
+          read(t2);
+          result[t1] = t2;
+        }
+      }
+      
       template<typename T> inline void read(std::shared_ptr<T> &t)
       {
         int ID = read<int>();
@@ -317,6 +331,20 @@ namespace pbrt {
           writeRaw(ptr,t.size()*sizeof(T));
       }
 
+
+      
+      template<typename T1, typename T2>
+      void write(std::map<T1,std::shared_ptr<T2>> &values)
+      {
+        int size = values.size();
+        write(size);
+        for (auto it : values) {
+          write(it.first);
+          write(serialize(it.second));
+        }
+      }
+
+
       void write(const std::vector<bool> &t)
       {
         std::vector<unsigned char> asChar(t.size());
@@ -431,10 +459,7 @@ namespace pbrt {
     /*! serialize out to given binary writer */
     int Geometry::writeTo(BinaryWriter &binary) 
     {
-      if (!material)
-        binary.write((int)-1);
-      else
-        binary.write(binary.serialize(material));
+      binary.write(binary.serialize(material));
       binary.write(textures);
       return TYPE_GEOMETRY;
     }
@@ -442,11 +467,9 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     void Geometry::readFrom(BinaryReader &binary) 
     {
-      int matID = binary.read<int>();
-      material = binary.getEntity<Material>(matID);
+      binary.read(material);
       binary.read(textures);
     }
-
 
 
 
