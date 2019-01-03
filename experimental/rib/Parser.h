@@ -79,7 +79,11 @@ namespace rib {
     void ignore(const std::string &what) { ignored[what]++; }
     
     void applyXfm(const affine3f &xfm)
-    { xfmStack.top() = xfmStack.top() * xfm; }
+    {
+      affine3f newXfm = xfmStack.top() * xfm;
+      // std::cout << "xfm: " << xfmStack.top() << "+" << xfm << " -> " << newXfm << std::endl;
+      xfmStack.top() = newXfm;
+    }
     void pushXfm() { xfmStack.push(xfmStack.top()); }
     void popXfm() { xfmStack.pop(); }
 
@@ -102,12 +106,39 @@ namespace rib {
     makePolygonMesh(const std::vector<int> &faceVertexCount,
                     const std::vector<int> &vertexIndices,
                     Params &params);
+
+    void instantiate(const std::string &name)
+    {
+      Object::SP obj = namedObjects[name];
+      if (!obj)
+        std::cerr << "warning: cannot find object '" << name << "'" << std::endl;
+      else {
+        affine3f xfm = xfmStack.top();
+        Instance::SP inst = std::make_shared<Instance>(obj,xfm);
+        currentObject->instances.push_back(inst);
+      }
+    }
+    void beginObject(const std::string &name)
+    {
+      objectStack.push(currentObject);
+      xfmStack.push(affine3f(one));
+      currentObject = std::make_shared<Object>();
+      std::cout << "#rib: starting on new object '" << name << "'" << std::endl;
+      namedObjects[name] = currentObject;
+    }
+    void endObject()
+    {
+      currentObject = objectStack.top();
+      objectStack.pop();
+      xfmStack.pop();
+    }
     
     Scene::SP  scene;
     Object::SP currentObject;
 
     std::stack<affine3f> xfmStack;
-
+    std::stack<Object::SP> objectStack;
+    std::map<std::string,Object::SP> namedObjects;
     /*! occurrances of ignored statements in rib file ... only used
         for proper warning of missing/ignored objects */
     std::map<std::string,int> ignored;

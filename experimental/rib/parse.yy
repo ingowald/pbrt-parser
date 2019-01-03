@@ -119,6 +119,12 @@ block_item
 : TOKEN_Identity
 | object_definition
 | TOKEN_ObjectInstance string other_params
+{
+  // ignoring other parms for now...
+  parser->instantiate($2);
+  free($2);
+  delete $3;
+}
 | TOKEN_Sphere float float float float
 {
   parser->ignore("Sphere");
@@ -344,7 +350,15 @@ transform_block_body TOKEN_TransformEnd
 ;
 
 object_definition 
-: TOKEN_ObjectBegin string transform_block_body TOKEN_ObjectEnd
+: TOKEN_ObjectBegin string
+{
+  parser->beginObject($2);
+  free($2);
+}
+transform_block_body TOKEN_ObjectEnd
+{
+  parser->endObject();
+}
 ;
 
 float

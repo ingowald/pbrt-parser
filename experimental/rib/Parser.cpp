@@ -28,11 +28,10 @@ namespace rib {
 
   RIBParser::RIBParser(const std::string &fileName)
   {
-    
     scene = std::make_shared<Scene>();
     currentObject = scene->root = std::make_shared<Object>();
     
-    xfmStack.push(affine3f());
+    xfmStack.push(affine3f(one));
     yydebug = 0; //1;
     yyin = fopen(fileName.c_str(),"r");
     yacc_state::parser = this;
@@ -97,6 +96,19 @@ namespace rib {
         qm->index.push_back(vec4i(idx[0],idx[1],idx[2],idx[2]));
       }
     }
+    // std::cout << "created mesh: First few quads: " << std::endl;
+    // for (int i=0;i<std::min(size_t(10),qm->index.size());i++) {
+    //   std::cout << "#" << i << ": " << qm->index[i] << "{"
+    //             << qm->vertex[qm->index[i].x]
+    //             << qm->vertex[qm->index[i].y]
+    //             << qm->vertex[qm->index[i].z]
+    //             << qm->vertex[qm->index[i].w]
+    //             << "}" << std::endl;
+    // }
+    // box3f bounds = empty;
+    // for (auto vtx : qm->vertex)
+    //   bounds.extend(vtx);
+    // PRINT(bounds);
     return qm;
   }
     
