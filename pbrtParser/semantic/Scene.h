@@ -568,6 +568,11 @@ namespace pbrt {
       /*! pretty-printer, for debugging */
       virtual std::string toString() const override { return "QuadMesh"; }
 
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+
       /*! create a new quad mesh by merging triangle pairs in given
         triangle mesh. triangles that cannot be merged into quads will
         be stored as degenerate quads */
