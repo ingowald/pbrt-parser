@@ -17,11 +17,17 @@
 #pragma once
 
 #include "FilePos.h"
-#include "ospcommon/AffineSpace.h"
-#include <stack>
-namespace rib {
-  using namespace ospcommon;
 
+#define PBRT_PARSER_VECTYPE_NAMESPACE  ospcommon
+#include "pbrtParser/semantic/Scene.h"
+#include "ospcommon/AffineSpace.h"
+
+#include <stack>
+
+namespace rib {
+  using namespace pbrt::semantic;
+  using ospcommon::affine3f;
+  
   typedef enum { FLOAT, INT, STRING } ParamType;
 
   template<typename T> struct getParamType;
@@ -68,10 +74,7 @@ namespace rib {
   };
   
   struct RIBParser {
-    RIBParser()
-    {
-      xfmStack.push(affine3f(one));
-    }
+    RIBParser(const std::string &fileName);
 
     affine3f currentXfm() { return xfmStack.top(); }
     
@@ -86,24 +89,11 @@ namespace rib {
                         const std::vector<int> &ignore0,
                         const std::vector<int> &ignore1,
                         const std::vector<float> &ignore2,
-                        Params &params)
-    {
-      int nextIdx = 0;
-      Param::SP _P = params["P"];
-      if (!_P) return;
-      ParamT<float> &P = (ParamT<float>&)*_P;
-      
-      const vec3f *vertex = (const vec3f*)P.values.data();
-      for (auto nextFaceVertices : faceVertexCount) {
-        std::vector<int> faceIndices;
-        for (int i=0;i<nextFaceVertices;i++)
-          faceIndices.push_back(vertexIndices[nextIdx++]);
-      }
-    }
+                        Params &params);
 
+    Scene::SP scene;
     
     std::stack<affine3f> xfmStack;
   };
-
   
-}
+} // ::rib

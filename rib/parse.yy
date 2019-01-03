@@ -2,7 +2,7 @@
 
 %{
 
-#include "rib.h"
+#include "Parser.h"
 
   using namespace rib;
 

@@ -3,7 +3,7 @@
 #define YY_MAIN 1
 #define YY_NEVER_INTERACTIVE 1
 
-#include "rib.h"
+#include "Parser.h"
 #include "parse_y.hpp"
 #include <string>
 

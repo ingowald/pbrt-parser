@@ -14,23 +14,38 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "rib.h"
-
-extern FILE *yyin;
-extern int yydebug;
-extern int yyparse();
+#include "Parser.h"
 
 namespace rib {
   RIBParser *parser = nullptr;
-}
 
-int main(int ac, char **av)
-{
-  rib::parser = new rib::RIBParser();
+  void usage(const std::string &err = "")
+  {
+    if (err != "")
+      std::cerr << "Error: " << err << std::endl << std::endl;
+    std::cout << "Usage: ./exp_rib2pbf inFile.rib -o outFile.pbf" << std::endl;
+    exit(err != "");
+  }
   
-  const std::string fileName = av[1];
+  extern "C" int main(int ac, char **av)
+  {
+    std::string inFileName = "";
+    std::string outFileName = "";
+
+    for (int i=1;i<ac;i++) {
+      const std::string arg = av[i];
+      if (arg[0] != '-')
+        inFileName = arg;
+      else if (arg == "-o")
+        outFileName = av[++i];
+      else usage("unknown argument '"+arg+"'");
+    }
+    if (inFileName == "")
+      usage("no input file name specified");
+    if (outFileName == "")
+      usage("no output file name specified");
   
-  yydebug = 0; //1;
-  yyin = fopen(fileName.c_str(),"r");
-  yyparse();
+    rib::parser = new rib::RIBParser(inFileName);
+    rib::parser->scene->saveTo(outFileName);
+  }
 }

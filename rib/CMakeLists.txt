@@ -44,12 +44,14 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(ribTest
-  rib.cpp
+  rib2pbf.cpp
+  Parser.cpp
   lex_l.cpp
   parse_y.cpp
   )
 
 TARGET_LINK_LIBRARIES(ribTest
+  pbrtParser_semantic
   )
 
 
