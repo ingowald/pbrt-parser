@@ -16,7 +16,11 @@
 
 #pragma once
 
-#include "../pbrtParser/semantic/Scene.h"
+#include "ospcommon/AffineSpace.h"
+
+#define PBRT_PARSER_VECTYPE_NAMESPACE  ospcommon
+#include "pbrtParser/semantic/Scene.h"
+// #include "../pbrtParser/semantic/Scene.h"
 #include <sstream>
 
 namespace rib {

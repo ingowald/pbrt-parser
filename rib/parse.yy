@@ -6,9 +6,10 @@
 
   using namespace rib;
 
-  namespace rib {
-  extern RIBParser *parser;
+  namespace yacc_state {
+    rib::RIBParser *parser;
   }
+  using yacc_state::parser;
   
 extern int yylex();
 void yyerror(const char *s);
@@ -21,7 +22,9 @@ void yyerror(const char *s);
 %union {
   float               floatVal;
   int                 intVal;
+  pbrt::semantic::QuadMesh  *quadMesh;
   char                *charPtr;
+  ospcommon::affine3f *xfm;
   std::vector<float>  *floatArray;
   std::vector<int>    *intArray;
   std::vector<std::string> *stringArray;
@@ -55,6 +58,8 @@ void yyerror(const char *s);
 %token TOKEN_SubdivisionMesh
 %token TOKEN_PointsGeneralPolygons
 
+%type <quadMesh>    subdiv_mesh polygon_mesh
+%type <xfm>         transformation
 %type <floatVal>    float
 %type <intVal>      int
 %type <charPtr>     string
@@ -94,33 +99,97 @@ block_item
 : TOKEN_Identity
 | object_definition
 | TOKEN_ObjectInstance string other_params
-| TOKEN_ScopedCoordinateSystem string
-| TOKEN_Translate float float float
-| TOKEN_Rotate float float float float
-| TOKEN_Scale float float float
-| concat_transform
 | TOKEN_Sphere float float float float
+{
+  parser->ignore("Sphere");
+}
 | TOKEN_Orientation string
+{
+  parser->ignore("Orientation");
+  free($2);
+}
+| TOKEN_ScopedCoordinateSystem string
+{
+  parser->ignore("ScopedCoordinateSystem");
+  free($2);
+}
+| transformation
+{
+  parser->applyXfm(*$1);
+  delete $1;
+}
 | attribute
 | attribute_block
 | transform_block
 | motion_block
+{ /* does its own thing */ }
 | area_light_source
 | shader
 | light_filter
 | TOKEN_Basis string float string float
+{
+  parser->ignore("Basis");
+  free($2);
+  free($4);
+}
 | subdiv_mesh
-| TOKEN_PointsGeneralPolygons int_array int_array /*< vertex count */ int_array /*<faceindices*/ other_params
+{
+  parser->add($1);
+  /* no delete here, the parser takes ownership via sharedptr */
+}
+| polygon_mesh
+{
+  parser->add($1);
+}
 | resource
+{ parser->ignore("Resource"); }
 ;
 
-concat_transform
-: TOKEN_ConcatTransform '[' float float float float float float float float float float float float float float float float ']'
+transformation
+: TOKEN_Rotate float float float float
+{
+  vec3f axis($3,$4,$5);
+  float angle = $2 * float(2*M_PI / 360.f);
+  $$ = new affine3f;
+  *$$ = ospcommon::affine3f::rotate(axis,angle);
+}
+| TOKEN_ConcatTransform '[' float float float float float float float float float float float float float float float float ']'
+{
+  affine3f xfm;
+  xfm.l.vx = vec3f($3,$4,$5);
+  xfm.l.vy = vec3f($7,$8,$9);
+  xfm.l.vz = vec3f($11,$12,$13);
+  xfm.p    = vec3f($15,$16,$17);
+  $$ = new affine3f;
+  *$$ = xfm;
+}
+| TOKEN_Translate float float float
+{
+  $$ = new affine3f;
+  *$$ = ospcommon::affine3f::translate(vec3f($2,$3,$4));
+}
+| TOKEN_Scale float float float
+{
+  $$ = new affine3f;
+  *$$ = ospcommon::affine3f::scale(vec3f($2,$3,$4));
+}
 ;
+
+polygon_mesh
+:TOKEN_PointsGeneralPolygons int_array int_array /*< vertex count */ int_array /*<faceindices*/ other_params
+{
+  $$ = parser->makePolygonMesh(*$3,*$4,*$5);
+  delete($2);
+  delete($3);
+  delete($4);
+  delete($5);
+}
+;
+
 
 subdiv_mesh
 : TOKEN_SubdivisionMesh string int_array int_array string_array int_array int_array float_array other_params {
-  parser->makeSubdivMesh($2,*$3,*$4,*$6,*$7,*$8,*$9);
+  $$ = parser->makeSubdivMesh($2,*$3,*$4,*$6,*$7,*$8,*$9);
   free($2);
   delete($3);
   delete($4);
@@ -185,15 +254,15 @@ string_array
 // ;
 
 area_light_source
-: TOKEN_AreaLightSource string string other_params
+: TOKEN_AreaLightSource string string other_params { parser->ignore("AreaLightSource"); }
 ;
 
 shader
-: TOKEN_Shader string string other_params
+: TOKEN_Shader string string other_params { parser->ignore("Shader"); }
 ;
 
 light_filter
-: TOKEN_LightFilter string string other_params
+: TOKEN_LightFilter string string other_params { parser->ignore("LightFilter"); }
 ;
 
 attribute
@@ -201,8 +270,25 @@ attribute
 ;
 
 motion_block_body
-: concat_transform concat_transform
+: transformation transformation
+{
+  /*! we don't do real motion transforms, so use only the first and
+      ignore the second */
+  parser->applyXfm(*$1);
+  delete $1;
+  delete $2;
+  parser->ignore("2nd arg in MotionBlock::transform"); 
+}
 | subdiv_mesh subdiv_mesh
+{
+  parser->add($1);
+  /* no delete of $1 here, the parser takes ownership via sharedptr */
+  
+  /* since we don't do 'real' motion blocks, $2 is no longer needed
+     here - kill it */
+  delete $2;
+  parser->ignore("2nd arg in MotionBlock::subdiv"); 
+}
 ;
 
 // motion_block_body
@@ -211,15 +297,30 @@ motion_block_body
 // ;
 
 attribute_block
-: TOKEN_AttributeBegin { parser->pushXfm(); } attribute_block_body TOKEN_AttributeEnd { parser->popXfm(); }
+: TOKEN_AttributeBegin {
+  parser->pushXfm();
+}
+attribute_block_body TOKEN_AttributeEnd {
+  parser->popXfm();
+}
 ;
 
 motion_block
-: TOKEN_MotionBegin '[' float float ']' motion_block_body TOKEN_MotionEnd
+: TOKEN_MotionBegin '[' float float ']'
+{
+  parser->ignore("time values in MotionBlock"); 
+} motion_block_body TOKEN_MotionEnd
 ;
 
 transform_block
-: TOKEN_TransformBegin transform_block_body TOKEN_TransformEnd
+: TOKEN_TransformBegin
+{
+  parser->pushXfm();
+}
+transform_block_body TOKEN_TransformEnd
+{
+  parser->popXfm();
+}
 ;
 
 object_definition 

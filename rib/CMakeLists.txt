@@ -43,14 +43,14 @@ LEX_FILE(lex.ll)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(ribTest
+add_executable(exp_rib2pbf
   rib2pbf.cpp
   Parser.cpp
   lex_l.cpp
   parse_y.cpp
   )
 
-TARGET_LINK_LIBRARIES(ribTest
+TARGET_LINK_LIBRARIES(exp_rib2pbf
   pbrtParser_semantic
   )
 

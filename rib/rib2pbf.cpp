@@ -45,7 +45,7 @@ namespace rib {
     if (outFileName == "")
       usage("no output file name specified");
   
-    rib::parser = new rib::RIBParser(inFileName);
-    rib::parser->scene->saveTo(outFileName);
+    RIBParser parser(inFileName);
+    parser.scene->saveTo(outFileName);
   }
 }

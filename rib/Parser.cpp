@@ -20,38 +20,85 @@ extern FILE *yyin;
 extern int yydebug;
 extern int yyparse();
 
+namespace yacc_state {
+  extern rib::RIBParser *parser;
+}
+
 namespace rib {
 
-      RIBParser::RIBParser(const std::string &fileName)
-    {
-      scene = std::make_shared<Scene>();
-      
-      xfmStack.push(affine3f());
-      yydebug = 0; //1;
-      yyin = fopen(fileName.c_str(),"r");
-      yyparse();
-      fclose(yyin);
-    }
+  RIBParser::RIBParser(const std::string &fileName)
+  {
+    
+    scene = std::make_shared<Scene>();
+    currentObject = scene->root = std::make_shared<Object>();
+    
+    xfmStack.push(affine3f());
+    yydebug = 0; //1;
+    yyin = fopen(fileName.c_str(),"r");
+    yacc_state::parser = this;
+    yyparse();
+    yacc_state::parser = nullptr;
+    fclose(yyin);
 
-  void RIBParser::makeSubdivMesh(const std::string &type,
-                        const std::vector<int> &faceVertexCount,
-                        const std::vector<int> &vertexIndices,
-                        const std::vector<int> &ignore0,
-                        const std::vector<int> &ignore1,
-                        const std::vector<float> &ignore2,
-                        Params &params)
-    {
-      int nextIdx = 0;
-      Param::SP _P = params["P"];
-      if (!_P) return;
-      ParamT<float> &P = (ParamT<float>&)*_P;
-      
-      const vec3f *vertex = (const vec3f*)P.values.data();
-      for (auto nextFaceVertices : faceVertexCount) {
-        std::vector<int> faceIndices;
-        for (int i=0;i<nextFaceVertices;i++)
-          faceIndices.push_back(vertexIndices[nextIdx++]);
+    std::cout << "done parsing." << std::endl;
+    if (!ignored.empty()) {
+      std::cout << "warning: there were some statements that we ignored..." << std::endl;
+      for (auto it : ignored)
+        std::cout << " - '" << it.first << "' \t(" << it.second << " times ...)" << std::endl;
+    }
+  }
+
+  void RIBParser::add(pbrt::semantic::QuadMesh *qm)
+  {
+    currentObject->geometries.push_back(pbrt::semantic::QuadMesh::SP(qm));
+  }
+
+  semantic::QuadMesh *
+  RIBParser::makeSubdivMesh(const std::string &type,
+                            const std::vector<int> &faceVertexCount,
+                            const std::vector<int> &vertexIndices,
+                            const std::vector<int> &ignore0,
+                            const std::vector<int> &ignore1,
+                            const std::vector<float> &ignore2,
+                            Params &params)
+  {
+    return makePolygonMesh(faceVertexCount,vertexIndices,params);
+  }
+
+  /*! note: this creates a POINTER, not a shared-ptr, else the yacc
+    stack gets confused! */
+  pbrt::semantic::QuadMesh *
+  RIBParser::makePolygonMesh(const std::vector<int> &faceVertexCount,
+                             const std::vector<int> &vertexIndices,
+                             Params &params)
+  {
+    int nextIdx = 0;
+    Param::SP _P = params["P"];
+    if (!_P) throw std::runtime_error("mesh without 'P' parameter!?");
+    ParamT<float> &P = (ParamT<float>&)*_P;
+
+    int numVertices = P.values.size()/3;
+    const vec3f *in_vertex = (const vec3f*)P.values.data();
+    
+    const affine3f xfm = currentXfm();
+    
+    pbrt::semantic::QuadMesh *qm = new semantic::QuadMesh();
+    for (int i=0;i<numVertices;i++)
+      qm->vertex.push_back(xfmPoint(xfm,in_vertex[i]));
+    for (auto nextFaceVertices : faceVertexCount) {
+      std::vector<int> idx;
+      for (int i=0;i<nextFaceVertices;i++)
+        idx.push_back(vertexIndices[nextIdx++]);
+      while (idx.size() >= 4) {
+        qm->index.push_back(vec4i(idx[0],idx[1],idx[2],idx[3]));
+        idx.erase(idx.begin()+1,idx.begin()+3);
+      }
+      if (idx.size() == 3) {
+        qm->index.push_back(vec4i(idx[0],idx[1],idx[2],idx[2]));
       }
     }
+    return qm;
+  }
+    
 
 } // ::rib

@@ -17,15 +17,13 @@
 #pragma once
 
 #include "FilePos.h"
-
-#define PBRT_PARSER_VECTYPE_NAMESPACE  ospcommon
-#include "pbrtParser/semantic/Scene.h"
 #include "ospcommon/AffineSpace.h"
 
 #include <stack>
 
 namespace rib {
   using namespace pbrt::semantic;
+  using namespace ospcommon;
   using ospcommon::affine3f;
   
   typedef enum { FLOAT, INT, STRING } ParamType;
@@ -77,23 +75,42 @@ namespace rib {
     RIBParser(const std::string &fileName);
 
     affine3f currentXfm() { return xfmStack.top(); }
+
+    void ignore(const std::string &what) { ignored[what]++; }
     
     void applyXfm(const affine3f &xfm)
     { xfmStack.top() = xfmStack.top() * xfm; }
     void pushXfm() { xfmStack.push(xfmStack.top()); }
     void popXfm() { xfmStack.pop(); }
 
-    void makeSubdivMesh(const std::string &type,
-                        const std::vector<int> &faceVertexCount,
-                        const std::vector<int> &vertexIndices,
-                        const std::vector<int> &ignore0,
-                        const std::vector<int> &ignore1,
-                        const std::vector<float> &ignore2,
-                        Params &params);
-
-    Scene::SP scene;
+    void add(pbrt::semantic::QuadMesh *qm);
     
+    /*! note: this creates a POINTER, not a shared-ptr, else the yacc
+        stack gets confused! */
+    pbrt::semantic::QuadMesh *
+    makeSubdivMesh(const std::string &type,
+                   const std::vector<int> &faceVertexCount,
+                   const std::vector<int> &vertexIndices,
+                   const std::vector<int> &ignore0,
+                   const std::vector<int> &ignore1,
+                   const std::vector<float> &ignore2,
+                   Params &params);
+
+    /*! note: this creates a POINTER, not a shared-ptr, else the yacc
+        stack gets confused! */
+    pbrt::semantic::QuadMesh *
+    makePolygonMesh(const std::vector<int> &faceVertexCount,
+                    const std::vector<int> &vertexIndices,
+                    Params &params);
+    
+    Scene::SP  scene;
+    Object::SP currentObject;
+
     std::stack<affine3f> xfmStack;
+
+    /*! occurrances of ignored statements in rib file ... only used
+        for proper warning of missing/ignored objects */
+    std::map<std::string,int> ignored;
   };
   
 } // ::rib
