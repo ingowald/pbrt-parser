@@ -726,50 +726,44 @@ namespace pbrt {
       virtual int writeTo(BinaryWriter &) override;
       /*! serialize _in_ from given binary file reader */
       virtual void readFrom(BinaryReader &) override;
-    
-      /*! @{ computed mostly from 'lookat' value - using a _unit_ screen
-        (that spans [-1,-1]-[+1,+1) that does not involve either
-        screen size, screen resolution, or aspect ratio */
-      vec3f screen_center;
-      vec3f screen_du;
-      vec3f screen_dv;
-      /*! @} */
-      vec3f lens_center;
-      vec3f lens_du;
-      vec3f lens_dv;
+
+      struct {
+        /*! @{ computed mostly from 'lookat' value - using a _unit_ screen
+          (that spans [-1,-1]-[+1,+1) that does not involve either
+          screen size, screen resolution, or aspect ratio */
+        vec3f screen_center;
+        vec3f screen_du;
+        vec3f screen_dv;
+        /*! @} */
+        vec3f lens_center;
+        vec3f lens_du;
+        vec3f lens_dv;
+      } simplified;
     };
 
-    /*! a frame buffer of given resolution - for now we'll have this
-      framebuffer actually store the pixels, and use a hardcoded vec4f
-      format 
-
-      \todo move the pixel array handling out of here - this is the
-      scene graph, not renderer state
-    */
-    struct FrameBuffer : public Entity {
+    /*! specification of 'film' / frame buffer. note this will only
+        store the size specification, not the actual pixels itself */
+    struct Film : public Entity {
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more consise, and easier to read */
-      typedef std::shared_ptr<FrameBuffer> SP;
+      typedef std::shared_ptr<Film> SP;
 
-      FrameBuffer(const vec2i &resolution)
-        : resolution(resolution)
-        // ,
-        //   pixels(resolution.x*resolution.y)
+      Film(const vec2i &resolution, const std::string &fileName="")
+        : resolution(resolution),
+          fileName(fileName)
       {}
 
       /*! pretty-printer, for debugging */
-      virtual std::string toString() const override { return "FrameBuffer"; }
+      virtual std::string toString() const override { return "Film"; }
       /*! serialize out to given binary writer */
       virtual int writeTo(BinaryWriter &) override;
       /*! serialize _in_ from given binary file reader */
       virtual void readFrom(BinaryReader &) override;
     
-    
-      /*! helper function that returns total number of pixels in this image */
-      inline size_t numPixels() const { return resolution.x*resolution.y; }
-    
-      // std::vector<vec4f> pixels;
       vec2i              resolution;
+      /*! some files do specify the desired filename to be written
+          to. may be empty if not set */
+      std::string        fileName;
     };
 
     /*! the complete scene - pretty much the 'root' object that
@@ -804,13 +798,16 @@ namespace pbrt {
 
       /*! return bounding box of scene */
       box3f getBounds() const
-      { assert(root); return root->getBounds(); }
+      { assert(world); return world->getBounds(); }
+
+      /*! just in case there's multiple cameras defined, this is a
+        vector */
+      std::vector<Camera::SP> cameras;
+      
+      Film::SP                film;
     
-      Camera::SP      camera;
-      FrameBuffer::SP frameBuffer;
-    
-      /*! the worldbegin/worldend content, in our format */
-      Object::SP      root;
+      /*! the worldbegin/worldend content */
+      Object::SP              world;
     };
     
     /* compute some _rough_ storage cost esimate for a scene. this will

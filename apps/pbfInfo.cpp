@@ -38,7 +38,7 @@ namespace pbrt {
     struct PBRTInfo {
       PBRTInfo(Scene::SP scene)
       {
-        traverse(scene->root);
+        traverse(scene->world);
         numObjects.print("objects");
         numShapes.print("shapes");
         numTriangles.print("triangles");

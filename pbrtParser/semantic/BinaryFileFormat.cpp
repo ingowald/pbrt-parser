@@ -65,7 +65,7 @@ namespace pbrt {
       TYPE_MARBLE_TEXTURE,
       TYPE_MIX_TEXTURE,
       TYPE_WRINKLED_TEXTURE,
-      TYPE_FRAME_BUFFER,
+      TYPE_FILM,
       TYPE_TRIANGLE_MESH,
       TYPE_QUAD_MESH,
       TYPE_SPHERE,
@@ -193,8 +193,8 @@ namespace pbrt {
           return std::make_shared<FourierMaterial>();
         case TYPE_METAL_MATERIAL:
           return std::make_shared<MetalMaterial>();
-        case TYPE_FRAME_BUFFER:
-          return std::make_shared<FrameBuffer>(vec2i(0));
+        case TYPE_FILM:
+          return std::make_shared<Film>(vec2i(0));
         case TYPE_CAMERA:
           return std::make_shared<Camera>();
         case TYPE_TRIANGLE_MESH:
@@ -315,6 +315,12 @@ namespace pbrt {
         writeRaw(&t,sizeof(t));
       }
 
+      template<typename T>
+      void write(const std::shared_ptr<T> &t)
+      {
+        write(serialize(t));
+      }
+
       void write(const std::string &t)
       {
         write((int32_t)t.size());
@@ -399,59 +405,48 @@ namespace pbrt {
     /*! serialize out to given binary writer */
     int Scene::writeTo(BinaryWriter &binary) 
     {
-      binary.write(binary.serialize(frameBuffer));
-      binary.write(binary.serialize(camera));
-      binary.write(binary.serialize(root));
+      binary.write(binary.serialize(film));
+      binary.write(cameras);
+      binary.write(binary.serialize(world));
       return TYPE_SCENE;
     }
   
     /*! serialize _in_ from given binary file reader */
     void Scene::readFrom(BinaryReader &binary) 
     {
-      frameBuffer = binary.getEntity<FrameBuffer>(binary.read<int>());
-      camera      = binary.getEntity<Camera>(binary.read<int>());
-      root        = binary.getEntity<Object>(binary.read<int>());
+      binary.read(film);
+      binary.read(cameras);
+      binary.read(world);
     }
-
-
 
     /*! serialize out to given binary writer */
     int Camera::writeTo(BinaryWriter &binary) 
     {
-      binary.write(screen_center);
-      binary.write(screen_du);
-      binary.write(screen_dv);
-      binary.write(lens_center);
-      binary.write(lens_du);
-      binary.write(lens_dv);
+      binary.write(simplified);
       return TYPE_CAMERA;
     }
   
     /*! serialize _in_ from given binary file reader */
     void Camera::readFrom(BinaryReader &binary) 
     {
-      binary.read(screen_center);
-      binary.read(screen_du);
-      binary.read(screen_dv);
-      binary.read(lens_center);
-      binary.read(lens_du);
-      binary.read(lens_dv);
+      binary.read(simplified);
     }
 
 
 
     /*! serialize out to given binary writer */
-    int FrameBuffer::writeTo(BinaryWriter &binary) 
+    int Film::writeTo(BinaryWriter &binary) 
     {
       binary.write(resolution);
-      return TYPE_FRAME_BUFFER;
+      binary.write(fileName);
+      return TYPE_FILM;
     }
   
     /*! serialize _in_ from given binary file reader */
-    void FrameBuffer::readFrom(BinaryReader &binary) 
+    void Film::readFrom(BinaryReader &binary) 
     {
       binary.read(resolution);
-      // pixels.resize(area(resolution));
+      binary.read(fileName);
     }
 
 

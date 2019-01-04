@@ -86,7 +86,6 @@ namespace pbrt {
         }
         if (in->mapType == "scale") {
           ScaleTexture::SP tex = std::make_shared<ScaleTexture>();
-#if 1
           if (in->hasParamTexture("tex1"))
             tex->tex1 = findOrCreateTexture(in->getParamTexture("tex1"));
           else if (in->hasParam3f("tex1"))
@@ -100,12 +99,6 @@ namespace pbrt {
             in->getParam3f(&tex->scale2.x,"tex2");
           else
             tex->scale2 = vec3f(in->getParam1f("tex2"));
-#else
-          std::string tex1_name = in->getParamString("tex1");
-          std::string tex2_name = in->getParamString("tex2");
-          tex->tex1 = findOrCreateTexture(in->attributes->namedTexture[tex1_name]);
-          tex->tex2 = findOrCreateTexture(in->attributes->namedTexture[tex2_name]);
-#endif
           return tex;
         }
         if (in->mapType == "mix") {
@@ -274,7 +267,7 @@ namespace pbrt {
               if (in->hasParam3f(name))
                 in->getParam3f(&mat->k.x,name);
               else
-              mat->spectrum_k = in->getParamString(name);
+                mat->spectrum_k = in->getParamString(name);
             }
             else if (name == "bumpmap") {
               mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
@@ -561,7 +554,7 @@ namespace pbrt {
         : pbrtScene(pbrtScene)
       {
         result        = std::make_shared<Scene>();
-        result->root  = findOrEmitObject(pbrtScene->world);
+        result->world  = findOrEmitObject(pbrtScene->world);
 
         if (!unhandledShapeTypeCounter.empty()) {
           std::cerr << "WARNING: scene contained some un-handled shapes!" << std::endl;
@@ -726,15 +719,19 @@ namespace pbrt {
       PBRTScene::SP pbrtScene;
     };
 
-    vec2i createFrameBuffer(Scene::SP ours, pbrt::syntactic::Scene::SP pbrt)
+    vec2i createFilm(Scene::SP ours, pbrt::syntactic::Scene::SP pbrt)
     {
       if (pbrt->film &&
           pbrt->film->findParam<int>("xresolution") &&
           pbrt->film->findParam<int>("yresolution")) {
         vec2i resolution;
+        std::string fileName = "";
+        if (pbrt->film->hasParamString("filename"))
+          fileName = pbrt->film->getParamString("filename");
+        
         resolution.x = pbrt->film->findParam<int>("xresolution")->get(0);
         resolution.y = pbrt->film->findParam<int>("yresolution")->get(0);
-        ours->frameBuffer = std::make_shared<FrameBuffer>(resolution);
+        ours->film = std::make_shared<Film>(resolution,fileName);
       } else {
         std::cout << "warning: could not determine film resolution from pbrt scene" << std::endl;
       }
@@ -759,38 +756,33 @@ namespace pbrt {
         return;
       }
 
-      pbrt::syntactic::Camera::SP camera = pbrt->cameras[0];
-      if (!camera)
-        throw std::runtime_error("invalid pbrt camera");
+      for (auto camera : pbrt->cameras) {
+        if (!camera)
+          throw std::runtime_error("invalid pbrt camera");
 
-      const float fov = findCameraFov(camera);
+        const float fov = findCameraFov(camera);
 
-      // TODO: lensradius and focaldistance:
+        // TODO: lensradius and focaldistance:
 
-      //     float 	lensradius 	0 	The radius of the lens. Used to render scenes with depth of field and focus effects. The default value yields a pinhole camera.
-      const float lensRadius = 0.f;
+        //     float 	lensradius 	0 	The radius of the lens. Used to render scenes with depth of field and focus effects. The default value yields a pinhole camera.
+        const float lensRadius = 0.f;
 
-      // float 	focaldistance 	10^30 	The focal distance of the lens. If "lensradius" is zero, this has no effect. Otherwise, it specifies the distance from the camera origin to the focal plane.
-      const float focalDistance = 1.f;
+        // float 	focaldistance 	10^30 	The focal distance of the lens. If "lensradius" is zero, this has no effect. Otherwise, it specifies the distance from the camera origin to the focal plane.
+        const float focalDistance = 1.f;
     
-
+        const affine3f frame = rcp(camera->transform.atStart);
     
-      const affine3f frame = rcp(camera->transform.atStart);
-    
-      ours->lens_center = frame.p;
-      ours->lens_du = lensRadius * frame.l.vx;
-      ours->lens_dv = lensRadius * frame.l.vy;
+        ours->simplified.lens_center = frame.p;
+        ours->simplified.lens_du = lensRadius * frame.l.vx;
+        ours->simplified.lens_dv = lensRadius * frame.l.vy;
 
-      // assuming screen height of 1
-      // tan(fov/2) = (1/2)/z = 1/(2z)
-      // 2z = 1/tan(fov/2)
-      // z = 0.5 / tan(fov/2)
-      const float fovDistanceToUnitPlane = 0.5f / tanf(fov/2 * M_PI/180.f);
-      ours->screen_center = frame.p + focalDistance * frame.l.vz;
-      ours->screen_du = - focalDistance/fovDistanceToUnitPlane * frame.l.vx;
-      ours->screen_dv = focalDistance/fovDistanceToUnitPlane * frame.l.vy;
+        const float fovDistanceToUnitPlane = 0.5f / tanf(fov/2 * M_PI/180.f);
+        ours->simplified.screen_center = frame.p + focalDistance * frame.l.vz;
+        ours->simplified.screen_du = - focalDistance/fovDistanceToUnitPlane * frame.l.vx;
+        ours->simplified.screen_dv = focalDistance/fovDistanceToUnitPlane * frame.l.vy;
 
-      scene->camera = ours;
+        scene->cameras.push_back(ours);
+      }
     }
 
     semantic::Scene::SP importPBRT(const std::string &fileName)
@@ -804,7 +796,7 @@ namespace pbrt {
         throw std::runtime_error("could not detect input file format!? (unknown extension in '"+fileName+"')");
       
       semantic::Scene::SP scene = SemanticParser(pbrt).result;
-      createFrameBuffer(scene,pbrt);
+      createFilm(scene,pbrt);
       createCamera(scene,pbrt);
       return scene;
     }

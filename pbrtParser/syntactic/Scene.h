@@ -233,6 +233,10 @@ namespace pbrt {
       {
         return (bool)findParam<Texture>(name);
       }
+      bool hasParamString(const std::string &name) const
+      {
+        return (bool)findParam<std::string>(name);
+      }
       bool hasParam1f(const std::string &name) const
       {
         return

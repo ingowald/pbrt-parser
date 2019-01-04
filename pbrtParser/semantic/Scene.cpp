@@ -225,12 +225,12 @@ namespace pbrt {
       static const int geomWeight = 4000.f;
     
       std::set<Geometry::SP> activeGeometries;
-      for (auto inst : scene->root->instances) 
+      for (auto inst : scene->world->instances) 
         for (auto geom : inst->object->geometries) 
           activeGeometries.insert(geom);
 
       double costEstimate
-        = scene->root->instances.size() * instWeight
+        = scene->world->instances.size() * instWeight
         + activeGeometries.size() * geomWeight;
       for (auto geom : activeGeometries)
         costEstimate += geom->getNumPrims() * primWeight;
@@ -325,67 +325,11 @@ namespace pbrt {
     
 
     struct SingleLevelFlattener {
-      SingleLevelFlattener(Object::SP root)
+      SingleLevelFlattener(Object::SP world)
         : result(std::make_shared<Object>())
       {
-        // inlineMultiLevelNodes(root);
-      
-        traverse(root, affine3f(ospcommon::one));
+        traverse(world, affine3f(ospcommon::one));
       }
-
-      // void inlineAllGeometry(Object::SP target,
-      //                        Object::SP object,
-      //                        const affine3f &xfm, int &numInlined)
-      // {
-      //   for (auto geom : object->geometries) {
-      //     TriangleMesh::SP mesh = std::dynamic_pointer_cast<TriangleMesh>(geom);
-      //     if (!geom) continue;
-
-      //     TriangleMesh::SP newMesh = std::make_shared<TriangleMesh>(mesh->material);
-      //     newMesh->index = mesh->index;
-      //     for (auto v : mesh->vertex)
-      //       newMesh->vertex.push_back(xfmPoint(xfm,v));
-      //     target->geometries.push_back(newMesh);
-      //   }
-
-      //   numInlined++;
-      
-      //   for (auto inst : object->instances)
-      //     if (inst && inst->object) 
-      //       inlineAllGeometry(target,inst->object, xfm * inst->xfm, numInlined);
-      // }
-
-      // Object::SP inlineAllGeometry(Object::SP object, int &numInlined)
-      // {
-      //   if (object->instances.empty()) return object;
-
-      //   Object::SP newObj = std::make_shared<Object>("inlinedFrom:"+object->name);
-      //   inlineAllGeometry(newObj,object,affine3f(one),numInlined);
-      //   return newObj;
-      // }
-
-      // void inlineMultiLevelNodes(Object::SP root)
-      // {
-      //   std::map<Object::SP,std::set<Instance::SP>> parentsOf;
-
-      //   // first, traverse everything to populate 'parentsOf' field
-      //   {
-      //     std::set<Object::SP> alreadyPushedObjects;
-      //     std::stack<Object::SP> workStack;
-      //     workStack.push(root);
-      //     alreadyPushedObjects.insert(root);
-      //     while (!workStack.empty()) {
-      //       Object::SP obj = workStack.top(); workStack.pop();
-      //       for (auto inst : obj->instances) {
-      //         parentsOf[inst->object].insert(inst);
-      //         if (alreadyPushedObjects.find(inst->object) == alreadyPushedObjects.end()) {
-      //           workStack.push(inst->object);
-      //           alreadyPushedObjects.insert(inst->object);
-      //         }
-      //       }
-      //     }
-      //   }
-      // }
     
       Object::SP
       getOrCreateEmittedGeometryFrom(Object::SP object)
@@ -426,15 +370,15 @@ namespace pbrt {
       flattned scene */
     void Scene::makeSingleLevel()
     {
-      this->root = SingleLevelFlattener(root).result;
+      this->world = SingleLevelFlattener(world).result;
     }
 
     /*! checks if the scene contains more than one level of instancing */
     bool Scene::isSingleLevel() const
     {
-      if (!root->geometries.empty())
+      if (!world->geometries.empty())
         return false;
-      for (auto inst : root->instances)
+      for (auto inst : world->instances)
         if (!inst->object->instances.empty())
           return false;
       return true;
