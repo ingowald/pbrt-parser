@@ -429,6 +429,9 @@ namespace pbrt {
               } else
                 mat->vRoughness = in->getParam1f(name);
             }
+            else if (name == "remaproughness") {
+              mat->remapRoughness = in->getParamBool(name);
+            }
             else if (name == "bumpmap") {
               mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
             }

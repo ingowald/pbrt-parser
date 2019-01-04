@@ -359,7 +359,8 @@ namespace pbrt {
       Texture::SP map_uRoughness;
       float vRoughness { .001 };
       Texture::SP map_vRoughness;
-
+      bool remapRoughness { false };
+      
       vec3f kd { .65f };
       Texture::SP map_kd;
       vec3f ks { .0f };

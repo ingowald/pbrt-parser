@@ -882,6 +882,7 @@ namespace pbrt {
       binary.write(binary.serialize(map_uRoughness));
       binary.write(vRoughness);
       binary.write(binary.serialize(map_vRoughness));
+      binary.write(remapRoughness);
       return TYPE_SUBSTRATE_MATERIAL;
     }
   
@@ -898,6 +899,7 @@ namespace pbrt {
       binary.read(map_uRoughness);
       binary.read(vRoughness);
       binary.read(map_vRoughness);
+      binary.read(remapRoughness);
     }
 
 
