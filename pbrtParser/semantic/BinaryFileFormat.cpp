@@ -84,11 +84,8 @@ namespace pbrt {
         : binFile(fileName)
       {
         int formatTag;
-
-        binFile.sync_with_stdio(false);
       
         binFile.read((char*)&formatTag,sizeof(formatTag));
-
         while (1) {
           size_t size;
           binFile.read((char*)&size,sizeof(size));
@@ -99,7 +96,7 @@ namespace pbrt {
           currentEntityData.resize(size);
           binFile.read((char *)currentEntityData.data(),size);
           currentEntityOffset = 0;
-        
+
           Entity::SP newEntity = createEntity(tag);
           readEntities.push_back(newEntity);
           if (newEntity) newEntity->readFrom(*this);
@@ -120,6 +117,10 @@ namespace pbrt {
       template<typename T> T read();
       template<typename T> std::vector<T> readVector();
       template<typename T> void read(std::vector<T> &vt) { vt = readVector<T>(); }
+      template<typename T> void read(std::vector<std::shared_ptr<T>> &vt)
+      {
+        vt = readVector<std::shared_ptr<T>>(); 
+      }
       template<typename T> void read(T &t) { t = read<T>(); }
 
 
@@ -273,8 +274,9 @@ namespace pbrt {
     {
       size_t length = read<size_t>();
       std::vector<T> vt(length);
-      for (int i=0;i<length;i++)
-        vt[i] = read<T>();
+      for (int i=0;i<length;i++) {
+        read(vt[i]);
+      }
       return vt;
     }
   
@@ -316,7 +318,7 @@ namespace pbrt {
       }
 
       template<typename T>
-      void write(const std::shared_ptr<T> &t)
+      void write(std::shared_ptr<T> t)
       {
         write(serialize(t));
       }
@@ -337,16 +339,27 @@ namespace pbrt {
           writeRaw(ptr,t.size()*sizeof(T));
       }
 
+      template<typename T>
+      void write(const std::vector<std::shared_ptr<T>> &t)
+      {
+        const void *ptr = (const void *)t.data();
+        size_t size = t.size();
+        write(size);
+        for (int i=0;i<size;i++)
+          write(t[i]);
+      }
+
 
       
       template<typename T1, typename T2>
-      void write(std::map<T1,std::shared_ptr<T2>> &values)
+      void write(const std::map<T1,std::shared_ptr<T2>> &values)
       {
         int size = values.size();
         write(size);
         for (auto it : values) {
           write(it.first);
-          write(serialize(it.second));
+          write(it.second);
+          // write(serialize(it.second));
         }
       }
 
