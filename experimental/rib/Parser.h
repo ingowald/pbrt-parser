@@ -121,7 +121,7 @@ namespace rib {
     void beginObject(const std::string &name)
     {
       objectStack.push(currentObject);
-      xfmStack.push(affine3f(one));
+      // xfmStack.push(affine3f(one));
       currentObject = std::make_shared<Object>();
       std::cout << "#rib: starting on new object '" << name << "'" << std::endl;
       namedObjects[name] = currentObject;
@@ -130,7 +130,7 @@ namespace rib {
     {
       currentObject = objectStack.top();
       objectStack.pop();
-      xfmStack.pop();
+      // xfmStack.pop();
     }
     
     Scene::SP  scene;

@@ -29,7 +29,7 @@ namespace rib {
   RIBParser::RIBParser(const std::string &fileName)
   {
     scene = std::make_shared<Scene>();
-    currentObject = scene->root = std::make_shared<Object>();
+    currentObject = scene->world = std::make_shared<Object>();
     
     xfmStack.push(affine3f(one));
     yydebug = 0; //1;
