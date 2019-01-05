@@ -103,12 +103,14 @@ namespace pbrt {
       int x, y, z, w;
     };
     struct affine3f {
-      /*! x-basis vector of affine transform matrix */
-      vec3f vx;
-      /*! y-basis vector of affine transform matrix */
-      vec3f vy;
-      /*! z-basis vector of affine transform matrix */
-      vec3f vz;
+      struct {
+        /*! x-basis vector of affine transform matrix */
+        vec3f vx;
+        /*! y-basis vector of affine transform matrix */
+        vec3f vy;
+        /*! z-basis vector of affine transform matrix */
+        vec3f vz;
+      } l;
       /*! translational part */
       vec3f p;
     };
