@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2018 Ingo Wald                                            //
+// Copyright 2015-2019 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -207,6 +207,7 @@ namespace pbrt {
       bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
       return bounds;
     };
+    
     /* compute some _rough_ storage cost esimate for a scene. this will
        allow bricking builders to greedily split only the most egregious
        objects */
@@ -236,12 +237,6 @@ namespace pbrt {
         costEstimate += geom->getNumPrims() * primWeight;
       return costEstimate;
     }
-
-    // inline bool operator<(const ospcommon::vec_t<float,3> a,
-    //                       const ospcommon::vec_t<float,3> b)
-    // {
-    //   return memcmp(&a,&b,sizeof(a)) < 0;
-    // }
 
     struct FatVertex {
       vec3f p, n;
