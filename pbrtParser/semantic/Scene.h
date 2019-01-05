@@ -728,6 +728,24 @@ namespace pbrt {
       /*! serialize _in_ from given binary file reader */
       virtual void readFrom(BinaryReader &) override;
 
+      float fov { 30.f };
+      
+      // PBRT-Doc: float lensradius 0 The radius of the lens. Used to
+      // render scenes with depth of field and focus effects. The
+      // default value yields a pinhole camera.
+      float lensRadius { 0.f };
+      
+      // PBRT-Doc: float focaldistance 10^30 The focal distance of the lens. If
+      // "lensradius" is zero, this has no effect. Otherwise, it
+      // specifies the distance from the camera origin to the focal
+      // plane
+      float focalDistance { 1e5f }; // iw: real default is 1e30f, but
+                                    // that messes up our 'simplified'
+                                    // camera...
+
+      // the camera transform active when the camera was created
+      affine3f frame;
+      
       struct {
         /*! @{ computed mostly from 'lookat' value - using a _unit_ screen
           (that spans [-1,-1]-[+1,+1) that does not involve either

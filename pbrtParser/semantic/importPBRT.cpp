@@ -788,6 +788,38 @@ namespace pbrt {
       }
     }
 
+    Camera::SP createCamera(pbrt::syntactic::Camera::SP camera)
+    {
+      if (!camera) return Camera::SP();
+
+      Camera::SP ours = std::make_shared<Camera>();
+      if (camera->hasParam1f("fov"))
+        ours->lensRadius = camera->getParam1f("fov");
+      if (camera->hasParam1f("lensradius"))
+        ours->lensRadius = camera->getParam1f("lensradius");
+      if (camera->hasParam1f("focaldistance"))
+        ours->focalDistance = camera->getParam1f("focaldistance");
+
+      ours->frame = rcp(camera->transform.atStart);
+      
+      ours->simplified.lens_center
+        = ours->frame.p;
+      ours->simplified.lens_du
+        = ours->lensRadius * ours->frame.l.vx;
+      ours->simplified.lens_dv
+        = ours->lensRadius * ours->frame.l.vy;
+      
+      const float fovDistanceToUnitPlane = 0.5f / tanf(ours->fov/2 * M_PI/180.f);
+      ours->simplified.screen_center
+        = ours->frame.p + ours->focalDistance * ours->frame.l.vz;
+      ours->simplified.screen_du
+        = - ours->focalDistance/fovDistanceToUnitPlane * ours->frame.l.vx;
+      ours->simplified.screen_dv
+        = ours->focalDistance/fovDistanceToUnitPlane * ours->frame.l.vy;
+
+      return ours;
+    }
+
     semantic::Scene::SP importPBRT(const std::string &fileName)
     {
       pbrt::syntactic::Scene::SP pbrt;
@@ -800,7 +832,8 @@ namespace pbrt {
       
       semantic::Scene::SP scene = SemanticParser(pbrt).result;
       createFilm(scene,pbrt);
-      createCamera(scene,pbrt);
+      for (auto cam : pbrt->cameras)
+        scene->cameras.push_back(createCamera(cam));
       return scene;
     }
 

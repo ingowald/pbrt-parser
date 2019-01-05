@@ -435,6 +435,10 @@ namespace pbrt {
     /*! serialize out to given binary writer */
     int Camera::writeTo(BinaryWriter &binary) 
     {
+      binary.write(fov);
+      binary.write(focalDistance);
+      binary.write(lensRadius);
+      binary.write(frame);
       binary.write(simplified);
       return TYPE_CAMERA;
     }
@@ -442,6 +446,10 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     void Camera::readFrom(BinaryReader &binary) 
     {
+      binary.read(fov);
+      binary.read(focalDistance);
+      binary.read(lensRadius);
+      binary.read(frame);
       binary.read(simplified);
     }
 
