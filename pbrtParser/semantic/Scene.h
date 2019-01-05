@@ -739,7 +739,7 @@ namespace pbrt {
       // "lensradius" is zero, this has no effect. Otherwise, it
       // specifies the distance from the camera origin to the focal
       // plane
-      float focalDistance { 1e5f }; // iw: real default is 1e30f, but
+      float focalDistance { 1e3f }; // iw: real default is 1e30f, but
                                     // that messes up our 'simplified'
                                     // camera...
 
