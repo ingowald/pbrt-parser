@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2015-2018 Ingo Wald                                            ##
+## Copyright 2015-2019 Ingo Wald                                            ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -14,7 +14,7 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-ADD_LIBRARY(pbrtParser_syntactic SHARED
+set(SOURCES
   Lexer.cpp
   Parser.cpp
   Scene.cpp
@@ -22,12 +22,20 @@ ADD_LIBRARY(pbrtParser_syntactic SHARED
   parsePLY.cpp
   ../../3rdParty/ply.cpp
   )
-#TARGET_COMPILE_DEFINITIONS(pbrtParser_syntactic PUBLIC pbrtParser_syntactic_EXPORTS=1)
-TARGET_LINK_LIBRARIES(pbrtParser_syntactic
-#  ospray_common
+
+# ------------------------------------------------------------------
+add_library(pbrtParser_syntactic SHARED
+  ${SOURCES}
+  )
+set_target_properties(pbrtParser_syntactic PROPERTIES VERSION ${pbrtParser_VERSION})
+
+# ------------------------------------------------------------------
+add_library(pbrtParser_syntactic_static
+  ${SOURCES}
   )
  
-
+# ------------------------------------------------------------------
 install(TARGETS pbrtParser_syntactic DESTINATION lib)
+install(TARGETS pbrtParser_syntactic_static DESTINATION lib)
 install(FILES Scene.h DESTINATION include/pbrtParser/syntactic)
 

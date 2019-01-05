@@ -14,43 +14,62 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-PROJECT(PBRTParser)
+project(pbrtParser)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-IF(COMMAND cmake_policy)
-  CMAKE_POLICY(SET CMP0003 NEW)
+if(NOT SET_UP_CONFIGURATIONS_DONE)
+    set(SET_UP_CONFIGURATIONS_DONE 1)
 
-  IF(${CMAKE_MAJOR_VERSION} EQUAL 3)
-    CMAKE_POLICY(SET CMP0042 NEW)
-  ENDIF(${CMAKE_MAJOR_VERSION} EQUAL 3)
-ENDIF(COMMAND cmake_policy)
+    # No reason to set CMAKE_CONFIGURATION_TYPES if it's not a multiconfig generator
+    # Also no reason mess with CMAKE_BUILD_TYPE if it's a multiconfig generator.
+    if(CMAKE_CONFIGURATION_TYPES) # multiconfig generator?
+        set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Profile" CACHE STRING "" FORCE) 
+    else()
+        if(NOT CMAKE_BUILD_TYPE)
+#            message("Defaulting to release build.")
+            set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
+        endif()
+        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY HELPSTRING "Choose the type of build")
+        # set the valid options for cmake-gui drop-down list
+        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release;Profile")
+    endif()
+endif()
 
-SET(CMAKE_CXX_STANDARD 11)
+cmake_minimum_required(VERSION 2.8)
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 NEW)
+
+  if(${CMAKE_MAJOR_VERSION} EQUAL 3)
+    cmake_policy(SET CMP0042 NEW)
+  endif(${CMAKE_MAJOR_VERSION} EQUAL 3)
+endif(COMMAND cmake_policy)
+
+set(CMAKE_CXX_STANDARD 11)
 
 option(EXP_RIB_IMPORTER "Build experimental rib importer?" OFF)
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/internal/)
+include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/internal/)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-ADD_SUBDIRECTORY(internal/ospcommon EXCLUDE_FROM_ALL)
+add_subdirectory(internal/ospcommon EXCLUDE_FROM_ALL)
 
-set(pbrt-parser_VERSION_MAJOR 1)
-set(pbrt-parser_VERSION_MINOR 0)
-set(pbrt-parser_VERSION_PATCH 0)
+set(pbrtParser_VERSION_MAJOR 1)
+set(pbrtParser_VERSION_MINOR 0)
+set(pbrtParser_VERSION_PATCH 0)
+set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
 
 # syntactic-only parser
-ADD_SUBDIRECTORY(pbrtParser/syntactic)
-ADD_SUBDIRECTORY(pbrtParser/semantic)
+add_subdirectory(pbrtParser/syntactic)
+add_subdirectory(pbrtParser/semantic)
 
 if(EXP_RIB_IMPORTER)
-  ADD_SUBDIRECTORY(experimental/rib)
+  add_subdirectory(experimental/rib)
 endif()
 
-ADD_SUBDIRECTORY(apps)
+add_subdirectory(apps)
 
 
 

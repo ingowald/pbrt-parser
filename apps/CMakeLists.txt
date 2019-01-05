@@ -31,3 +31,5 @@ TARGET_LINK_LIBRARIES(pbrt2pbf pbrtParser_semantic)
 ADD_EXECUTABLE(pbfInfo pbfInfo.cpp)
 TARGET_LINK_LIBRARIES(pbfInfo pbrtParser_semantic)
 
+install(TARGETS pbfInfo  DESTINATION bin)
+install(TARGETS pbrt2pbf DESTINATION bin)

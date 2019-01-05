@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2015-2018 Ingo Wald                                            ##
+## Copyright 2015-2019 Ingo Wald                                            ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -14,17 +14,31 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-ADD_LIBRARY(pbrtParser_semantic SHARED
+set(SOURCES
   Scene.cpp
   BinaryFileFormat.cpp
   importPBRT.cpp
   )
-#TARGET_COMPILE_DEFINITIONS(pbrtParser_semantic PUBLIC pbrtParser_semantic_EXPORTS=1)
-TARGET_LINK_LIBRARIES(pbrtParser_semantic
+
+# ------------------------------------------------------------------
+add_library(pbrtParser_semantic SHARED
+  ${SOURCES}
+  )
+target_link_libraries(pbrtParser_semantic
   pbrtParser_syntactic
   )
- 
+set_target_properties(pbrtParser_semantic PROPERTIES VERSION ${pbrtParser_VERSION})
 
+# ------------------------------------------------------------------
+add_library(pbrtParser_semantic_static
+  ${SOURCES}
+  )
+target_link_libraries(pbrtParser_semantic_static
+  pbrtParser_syntactic_static
+  )
+
+# ------------------------------------------------------------------
 install(TARGETS pbrtParser_semantic DESTINATION lib)
+install(TARGETS pbrtParser_semantic_static DESTINATION lib)
 install(FILES Scene.h DESTINATION include/pbrtParser/semantic)
 
