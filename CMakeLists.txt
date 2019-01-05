@@ -58,7 +58,7 @@ add_subdirectory(internal/ospcommon EXCLUDE_FROM_ALL)
 
 set(pbrtParser_VERSION_MAJOR 1)
 set(pbrtParser_VERSION_MINOR 0)
-set(pbrtParser_VERSION_PATCH 0)
+set(pbrtParser_VERSION_PATCH 1)
 set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
 
 # syntactic-only parser
