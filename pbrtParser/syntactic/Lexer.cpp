@@ -115,7 +115,6 @@ namespace pbrt {
       }
         
       int c = fgetc(file->file);
-      int eol = '\n';
       if (c == '\n') {
         loc.line++;
         loc.col = 0;

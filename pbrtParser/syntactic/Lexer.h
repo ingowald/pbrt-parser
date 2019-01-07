@@ -88,8 +88,8 @@ namespace pbrt {
       inline const char *c_str() const { return text.c_str(); }
 
       const Loc         loc;
-      const std::string text;
       const Type        type;
+      const std::string text;
     };
 
     struct PBRT_PARSER_INTERFACE TokenHandle : public std::shared_ptr<Token> {

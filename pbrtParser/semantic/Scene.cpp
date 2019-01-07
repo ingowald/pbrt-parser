@@ -136,6 +136,10 @@ namespace pbrt {
 
 
     
+    // ==================================================================
+    // QuadMesh
+    // ==================================================================
+
     box3f QuadMesh::getPrimBounds(const size_t primID, const affine3f &xfm) 
     {
       box3f primBounds = ospcommon::empty;
@@ -170,6 +174,43 @@ namespace pbrt {
     }
 
 
+
+
+    // ==================================================================
+    // Curve
+    // ==================================================================
+
+    box3f Curve::getPrimBounds(const size_t primID, const affine3f &xfm) 
+    {
+      box3f primBounds = ospcommon::empty;
+      for (auto p : P)
+        primBounds.extend(xfmPoint(xfm,p));
+      float maxWidth = std::max(width0,width1);
+      primBounds.lower -= maxWidth;
+      primBounds.upper -= maxWidth;
+      return primBounds;
+    }
+
+    box3f Curve::getPrimBounds(const size_t primID) 
+    {
+      box3f primBounds = ospcommon::empty;
+      for (auto p : P)
+        primBounds.extend(p);
+      float maxWidth = std::max(width0,width1);
+      primBounds.lower -= maxWidth;
+      primBounds.upper -= maxWidth;
+      return primBounds;
+    }
+    
+    box3f Curve::getBounds() 
+    {
+      return getPrimBounds(0);
+    }
+
+
+    // ==================================================================
+    // Object
+    // ==================================================================
 
     box3f Object::getBounds() const
     {

@@ -488,6 +488,9 @@ namespace pbrt {
     }
 
 
+    // ==================================================================
+    // TriangleMesh
+    // ==================================================================
 
     /*! serialize out to given binary writer */
     int TriangleMesh::writeTo(BinaryWriter &binary) 
@@ -509,6 +512,10 @@ namespace pbrt {
     }
 
 
+    // ==================================================================
+    // QuadMesh
+    // ==================================================================
+
     /*! serialize out to given binary writer */
     int QuadMesh::writeTo(BinaryWriter &binary) 
     {
@@ -528,6 +535,40 @@ namespace pbrt {
       binary.read(index);
     }
 
+
+    // ==================================================================
+    // Curve
+    // ==================================================================
+
+    /*! serialize out to given binary writer */
+    int Curve::writeTo(BinaryWriter &binary) 
+    {
+      Shape::writeTo(binary);
+      binary.write(width0);
+      binary.write(width1);
+      binary.write(basis);
+      binary.write(type);
+      binary.write(degree);
+      binary.write(P);
+      return TYPE_QUAD_MESH;
+    }
+  
+    /*! serialize _in_ from given binary file reader */
+    void Curve::readFrom(BinaryReader &binary) 
+    {
+      Shape::readFrom(binary);
+      binary.read(width0);
+      binary.read(width1);
+      binary.read(basis);
+      binary.read(type);
+      binary.read(degree);
+      binary.read(P);
+    }
+
+
+    // ==================================================================
+    // Disk
+    // ==================================================================
 
     /*! serialize out to given binary writer */
     int Disk::writeTo(BinaryWriter &binary) 
@@ -551,7 +592,9 @@ namespace pbrt {
 
 
 
-    
+    // ==================================================================
+    // Sphere
+    // ==================================================================
 
     /*! serialize out to given binary writer */
     int Sphere::writeTo(BinaryWriter &binary) 
@@ -1134,6 +1177,9 @@ namespace pbrt {
 
 
 
+    // ==================================================================
+    // Instance
+    // ==================================================================
 
     /*! serialize out to given binary writer */
     int Instance::writeTo(BinaryWriter &binary) 
@@ -1153,6 +1199,10 @@ namespace pbrt {
 
 
   
+    // ==================================================================
+    // Object
+    // ==================================================================
+
     /*! serialize out to given binary writer */
     int Object::writeTo(BinaryWriter &binary) 
     {

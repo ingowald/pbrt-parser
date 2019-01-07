@@ -88,7 +88,7 @@ namespace pbrt {
       std::stringstream ss;
       ss << getType() << " ";
       ss << "[ ";
-      for (int i=0;i<this->size();i++)
+      for (size_t i=0;i<this->size();i++)
         ss << get(i) << " ";
       ss << "]";
       return ss.str();
@@ -109,7 +109,7 @@ namespace pbrt {
       std::stringstream ss;
       ss << getType() << " ";
       ss << "[ ";
-      for (int i=0;i<this->size();i++)
+      for (size_t i=0;i<this->size();i++)
         ss << get(i) << " ";
       ss << "]";
       return ss.str();
@@ -120,7 +120,7 @@ namespace pbrt {
       std::stringstream ss;
       ss << getType() << " ";
       ss << "[ ";
-      for (int i=0;i<this->size();i++)
+      for (size_t i=0;i<this->size();i++)
         ss << get(i) << " ";
       ss << "]";
       return ss.str();
@@ -131,7 +131,7 @@ namespace pbrt {
       std::stringstream ss;
       ss << getType() << " ";
       ss << "[ ";
-      for (int i=0;i<this->size();i++)
+      for (size_t i=0;i<this->size();i++)
         ss << get(i) << " ";
       ss << "]";
       return ss.str();

@@ -606,7 +606,50 @@ namespace pbrt {
     };
 
     /*! what we create for 'Shape "curve" type "cylinder"' */
-    struct CylinderCurve : public Shape {
+    struct Curve : public Shape {
+      typedef std::shared_ptr<Curve> SP;
+
+      typedef enum : uint8_t {
+        CurveType_Cylinder=0, CurveType_Flat, CurveType_Ribbon, CurveType_Unknown
+          } CurveType;
+      typedef enum : uint8_t {
+        CurveBasis_Bezier=0, CurveBasis_BSpline, CurveBasis_Unknown
+          } BasisType;
+      
+      /*! constructor */
+      Curve(Material::SP material=Material::SP()) : Shape(material) {}
+    
+      /*! pretty-printer, for debugging */
+      virtual std::string toString() const override { return "Curve"; }
+
+      /*! serialize out to given binary writer */
+      virtual int writeTo(BinaryWriter &) override;
+      
+      /*! serialize _in_ from given binary file reader */
+      virtual void readFrom(BinaryReader &) override;
+
+      /*! for now, return '1' prim for the entire curve. since in pbrt
+          a curve can be an entire spline of many points, most
+          renderers will likely want to subdivide that into multiple
+          smaller cubis curve segements .... but since we can't know
+          what those renderers will do let's just report a single prim
+          here */
+      virtual size_t getNumPrims() const override
+      { return 1; }
+      
+      virtual box3f getPrimBounds(const size_t primID, const affine3f &xfm) override;
+      virtual box3f getPrimBounds(const size_t primID) override;
+    
+      virtual box3f getBounds() override;
+
+      affine3f  transform;
+      /*! the array of control points */
+      CurveType type;
+      BasisType basis;
+      uint8_t   degree { 3 };
+      std::vector<vec3f> P;
+      float width0 { 1.f };
+      float width1 { 1.f };
     };
       
     /*! a single sphere, with a radius and a transform. note we do

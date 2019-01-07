@@ -239,6 +239,14 @@ namespace pbrt {
       {
         return (bool)findParam<std::string>(name);
       }
+      bool hasParam1i(const std::string &name) const
+      {
+        return
+          (bool)findParam<int>(name)
+          &&
+          findParam<int>(name)->size() == 1
+          ;
+      }
       bool hasParam1f(const std::string &name) const
       {
         return

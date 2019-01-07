@@ -644,6 +644,61 @@ namespace pbrt {
         return ours;
       }
 
+
+
+      Shape::SP emitCurve(pbrt::syntactic::Shape::SP shape)
+      {
+        Curve::SP ours = std::make_shared<Curve>(findOrCreateMaterial(shape->material));
+
+        // -------------------------------------------------------
+        // check 'type'
+        const std::string type
+          = shape->hasParamString("type")
+          ? shape->getParamString("type")
+          : std::string("");
+        if (type == "cylinder")
+          ours->type = Curve::CurveType_Cylinder;
+        else if (type == "ribbon")
+          ours->type = Curve::CurveType_Ribbon;
+        else if (type == "flat")
+            ours->type = Curve::CurveType_Flat;
+          else 
+            ours->type = Curve::CurveType_Unknown;
+        
+        // -------------------------------------------------------
+        // check 'basis'
+        const std::string basis
+          = shape->hasParamString("basis")
+          ? shape->getParamString("basis")
+          : std::string("");
+        if (basis == "bezier")
+          ours->basis = Curve::CurveBasis_Bezier;
+        else if (basis == "bspline")
+          ours->basis = Curve::CurveBasis_BSpline;
+        else 
+          ours->basis = Curve::CurveBasis_Unknown;
+        
+        // -------------------------------------------------------
+        // check 'width', 'width0', 'width1'
+        if (shape->hasParam1f("width")) 
+          ours->width0 = ours->width1 = shape->getParam1f("width");
+        
+        if (shape->hasParam1f("width0")) 
+          ours->width0 = shape->getParam1f("width0");
+        if (shape->hasParam1f("width1")) 
+          ours->width1 = shape->getParam1f("width1");
+
+        if (shape->hasParam1i("degree")) 
+          ours->degree = shape->getParam1i("degree");
+
+        // vertices - param "P", 3x float each
+        ours->P = extractVector<vec3f>(shape,"P");
+        return ours;
+      }
+
+
+
+      
       Shape::SP emitSphere(pbrt::syntactic::Shape::SP shape)
       {
         Sphere::SP ours = std::make_shared<Sphere>(findOrCreateMaterial(shape->material));
@@ -676,6 +731,8 @@ namespace pbrt {
           return emitPlyMesh(shape);
         if (shape->type == "trianglemesh")
           return emitTriangleMesh(shape);
+        if (shape->type == "curve")
+          return emitCurve(shape);
         if (shape->type == "sphere")
           return emitSphere(shape);
         if (shape->type == "disk")

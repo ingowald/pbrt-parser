@@ -120,7 +120,7 @@ namespace pbrt {
       /*! peek ahead by N tokens, (either from current file, or
         parent file(s) if current file is EOL!); return NULL if
         complete end of input */
-      TokenHandle peek(int ahead=0);
+      TokenHandle peek(unsigned int ahead=0);
 
       // add additional transform to current transform
       void addTransform(const affine3f &xfm)
@@ -144,13 +144,13 @@ namespace pbrt {
       std::shared_ptr<Object> findNamedObject(const std::string &name, bool createIfNotExist=false);
 
       // emit debug status messages...
-      bool dbg;
       const std::string basePath;
       std::string rootNamePath;
       std::shared_ptr<Scene>    scene;
       std::shared_ptr<Object>   currentObject;
       std::shared_ptr<Material> currentMaterial;
     
+      bool dbg;
       /*! tracks the location of the last token gotten through next() (for debugging) */
       // Loc lastLoc;
     

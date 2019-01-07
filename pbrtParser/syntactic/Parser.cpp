@@ -224,7 +224,7 @@ namespace pbrt {
     }
 
     Parser::Parser(const std::string &basePath) 
-      : scene(std::make_shared<Scene>()), dbg(false), basePath(basePath) 
+      : basePath(basePath), scene(std::make_shared<Scene>()), dbg(false)
     {
       ctm.reset();
       attributesStack.push(std::make_shared<Attributes>());
@@ -623,7 +623,7 @@ namespace pbrt {
       return token;
     }
     
-    TokenHandle Parser::peek(int i)
+    TokenHandle Parser::peek(unsigned int i)
     {
       while (peekQueue.size() <= i) {
         TokenHandle token = tokens->next();
