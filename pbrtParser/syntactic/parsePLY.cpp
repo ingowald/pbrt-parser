@@ -131,20 +131,20 @@ namespace pbrt {
         float version;
         int vertices = 0;
 
-        int triangles = 0;
+        // int triangles = 0;
 
         int has_x, has_y, has_z;
-        int has_face_red=0; // face colors
-        int has_face_green=0; // face colors
-        int has_face_blue=0; // face colors
-        int has_vertex_red=0; // vertex colors
-        int has_vertex_green=0; // vertex colors
-        int has_vertex_blue=0; // vertex colors
+        // int has_face_red=0; // face colors
+        // int has_face_green=0; // face colors
+        // int has_face_blue=0; // face colors
+        // int has_vertex_red=0; // vertex colors
+        // int has_vertex_green=0; // vertex colors
+        // int has_vertex_blue=0; // vertex colors
         int has_nx=0, has_ny=0, has_nz=0;
         int has_fverts=0;
         
         PlyOtherElems *other_elements = nullptr;
-        PlyOtherProp *vert_other,*face_other;//,*edge_other;
+        // PlyOtherProp *vert_other; ,*face_other;//,*edge_other;
 
         char **element_list = nullptr;
         int file_type = 0;
@@ -157,18 +157,18 @@ namespace pbrt {
         /*** Read in the original PLY object ***/
         const char *filename = fileName.c_str();
         FILE *file;
-        bool isPipe = false;
+        // bool isPipe = false;
 
-        if (strlen(filename) > 7 && !strcmp(filename+strlen(filename)-7,".ply.gz")) {
-#ifdef _WIN32
-          throw std::runtime_error("loading gzipped ply files not supported under windows");
-#else
-          isPipe = true;
-          char cmd[10000];
-          sprintf(cmd,"/usr/bin/gunzip -c %s",filename);
-          file = popen(cmd,"r");
-#endif
-        } else
+        // if (strlen(filename) > 7 && !strcmp(filename+strlen(filename)-7,".ply.gz")) {
+// #ifdef _WIN32
+//           throw std::runtime_error("loading gzipped ply files not supported under windows");
+// #else
+//           isPipe = true;
+//           char cmd[10000];
+//           sprintf(cmd,"/usr/bin/gunzip -c %s",filename);
+//           file = popen(cmd,"r");
+// #endif
+//         } else
           file = fopen(filename,"rb");
     
         if (!file) 
@@ -214,19 +214,20 @@ namespace pbrt {
               } else if (equal_strings("nz", plist[j]->name)) {
                 ply_get_property (ply, elem_name, &vert_props[VTX_NZ]);  /* z */
                 has_nz = TRUE;
-              } else if (equal_strings("diffuse_red", plist[j]->name)) {
-                ply_get_property (ply, elem_name, &vert_props[VTX_RED]);  /* z */
-                has_vertex_red = TRUE;
-              } else if (equal_strings("diffuse_green", plist[j]->name)) {
-                ply_get_property (ply, elem_name, &vert_props[VTX_GREEN]);  /* z */
-                has_vertex_green = TRUE;
-              } else if (equal_strings("diffuse_blue", plist[j]->name)) {
-                ply_get_property (ply, elem_name, &vert_props[VTX_BLUE]);  /* z */
-                has_vertex_blue = TRUE;
+              // } else if (equal_strings("diffuse_red", plist[j]->name)) {
+              //   ply_get_property (ply, elem_name, &vert_props[VTX_RED]);  /* z */
+              //   has_vertex_red = TRUE;
+              // } else if (equal_strings("diffuse_green", plist[j]->name)) {
+              //   ply_get_property (ply, elem_name, &vert_props[VTX_GREEN]);  /* z */
+              //   has_vertex_green = TRUE;
+              // } else if (equal_strings("diffuse_blue", plist[j]->name)) {
+              //   ply_get_property (ply, elem_name, &vert_props[VTX_BLUE]);  /* z */
+              //   has_vertex_blue = TRUE;
               }
             }
     
-            vert_other = ply_get_other_properties (ply, elem_name,
+            // vert_other =
+              ply_get_other_properties (ply, elem_name,
                                                    offsetof(Vertex,other_props));
             
             /* test for necessary properties */
@@ -258,22 +259,23 @@ namespace pbrt {
             /* verify which properties these vertices have */
             has_fverts = FALSE;
             
-            for (int j=0; j<nprops; j++) {
-              if (equal_strings("vertex_indices", plist[j]->name)) {
-                ply_get_property(ply, elem_name, &face_props[FACE_INDICES]);/* vertex_indices */
-                has_fverts = TRUE;
-              } else if (equal_strings("red", plist[j]->name)) {
-                ply_get_property(ply, elem_name, &face_props[FACE_RED]);/* vertex_indices */
-                has_face_red = TRUE;
-              } else if (equal_strings("green", plist[j]->name)) {
-                ply_get_property(ply, elem_name, &face_props[FACE_GREEN]);/* vertex_indices */
-                has_face_green = TRUE;
-              } else if (equal_strings("blue", plist[j]->name)) {
-                ply_get_property(ply, elem_name, &face_props[FACE_BLUE]);/* vertex_indices */
-                has_face_blue = TRUE;
-              }
-            }
-            face_other = ply_get_other_properties (ply, elem_name,
+            // for (int j=0; j<nprops; j++) {
+            //   if (equal_strings("vertex_indices", plist[j]->name)) {
+            //     ply_get_property(ply, elem_name, &face_props[FACE_INDICES]);/* vertex_indices */
+            //     has_fverts = TRUE;
+            //   } else if (equal_strings("red", plist[j]->name)) {
+            //     ply_get_property(ply, elem_name, &face_props[FACE_RED]);/* vertex_indices */
+            //     has_face_red = TRUE;
+            //   } else if (equal_strings("green", plist[j]->name)) {
+            //     ply_get_property(ply, elem_name, &face_props[FACE_GREEN]);/* vertex_indices */
+            //     has_face_green = TRUE;
+            //   } else if (equal_strings("blue", plist[j]->name)) {
+            //     ply_get_property(ply, elem_name, &face_props[FACE_BLUE]);/* vertex_indices */
+            //     has_face_blue = TRUE;
+            //   }
+            // }
+            // face_other =
+              ply_get_other_properties (ply, elem_name,
                                                    offsetof(Face,other_props));
             
             
@@ -285,7 +287,7 @@ namespace pbrt {
             // if (!has_face_blue)                   
             //   material = getMaterial(200,200,200);
             
-            triangles = num_elems;
+            // triangles = num_elems;
             // numTrisWritten += num_elems;
             
             /* grab all the face elements */
@@ -294,9 +296,9 @@ namespace pbrt {
             tmp.other_props = nullptr;
             for (int j=0; j<num_elems; j++)  {
               ply_get_element (ply, (void *) &tmp);
-              if (!has_face_blue) {
-                tmp.red = tmp.green = tmp.blue = 255;
-              }
+              // if (!has_face_blue) {
+              //   tmp.red = tmp.green = tmp.blue = 255;
+              // }
               if (tmp.nverts == 3) {
                 // if (has_face_blue)
                 //   material = getMaterial(tmp.red,tmp.green,tmp.blue);;
@@ -337,15 +339,17 @@ namespace pbrt {
         // if (nor) delete[] nor;
 
         int num_comments;
-        char **comments;
+        // char **comments;
         // PlyOtherProp *vert_other,*face_other;//,*edge_other;
 
         int num_obj_info;
-        char **obj_info;
+        // char **obj_info;
 
         
-        comments = ply_get_comments (ply, &num_comments);
-        obj_info = ply_get_obj_info (ply, &num_obj_info);
+        // comments =
+          ply_get_comments (ply, &num_comments);
+        // obj_info =
+          ply_get_obj_info (ply, &num_obj_info);
         
         ply_close (ply); 
         

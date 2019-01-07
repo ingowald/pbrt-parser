@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define _unused(x) ((void)(x))
+
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for syntactic-only parser - this allows to distringuish
@@ -99,24 +101,28 @@ namespace pbrt {
       xfm.l.vx.z = std::stod(next()->c_str());
       float vx_w = std::stod(next()->c_str());
       assert(vx_w == 0.f);
+      _unused(vx_w);
 
       xfm.l.vy.x = std::stod(next()->c_str());
       xfm.l.vy.y = std::stod(next()->c_str());
       xfm.l.vy.z = std::stod(next()->c_str());
       float vy_w = std::stod(next()->c_str());
       assert(vy_w == 0.f);
+      _unused(vy_w);
 
       xfm.l.vz.x = std::stod(next()->c_str());
       xfm.l.vz.y = std::stod(next()->c_str());
       xfm.l.vz.z = std::stod(next()->c_str());
       float vz_w = std::stod(next()->c_str());
       assert(vz_w == 0.f);
+      _unused(vz_w);
 
       xfm.p.x    = std::stod(next()->c_str());
       xfm.p.y    = std::stod(next()->c_str());
       xfm.p.z    = std::stod(next()->c_str());
       float p_w  = std::stod(next()->c_str());
       assert(p_w == 1.f);
+      _unused(p_w);
 
       const std::string close = *next();
       assert(close == "]");

@@ -292,7 +292,7 @@ namespace pbrt {
 
       std::vector<int> indexRemap(in->vertex.size());
       std::map<FatVertex,int> vertexID;
-      for (int i=0;i<in->vertex.size();i++) {
+      for (size_t i=0;i<in->vertex.size();i++) {
         FatVertex oldVertex;
         oldVertex.p = in->vertex[i];
         oldVertex.n = in->normal.empty()?vec3f(0.f):in->normal[i];
@@ -331,7 +331,7 @@ namespace pbrt {
       out->vertex   = tris->vertex;
       out->normal   = tris->normal;
       
-      for (int i=0;i<tris->index.size();i++) {
+      for (size_t i=0;i<tris->index.size();i++) {
         vec3i idx0 = tris->index[i+0];
         if ((i+1) < tris->index.size()) {
           vec3i idx1 = tris->index[i+1];

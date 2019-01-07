@@ -16,6 +16,10 @@
 
 project(pbrtParser)
 
+set(pbrtParser_VERSION_MAJOR 1)
+set(pbrtParser_VERSION_MINOR 1)
+set(pbrtParser_VERSION_PATCH 0)
+
 if(NOT SET_UP_CONFIGURATIONS_DONE)
     set(SET_UP_CONFIGURATIONS_DONE 1)
 
@@ -57,9 +61,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_subdirectory(internal/ospcommon EXCLUDE_FROM_ALL)
 
-set(pbrtParser_VERSION_MAJOR 1)
-set(pbrtParser_VERSION_MINOR 0)
-set(pbrtParser_VERSION_PATCH 1)
 set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
 
 # syntactic-only parser

@@ -779,7 +779,7 @@ namespace pbrt {
       PBRTScene::SP pbrtScene;
     };
 
-    vec2i createFilm(Scene::SP ours, pbrt::syntactic::Scene::SP pbrt)
+    void createFilm(Scene::SP ours, pbrt::syntactic::Scene::SP pbrt)
     {
       if (pbrt->film &&
           pbrt->film->findParam<int>("xresolution") &&

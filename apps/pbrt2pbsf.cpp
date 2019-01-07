@@ -59,7 +59,7 @@ namespace pbrt {
       if (!stArray) return false;
       if (stArray->size() % 8) return false;
       const float required_pattern[8] = { 0,0, 1,0, 1,1, 0,1 };
-      for (int quadID=0;quadID<stArray->size()/8;quadID++) {
+      for (size_t quadID=0;quadID<stArray->size()/8;quadID++) {
         for (int i=0;i<8;i++)
           if ((*stArray)[8*quadID+i] != required_pattern[i]) return false;
       }
@@ -73,13 +73,13 @@ namespace pbrt {
     {
       if (!indices) return false;
       if (indices->size() % 6) return false;
-      for (int quadID=0;quadID<indices->size()/6;quadID++) {
-        if ((*indices)[6*quadID+0] != (4*quadID+0)) return false;
-        if ((*indices)[6*quadID+1] != (4*quadID+1)) return false;
-        if ((*indices)[6*quadID+2] != (4*quadID+2)) return false;
-        if ((*indices)[6*quadID+3] != (4*quadID+0)) return false;
-        if ((*indices)[6*quadID+4] != (4*quadID+2)) return false;
-        if ((*indices)[6*quadID+5] != (4*quadID+3)) return false;
+      for (size_t quadID=0;quadID<indices->size()/6;quadID++) {
+        if ((*indices)[6*quadID+0] != (int)(4*quadID+0)) return false;
+        if ((*indices)[6*quadID+1] != (int)(4*quadID+1)) return false;
+        if ((*indices)[6*quadID+2] != (int)(4*quadID+2)) return false;
+        if ((*indices)[6*quadID+3] != (int)(4*quadID+0)) return false;
+        if ((*indices)[6*quadID+4] != (int)(4*quadID+2)) return false;
+        if ((*indices)[6*quadID+5] != (int)(4*quadID+3)) return false;
       }
       return true;
     }
@@ -91,9 +91,9 @@ namespace pbrt {
     {
       if (!indices) return false;
       if (indices->size() % 2) return false;
-      for (int quadID=0;quadID<indices->size()/2;quadID++) {
-        if ((*indices)[2*quadID+0] != quadID) return false;
-        if ((*indices)[2*quadID+1] != quadID) return false;
+      for (size_t quadID=0;quadID<indices->size()/2;quadID++) {
+        if ((*indices)[2*quadID+0] != (int)quadID) return false;
+        if ((*indices)[2*quadID+1] != (int)quadID) return false;
       }
       return true;
     }
@@ -258,7 +258,7 @@ namespace pbrt {
             std::shared_ptr<ParamArray<float>>
               param = std::make_shared<ParamArray<float>>("point3");
             param->resize(3*vertex.size());
-            for (int i=0;i<vertex.size();i++) {
+            for (size_t i=0;i<vertex.size();i++) {
               (*param)[3*i+0] = vertex[i].x;
               (*param)[3*i+1] = vertex[i].y;
               (*param)[3*i+2] = vertex[i].z;
@@ -269,7 +269,7 @@ namespace pbrt {
             std::shared_ptr<ParamArray<float>>
               param = std::make_shared<ParamArray<float>>("normal");
             param->resize(3*normal.size());
-            for (int i=0;i<normal.size();i++) {
+            for (size_t i=0;i<normal.size();i++) {
               (*param)[3*i+0] = normal[i].x;
               (*param)[3*i+1] = normal[i].y;
               (*param)[3*i+2] = normal[i].z;
@@ -280,7 +280,7 @@ namespace pbrt {
             std::shared_ptr<ParamArray<int>>
               param = std::make_shared<ParamArray<int>>("integer");
             param->resize(3*index.size());
-            for (int i=0;i<index.size();i++) {
+            for (size_t i=0;i<index.size();i++) {
               (*param)[3*i+0] = index[i].x;
               (*param)[3*i+1] = index[i].y;
               (*param)[3*i+2] = index[i].z;

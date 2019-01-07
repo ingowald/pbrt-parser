@@ -70,6 +70,7 @@ namespace pbrt {
       TYPE_QUAD_MESH,
       TYPE_SPHERE,
       TYPE_DISK,
+      TYPE_CURVE,
     };
     
     /*! a simple buffer for binary data */
@@ -206,6 +207,8 @@ namespace pbrt {
           return std::make_shared<Sphere>();
         case TYPE_DISK:
           return std::make_shared<Disk>();
+        case TYPE_CURVE:
+          return std::make_shared<Curve>();
         case TYPE_INSTANCE:
           return std::make_shared<Instance>();
         case TYPE_OBJECT:
@@ -228,7 +231,7 @@ namespace pbrt {
         if (ID == -1)
           return std::shared_ptr<T>();
         // assertion: only values with ID 0 ... N-1 are allowed
-        assert(ID < readEntities.size() && ID >= 0);
+        assert(ID < (int)readEntities.size() && ID >= 0);
 
         // rule 2: if object _was_ a null pointer, return it (that was
         // an error during object creation)
@@ -274,7 +277,7 @@ namespace pbrt {
     {
       size_t length = read<size_t>();
       std::vector<T> vt(length);
-      for (int i=0;i<length;i++) {
+      for (size_t i=0;i<length;i++) {
         read(vt[i]);
       }
       return vt;
@@ -342,10 +345,9 @@ namespace pbrt {
       template<typename T>
       void write(const std::vector<std::shared_ptr<T>> &t)
       {
-        const void *ptr = (const void *)t.data();
         size_t size = t.size();
         write(size);
-        for (int i=0;i<size;i++)
+        for (size_t i=0;i<size;i++)
           write(t[i]);
       }
 
@@ -367,7 +369,7 @@ namespace pbrt {
       void write(const std::vector<bool> &t)
       {
         std::vector<unsigned char> asChar(t.size());
-        for (int i=0;i<t.size();i++)
+        for (size_t i=0;i<t.size();i++)
           asChar[i] = t[i]?1:0;
         write(asChar);
       }
@@ -550,7 +552,7 @@ namespace pbrt {
       binary.write(type);
       binary.write(degree);
       binary.write(P);
-      return TYPE_QUAD_MESH;
+      return TYPE_CURVE;
     }
   
     /*! serialize _in_ from given binary file reader */

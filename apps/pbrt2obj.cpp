@@ -98,7 +98,7 @@ namespace pbrt {
       std::shared_ptr<ParamArray<float> > param_st = shape->findParam<float>("st");
       if (param_st) {
         const size_t numPoints = param_st->size() / 2;
-        for (int i=0;i<numPoints;i++) {
+        for (size_t i=0;i<numPoints;i++) {
           vec2f v(param_st->get(2*i+0),
                   param_st->get(2*i+1));
           out << "vt " << v.x << " " << v.y << std::endl;
@@ -109,7 +109,7 @@ namespace pbrt {
         std::shared_ptr<ParamArray<float> > param_P = shape->findParam<float>("P");
         if (param_P) {
           const size_t numPoints = param_P->size() / 3;
-          for (int i=0;i<numPoints;i++) {
+          for (size_t i=0;i<numPoints;i++) {
             vec3f v(param_P->get(3*i+0),
                     param_P->get(3*i+1),
                     param_P->get(3*i+2));
@@ -125,7 +125,7 @@ namespace pbrt {
         if (param_indices) {
           
           const size_t numIndices = param_indices->size() / 3;
-          for (int i=0;i<numIndices;i++) {
+          for (size_t i=0;i<numIndices;i++) {
             vec3i v(param_indices->get(3*i+0),
                     param_indices->get(3*i+1),
                     param_indices->get(3*i+2));
@@ -169,14 +169,14 @@ namespace pbrt {
       const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
       size_t firstVertexID = numVerticesWritten+1;
 
-      for (int i=0;i<p.size();i++) {
+      for (size_t i=0;i<p.size();i++) {
         vec3f v = xfmPoint(xfm,p[i]);
         out << "v  " << v.x << " " << v.y << " " << v.z << std::endl;
         // fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
         numVerticesWritten++;
       }
 
-      for (int i=0;i<idx.size();i++) {
+      for (size_t i=0;i<idx.size();i++) {
         vec3i v = idx[i];
         out << "f " << (firstVertexID+v.x)
             << "\t" << (firstVertexID+v.y)
@@ -203,7 +203,7 @@ namespace pbrt {
                      const affine3f &instanceXfm)
     {
       cout << "writing " << object->toString() << endl;
-      for (int shapeID=0;shapeID<object->shapes.size();shapeID++) {
+      for (size_t shapeID=0;shapeID<object->shapes.size();shapeID++) {
         std::shared_ptr<Shape> shape = object->shapes[shapeID];
         if (shape->type == "trianglemesh") {
           writeTriangleMesh(shape,instanceXfm);
@@ -212,7 +212,7 @@ namespace pbrt {
         } else 
           cout << "**** invalid shape #" << shapeID << " : " << shape->type << endl;
       }
-      for (int instID=0;instID<object->objectInstances.size();instID++) {
+      for (size_t instID=0;instID<object->objectInstances.size();instID++) {
         writeObject(scene,
                     object->objectInstances[instID]->object,
                     instanceXfm*(ospcommon::affine3f&)object->objectInstances[instID]->xfm.atStart);

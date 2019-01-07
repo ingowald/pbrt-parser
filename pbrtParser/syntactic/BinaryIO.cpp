@@ -141,7 +141,7 @@ namespace pbrt {
     void BinaryWriter::writeVec(const std::vector<bool> &t)
     {
       std::vector<unsigned char> asChar(t.size());
-      for (int i=0;i<t.size();i++)
+      for (size_t i=0;i<t.size();i++)
         asChar[i] = t[i]?1:0;
       writeVec(asChar);
     }
@@ -550,7 +550,7 @@ namespace pbrt {
     {
       size_t size = read<size_t>();
       v.resize(size);
-      for (int i=0;i<size;i++)
+      for (size_t i=0;i<size;i++)
         v[i] = readString();
       // v.push_back(readString());
     }
@@ -559,7 +559,7 @@ namespace pbrt {
       std::vector<unsigned char> asChar;
       readVec(asChar);
       v.resize(asChar.size());
-      for (int i=0;i<asChar.size();i++)
+      for (size_t i=0;i<asChar.size();i++)
         v[i] = asChar[i];
     }
 
@@ -691,7 +691,7 @@ namespace pbrt {
 
       Material::SP material;
       int matID = block.read<int32_t>();
-      if (matID >= 0 && matID < materials.size())
+      if (matID >= 0 && matID < (int)materials.size())
         material = materials[matID];
         
       Shape::SP shape = std::make_shared<Shape>(type,material,attributes,transform);
