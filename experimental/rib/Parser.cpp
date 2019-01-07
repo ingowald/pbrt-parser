@@ -49,7 +49,7 @@ namespace rib {
 
   void RIBParser::add(pbrt::semantic::QuadMesh *qm)
   {
-    currentObject->geometries.push_back(pbrt::semantic::QuadMesh::SP(qm));
+    currentObject->shapes.push_back(pbrt::semantic::QuadMesh::SP(qm));
   }
 
   semantic::QuadMesh *

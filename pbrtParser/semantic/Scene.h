@@ -39,7 +39,7 @@ namespace pbrt {
     parser, the semantic one will distinguish between different
     matieral types, differnet shape types, etc, and it will not only
     store 'name:value' pairs for parameters, but figure out which
-    parameters which geometry etc have, parse them from the
+    parameters which shape etc have, parse them from the
     parameters, etc */
   namespace semantic {
 
@@ -68,7 +68,7 @@ namespace pbrt {
     struct Object;
 
     /*! base abstraction for any entity in the pbrt scene graph that's
-        not a paramter type (eg, it's a geometry/shape, a object, a
+        not a paramter type (eg, it's a shape/shape, a object, a
         instance, matierla, tetxture, etc */
     struct Entity : public std::enable_shared_from_this<Entity> {
       typedef std::shared_ptr<Entity> SP;
@@ -490,16 +490,16 @@ namespace pbrt {
     };
 
     /*! base abstraction for any geometric shape. for pbrt, this
-        should actually be called a 'Shape'; we call it geometry for
+        should actually be called a 'Shape'; we call it shape for
         historic reasons (it's the term that embree and ospray - as
         well as a good many others - use) */
-    struct Geometry : public Entity {
-      typedef std::shared_ptr<Geometry> SP;
+    struct Shape : public Entity {
+      typedef std::shared_ptr<Shape> SP;
     
-      Geometry(Material::SP material = Material::SP()) : material(material) {}
+      Shape(Material::SP material = Material::SP()) : material(material) {}
     
       /*! virtual destructor, to force this to be polymorphic */
-      virtual ~Geometry() {}
+      virtual ~Shape() {}
     
       /*! serialize out to given binary writer */
       virtual int writeTo(BinaryWriter &) override;
@@ -522,11 +522,11 @@ namespace pbrt {
       vec3i indices for triangle vertex indices. normal and texture
       arrays may be empty, but if they exist, will use the same vertex
       indices as vertex positions */
-    struct TriangleMesh : public Geometry {
+    struct TriangleMesh : public Shape {
       typedef std::shared_ptr<TriangleMesh> SP;
 
       /*! constructor */
-      TriangleMesh(Material::SP material=Material::SP()) : Geometry(material) {}
+      TriangleMesh(Material::SP material=Material::SP()) : Shape(material) {}
     
       /*! pretty-printer, for debugging */
       virtual std::string toString() const override { return "TriangleMesh"; }
@@ -559,12 +559,19 @@ namespace pbrt {
     /*! a plain qaud mesh, where every quad is a pair of two
       triangles. "degenerate" quads (in the sense of quads that are
       actually only triangles) are in fact allowed by having index.w
-      be equal to index.z. */
-    struct QuadMesh : public Geometry {
+      be equal to index.z. 
+
+      \note Note that PBRT itself doesn't actually _have_ quad meshes
+      (only triangle meshes), but many objects do in fact contain
+      either mostly or even all quads; so we added this type for
+      convenience - that renderers that _can_ optimie for quads can
+      easily convert from pbrt's trianglemehs to a quadmesh using \see
+      QuadMesh::createFrom(TriangleMesh::SP) */
+    struct QuadMesh : public Shape {
       typedef std::shared_ptr<QuadMesh> SP;
 
       /*! constructor */
-      QuadMesh(Material::SP material=Material::SP()) : Geometry(material) {}
+      QuadMesh(Material::SP material=Material::SP()) : Shape(material) {}
     
       /*! pretty-printer, for debugging */
       virtual std::string toString() const override { return "QuadMesh"; }
@@ -597,16 +604,20 @@ namespace pbrt {
       bool  haveComputedBounds { false };
       box3f bounds;
     };
-  
+
+    /*! what we create for 'Shape "curve" type "cylinder"' */
+    struct CylinderCurve : public Shape {
+    };
+      
     /*! a single sphere, with a radius and a transform. note we do
         _not_ yet apply the transform to update ratius and center, and
         use the pbrt way of storing them individually (in thoery this
         allows ellipsoins, too!?) */
-    struct Sphere : public Geometry {
+    struct Sphere : public Shape {
       typedef std::shared_ptr<Sphere> SP;
 
       /*! constructor */
-      Sphere(Material::SP material=Material::SP()) : Geometry(material) {}
+      Sphere(Material::SP material=Material::SP()) : Shape(material) {}
     
       /*! pretty-printer, for debugging */
       virtual std::string toString() const override { return "Sphere"; }
@@ -635,11 +646,11 @@ namespace pbrt {
         _not_ yet apply the transform to update ratius and center, and
         use the pbrt way of storing them individually (in thoery this
         allows ellipsoins, too!?) */
-    struct Disk : public Geometry {
+    struct Disk : public Shape {
       typedef std::shared_ptr<Disk> SP;
 
       /*! constructor */
-      Disk(Material::SP material=Material::SP()) : Geometry(material) {}
+      Disk(Material::SP material=Material::SP()) : Shape(material) {}
     
       /*! pretty-printer, for debugging */
       virtual std::string toString() const override { return "Disk"; }
@@ -706,8 +717,8 @@ namespace pbrt {
 
       virtual box3f getBounds() const;
     
-      std::vector<Geometry::SP>     geometries;
-      std::vector<Instance::SP>     instances;
+      std::vector<Shape::SP>     shapes;
+      std::vector<Instance::SP>  instances;
       std::string name = "";
     };
 

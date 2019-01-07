@@ -38,10 +38,10 @@
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for syntax-only parser - this allows to distringuish
-    high-level objects such as geometries from objects or transforms,
+    high-level objects such as shapes from objects or transforms,
     but does *not* make any difference between what types of
-    geometries, what their parameters mean, etc. Basically, at this
-    level a triangle mesh is nothing but a geometry that has a string
+    shapes, what their parameters mean, etc. Basically, at this
+    level a triangle mesh is nothing but a shape that has a string
     with a given name, and parameters of given names and types */
   namespace syntactic {
   
@@ -431,7 +431,7 @@ namespace pbrt {
       virtual std::string toString() const override { return "PixelFilter<"+type+">"; }
     };
 
-    /*! a PBRT 'geometric shape' (a geometry in ospray terms) - ie,
+    /*! a PBRT 'geometric shape' (a shape in ospray terms) - ie,
       something that has primitives that together form some sort of
       surface(s) that a ray can intersect*/
     struct PBRT_PARSER_INTERFACE Shape : public Node {
@@ -574,7 +574,7 @@ namespace pbrt {
     /*! The main object defined by each pbrt (root) file is a scene - a
       scene contains all kind of global settings (such as integrator
       to use, cameras defined in this scene, which pixel filter to
-      use, etc, plus some geometry. */
+      use, etc, plus some shape. */
     struct PBRT_PARSER_INTERFACE Scene {
 
       /*! allows for writing pbrt::syntactic::Scene::SP, which is somewhat more concise
@@ -615,7 +615,7 @@ namespace pbrt {
       //! last pixel filter specified in the scene, or nullptr if none.
       std::shared_ptr<PixelFilter> pixelFilter;
 
-      /*! the root scene geometry, defined in the
+      /*! the root scene shape, defined in the
         'WorldBegin'/'WorldEnd' statements */
       std::shared_ptr<Object> world;
 
@@ -629,9 +629,9 @@ namespace pbrt {
       { return basePath + relativePath; }
     
       /*! the base path for all filenames defined in this scene. In
-        pbrt, lots of objects (a ply mesh geometry, a texture, etc)
+        pbrt, lots of objects (a ply mesh shape, a texture, etc)
         will require additional files in other formats (e.g., the
-        actual .ply file that the ply geometry refers to; and the file
+        actual .ply file that the ply shape refers to; and the file
         names will typically be relative to the file that referenced
         them. To help computing a global file name for this we compute
         - and store - the name of the directory that contained the
@@ -670,10 +670,10 @@ void pbrt_helper_loadPlyTriangles(const std::string &fileName,
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for syntactic-only parser - this allows to distringuish
-    high-level objects such as geometries from objects or transforms,
+    high-level objects such as shapes from objects or transforms,
     but does *not* make any difference between what types of
-    geometries, what their parameters mean, etc. Basically, at this
-    level a triangle mesh is nothing but a geometry that has a string
+    shapes, what their parameters mean, etc. Basically, at this
+    level a triangle mesh is nothing but a shape that has a string
     with a given name, and parameters of given names and types */
   namespace syntactic {
   

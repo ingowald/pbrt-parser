@@ -27,10 +27,10 @@
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for syntactic-only parser - this allows to distringuish
-    high-level objects such as geometries from objects or transforms,
+    high-level objects such as shapes from objects or transforms,
     but does *not* make any difference between what types of
-    geometries, what their parameters mean, etc. Basically, at this
-    level a triangle mesh is nothing but a geometry that has a string
+    shapes, what their parameters mean, etc. Basically, at this
+    level a triangle mesh is nothing but a shape that has a string
     with a given name, and parameters of given names and types */
   namespace syntactic {
   
@@ -821,7 +821,7 @@ namespace pbrt {
 
         if (token == "Material") {
           throw std::runtime_error("'Material' field not within a WorldBegin/End context. "
-                                   "Did you run the parser on the 'geometry.pbrt' file directly? "
+                                   "Did you run the parser on the 'shape.pbrt' file directly? "
                                    "(you shouldn't - it should only be included from within a "
                                    "pbrt scene file - typically '*.view')");
           continue;

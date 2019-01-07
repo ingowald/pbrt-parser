@@ -29,11 +29,11 @@ namespace pbrt {
     parser, the semantic one will distinguish between different
     matieral types, differnet shape types, etc, and it will not only
     store 'name:value' pairs for parameters, but figure out which
-    parameters which geometry etc have, parse them from the
+    parameters which shape etc have, parse them from the
     parameters, etc */
   namespace semantic {
   
-    box3f Geometry::getPrimBounds(const size_t primID)
+    box3f Shape::getPrimBounds(const size_t primID)
     {
       return getPrimBounds(primID,affine3f(ospcommon::one));
     }
@@ -180,7 +180,7 @@ namespace pbrt {
           bounds.extend(ib);
         }
       }
-      for (auto geom : geometries) {
+      for (auto geom : shapes) {
         if (geom) {
           const box3f gb = geom->getBounds();
           bounds.extend(gb);
@@ -225,15 +225,15 @@ namespace pbrt {
       static const int instWeight = 4000.f;
       static const int geomWeight = 4000.f;
     
-      std::set<Geometry::SP> activeGeometries;
+      std::set<Shape::SP> activeShapes;
       for (auto inst : scene->world->instances) 
-        for (auto geom : inst->object->geometries) 
-          activeGeometries.insert(geom);
+        for (auto geom : inst->object->shapes) 
+          activeShapes.insert(geom);
 
       double costEstimate
         = scene->world->instances.size() * instWeight
-        + activeGeometries.size() * geomWeight;
-      for (auto geom : activeGeometries)
+        + activeShapes.size() * geomWeight;
+      for (auto geom : activeShapes)
         costEstimate += geom->getNumPrims() * primWeight;
       return costEstimate;
     }
@@ -327,14 +327,14 @@ namespace pbrt {
       }
     
       Object::SP
-      getOrCreateEmittedGeometryFrom(Object::SP object)
+      getOrCreateEmittedShapeFrom(Object::SP object)
       {
-        if (object->geometries.empty()) return Object::SP();
+        if (object->shapes.empty()) return Object::SP();
         if (alreadyEmitted[object]) return alreadyEmitted[object];
       
-        Object::SP ours = std::make_shared<Object>("GeometryFrom:"+object->name);
-        for (auto geom : object->geometries)
-          ours->geometries.push_back(geom);
+        Object::SP ours = std::make_shared<Object>("ShapeFrom:"+object->name);
+        for (auto geom : object->shapes)
+          ours->shapes.push_back(geom);
         return alreadyEmitted[object] = ours;
       }
     
@@ -343,10 +343,10 @@ namespace pbrt {
         if (!object)
           return;
       
-        Object::SP emittedGeometry = getOrCreateEmittedGeometryFrom(object);
-        if (emittedGeometry) {
+        Object::SP emittedShape = getOrCreateEmittedShapeFrom(object);
+        if (emittedShape) {
           Instance::SP inst
-            = std::make_shared<Instance>(emittedGeometry,xfm);
+            = std::make_shared<Instance>(emittedShape,xfm);
           if (inst)
             result->instances.push_back(inst);
         }
@@ -371,7 +371,7 @@ namespace pbrt {
     /*! checks if the scene contains more than one level of instancing */
     bool Scene::isSingleLevel() const
     {
-      if (!world->geometries.empty())
+      if (!world->shapes.empty())
         return false;
       for (auto inst : world->instances)
         if (!inst->object->instances.empty())

@@ -62,7 +62,7 @@ namespace pbrt {
         // numShapes.add(firstTime,object->shapes.size());
         numInstances.add(firstTime,object->instances.size());
       
-        for (auto geom : object->geometries) {
+        for (auto geom : object->shapes) {
           usedMaterials.insert(geom->material);
           if (TriangleMesh::SP mesh=std::dynamic_pointer_cast<TriangleMesh>(geom)){
             numTriangles.add(firstTime,mesh->index.size());

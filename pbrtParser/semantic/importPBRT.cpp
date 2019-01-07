@@ -546,7 +546,7 @@ namespace pbrt {
       /*! counter that tracks, for each un-handled shape type, how many
         "instances" of that shape type it could not create (note those
         are not _real_ instances in the ray tracing sense, just
-        "occurrances" of that geometry type in the scene graph,
+        "occurrances" of that shape type in the scene graph,
         _before_ object instantiation */
       std::map<std::string,size_t> unhandledShapeTypeCounter;
     
@@ -576,8 +576,8 @@ namespace pbrt {
         return ourInstance;
       }
 
-      /*! extract 'texture' parameters from shape, and assign to geometry */
-      void extractTextures(Geometry::SP geom, pbrt::syntactic::Shape::SP shape)
+      /*! extract 'texture' parameters from shape, and assign to shape */
+      void extractTextures(Shape::SP geom, pbrt::syntactic::Shape::SP shape)
       {
         for (auto param : shape->param) {
           if (param.second->getType() != "texture")
@@ -587,7 +587,7 @@ namespace pbrt {
         }
       }
 
-      Geometry::SP emitPlyMesh(pbrt::syntactic::Shape::SP shape)
+      Shape::SP emitPlyMesh(pbrt::syntactic::Shape::SP shape)
       {
         // const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
         const std::string fileName
@@ -622,7 +622,7 @@ namespace pbrt {
         return result;
       }
     
-      Geometry::SP emitTriangleMesh(pbrt::syntactic::Shape::SP shape)
+      Shape::SP emitTriangleMesh(pbrt::syntactic::Shape::SP shape)
       {
         TriangleMesh::SP ours = std::make_shared<TriangleMesh>(findOrCreateMaterial(shape->material));
 
@@ -644,7 +644,7 @@ namespace pbrt {
         return ours;
       }
 
-      Geometry::SP emitSphere(pbrt::syntactic::Shape::SP shape)
+      Shape::SP emitSphere(pbrt::syntactic::Shape::SP shape)
       {
         Sphere::SP ours = std::make_shared<Sphere>(findOrCreateMaterial(shape->material));
 
@@ -655,7 +655,7 @@ namespace pbrt {
         return ours;
       }
 
-      Geometry::SP emitDisk(pbrt::syntactic::Shape::SP shape)
+      Shape::SP emitDisk(pbrt::syntactic::Shape::SP shape)
       {
         Disk::SP ours = std::make_shared<Disk>(findOrCreateMaterial(shape->material));
 
@@ -670,7 +670,7 @@ namespace pbrt {
         return ours;
       }
 
-      Geometry::SP emitGeometry(pbrt::syntactic::Shape::SP shape)
+      Shape::SP emitShape(pbrt::syntactic::Shape::SP shape)
       {
         if (shape->type == "plymesh") 
           return emitPlyMesh(shape);
@@ -684,16 +684,16 @@ namespace pbrt {
         // throw std::runtime_error("un-handled shape "+shape->type);
         unhandledShapeTypeCounter[shape->type]++;
         // std::cout << "WARNING: un-handled shape " << shape->type << std::endl;
-        return Geometry::SP();
+        return Shape::SP();
       }
 
-      Geometry::SP findOrCreateGeometry(pbrt::syntactic::Shape::SP pbrtShape)
+      Shape::SP findOrCreateShape(pbrt::syntactic::Shape::SP pbrtShape)
       {
-        if (emittedGeometries.find(pbrtShape) != emittedGeometries.end())
-          return emittedGeometries[pbrtShape];
+        if (emittedShapes.find(pbrtShape) != emittedShapes.end())
+          return emittedShapes[pbrtShape];
 
-        emittedGeometries[pbrtShape] = emitGeometry(pbrtShape);
-        return emittedGeometries[pbrtShape];
+        emittedShapes[pbrtShape] = emitShape(pbrtShape);
+        return emittedShapes[pbrtShape];
       }
     
       Object::SP findOrEmitObject(pbrt::syntactic::Object::SP pbrtObject)
@@ -705,9 +705,9 @@ namespace pbrt {
         Object::SP ourObject = std::make_shared<Object>();
         ourObject->name = pbrtObject->name;
         for (auto shape : pbrtObject->shapes) {
-          Geometry::SP ourGeometry = findOrCreateGeometry(shape);
-          if (ourGeometry)
-            ourObject->geometries.push_back(ourGeometry);
+          Shape::SP ourShape = findOrCreateShape(shape);
+          if (ourShape)
+            ourObject->shapes.push_back(ourShape);
         }
         for (auto instance : pbrtObject->objectInstances)
           ourObject->instances.push_back(emitInstance(instance));
@@ -717,7 +717,7 @@ namespace pbrt {
       }
 
       std::map<pbrt::syntactic::Object::SP,Object::SP> emittedObjects;
-      std::map<pbrt::syntactic::Shape::SP,Geometry::SP> emittedGeometries;
+      std::map<pbrt::syntactic::Shape::SP,Shape::SP>   emittedShapes;
     
       PBRTScene::SP pbrtScene;
     };

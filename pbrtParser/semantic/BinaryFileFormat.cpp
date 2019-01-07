@@ -39,7 +39,7 @@ namespace pbrt {
       TYPE_ERROR,
       TYPE_SCENE,
       TYPE_OBJECT,
-      TYPE_GEOMETRY,
+      TYPE_SHAPE,
       TYPE_INSTANCE,
       TYPE_CAMERA,
       TYPE_MATERIAL,
@@ -473,15 +473,15 @@ namespace pbrt {
 
 
     /*! serialize out to given binary writer */
-    int Geometry::writeTo(BinaryWriter &binary) 
+    int Shape::writeTo(BinaryWriter &binary) 
     {
       binary.write(binary.serialize(material));
       binary.write(textures);
-      return TYPE_GEOMETRY;
+      return TYPE_SHAPE;
     }
   
     /*! serialize _in_ from given binary file reader */
-    void Geometry::readFrom(BinaryReader &binary) 
+    void Shape::readFrom(BinaryReader &binary) 
     {
       binary.read(material);
       binary.read(textures);
@@ -492,7 +492,7 @@ namespace pbrt {
     /*! serialize out to given binary writer */
     int TriangleMesh::writeTo(BinaryWriter &binary) 
     {
-      Geometry::writeTo(binary);
+      Shape::writeTo(binary);
       binary.write(vertex);
       binary.write(normal);
       binary.write(index);
@@ -502,7 +502,7 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     void TriangleMesh::readFrom(BinaryReader &binary) 
     {
-      Geometry::readFrom(binary);
+      Shape::readFrom(binary);
       binary.read(vertex);
       binary.read(normal);
       binary.read(index);
@@ -512,7 +512,7 @@ namespace pbrt {
     /*! serialize out to given binary writer */
     int QuadMesh::writeTo(BinaryWriter &binary) 
     {
-      Geometry::writeTo(binary);
+      Shape::writeTo(binary);
       binary.write(vertex);
       binary.write(normal);
       binary.write(index);
@@ -522,7 +522,7 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     void QuadMesh::readFrom(BinaryReader &binary) 
     {
-      Geometry::readFrom(binary);
+      Shape::readFrom(binary);
       binary.read(vertex);
       binary.read(normal);
       binary.read(index);
@@ -532,7 +532,7 @@ namespace pbrt {
     /*! serialize out to given binary writer */
     int Disk::writeTo(BinaryWriter &binary) 
     {
-      Geometry::writeTo(binary);
+      Shape::writeTo(binary);
       binary.write(radius);
       binary.write(height);
       binary.write(transform);
@@ -542,7 +542,7 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     void Disk::readFrom(BinaryReader &binary) 
     {
-      Geometry::readFrom(binary);
+      Shape::readFrom(binary);
       binary.read(radius);
       binary.read(height);
       binary.read(transform);
@@ -556,7 +556,7 @@ namespace pbrt {
     /*! serialize out to given binary writer */
     int Sphere::writeTo(BinaryWriter &binary) 
     {
-      Geometry::writeTo(binary);
+      Shape::writeTo(binary);
       binary.write(radius);
       binary.write(transform);
       return TYPE_SPHERE;
@@ -565,7 +565,7 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     void Sphere::readFrom(BinaryReader &binary) 
     {
-      Geometry::readFrom(binary);
+      Shape::readFrom(binary);
       binary.read(radius);
       binary.read(transform);
     }
@@ -1157,8 +1157,8 @@ namespace pbrt {
     int Object::writeTo(BinaryWriter &binary) 
     {
       binary.write(name);
-      binary.write((int)geometries.size());
-      for (auto geom : geometries) {
+      binary.write((int)shapes.size());
+      for (auto geom : shapes) {
         binary.write(binary.serialize(geom));
       }
       binary.write((int)instances.size());
@@ -1172,11 +1172,11 @@ namespace pbrt {
     void Object::readFrom(BinaryReader &binary) 
     {
       name = binary.read<std::string>();
-      // read geometries
-      int numGeometries = binary.read<int>();
-      assert(geometries.empty());
-      for (int i=0;i<numGeometries;i++)
-        geometries.push_back(binary.getEntity<Geometry>(binary.read<int>()));
+      // read shapes
+      int numShapes = binary.read<int>();
+      assert(shapes.empty());
+      for (int i=0;i<numShapes;i++)
+        shapes.push_back(binary.getEntity<Shape>(binary.read<int>()));
       // read instances
       int numInstances = binary.read<int>();
       assert(instances.empty());
