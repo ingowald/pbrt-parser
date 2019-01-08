@@ -48,7 +48,7 @@ if(COMMAND cmake_policy)
 endif(COMMAND cmake_policy)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -Wall)
+#set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -Wall)
   
 option(EXP_RIB_IMPORTER "Build experimental rib importer?" OFF)
 
