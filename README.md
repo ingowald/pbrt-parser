@@ -30,8 +30,50 @@ A few screenshots:
 ![moana.pbrt](doc/jpg/moana.jpg "moana island, as shown at Siggraph 2018, using a slightly older version of this parser")
 
 
+STATUS
+======
+
+The *semantical* parser currently supports:
+
+- Shapes: `trianglemesh`, `disk`, `sphere` are supported.
+- Materials: `Disney`, `Uber`, `Mix`, `Metal`, `Mirror`, `Matte`, `Translucent`, `Plastic`, `Substrate`, `Fourier`, `Glass`. In particular, all indirect references (e.g., a "uber" material referencing two other materials by name) are now properly resolved.
+- Textures: `Image`, `PtexFile` (storing only the filename, not the ptx data), `Fbm`, `Windy`, `Marble`, `Scale`, `Wrinkled`, `Mix`, and `Constant`. As with materials, all indirect references should be fully recognized.
+- File formats
+  - `.pbrt` : the original pbrt file format - slow to parse, but will work
+  - `.pbf`  : our own binary file format (use `pbrt2pbf` to convert ascii pbrt to binary pbf)
+
+Disclaimer(s): I did do a significant amonut of testing to make sure that the
+parser can load all .pbrt files without complaining, and that the above classes will
+parse everything that's in those files .... BUT:
+
+- I may have missed some things - please let me know...
+
+- The parser _should_ parse all .pbrt files I could find, but there
+  will likely be other files that are valid PBRT files that the parser
+  would choke. If you find any, please let me know.
+
+- I do not currently have a fully PBRT compliant renderer, so cannot
+  test whether all the parsed data is actualy parsed
+  correctly. Generally triangle meshes, objects, instances,
+  transforms, material and texture types, mapping of
+  materials/textures etc to shapes, etc, should all work, but I can't
+  entirely vouch for all material properties or texture properties of
+  all material types.
+
+- I *will* parse auxiliary .ply files as part of the parsing process,
+  but will *not* parse texture formats, ptex, spectrum specs, etc. For
+  all such auxiliary files I'll include the file name, but leave it to
+  the app to load such files (else I'd require tons of external
+  dependencies)
+
+Known Limitations
+-----------------
+
+- `loopsubdiv` shapes are still ignored.
+- some models use camera space for object definitions - this isn't supported yet.
+
 A Brief History of this Project
--------------------------------
+===============================
 
 This project started out as being mostly a toy project for my own use,
 _originally_ with the sole goal of being able to load PBRT's heavily
