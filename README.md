@@ -35,8 +35,8 @@ STATUS
 
 The *semantical* parser currently supports:
 
-- Shapes: `trianglemesh`, `disk`, `sphere` are supported.
-- Materials: `Disney`, `Uber`, `Mix`, `Metal`, `Mirror`, `Matte`, `Translucent`, `Plastic`, `Substrate`, `Fourier`, `Glass`. In particular, all indirect references (e.g., a "uber" material referencing two other materials by name) are now properly resolved.
+- Shapes: `trianglemesh`, `disk`, `sphere`, and 'curve' are supported.
+- Materials: `Disney`, `Uber`, `Mix`, `Metal`, `Mirror`, `Matte`, `Translucent`, `Plastic`, `Substrate`, `Fourier`, and `Glass` should all work. In particular, all indirect references (e.g., a "mix" material referencing two other materials by name) are now properly resolved.
 - Textures: `Image`, `PtexFile` (storing only the filename, not the ptx data), `Fbm`, `Windy`, `Marble`, `Scale`, `Wrinkled`, `Mix`, and `Constant`. As with materials, all indirect references should be fully recognized.
 - File formats
   - `.pbrt` : the original pbrt file format - slow to parse, but will work
@@ -70,6 +70,10 @@ Known Limitations
 -----------------
 
 - `loopsubdiv` shapes are still ignored.
+
+- `curve` is currently a single shape type; would make senes to split
+  into FlatCurve, CylinderCurve, etc.
+
 - some models use camera space for object definitions - this isn't supported yet.
 
 A Brief History of this Project
