@@ -1,38 +1,10 @@
 stages:
   - build
 
-ubuntu18-gcc-release:
-  stage: build
-  tags:
-    - docker
-  image: ubuntu:18.04
-  script:
-    - apt -y update
-    - apt -y install cmake g++
-    - mkdir build-gcc-release
-    - cd build-gcc-release
-    - export CXX=g++
-    - cmake -DCMAKE_BUILD_TYPE=Release ..
-    - make
 
-ubuntu18-gcc-debug:
-  stage: build
-  tags:
-    - docker
-  image: ubuntu:18.04
-  script:
-    - apt -y update
-    - apt -y install cmake g++
-    - mkdir build-gcc-debug
-    - cd build-gcc-debug
-    - export CXX=g++
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - make
-
-
-
-
-
+# -------------------------------------------------------
+# ubuntu 16
+# -------------------------------------------------------
 ubuntu16-gcc-release:
   stage: build
   tags:
@@ -41,8 +13,8 @@ ubuntu16-gcc-release:
   script:
     - apt -y update
     - apt -y install cmake g++
-    - mkdir build-gcc-release
-    - cd build-gcc-release
+    - mkdir build
+    - cd build
     - export CXX=g++
     - cmake -DCMAKE_BUILD_TYPE=Release ..
     - make
@@ -55,9 +27,73 @@ ubuntu16-gcc-debug:
   script:
     - apt -y update
     - apt -y install cmake g++
-    - mkdir build-gcc-debug
-    - cd build-gcc-debug
+    - mkdir build
+    - cd build
     - export CXX=g++
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make
+
+# -------------------------------------------------------
+# ubuntu 18
+# -------------------------------------------------------
+ubuntu18-gcc-release:
+  stage: build
+  tags:
+    - docker
+  image: ubuntu:18.04
+  script:
+    - apt -y update
+    - apt -y install cmake g++
+    - mkdir build
+    - cd build
+    - export CXX=g++
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make
+
+ubuntu18-gcc-debug:
+  stage: build
+  tags:
+    - docker
+  image: ubuntu:18.04
+  script:
+    - apt -y update
+    - apt -y install cmake g++
+    - mkdir build
+    - cd build
+    - export CXX=g++
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - make
+
+ubuntu18-gcc-release:
+  stage: build
+  tags:
+    - docker
+  image: ubuntu:18.04
+  script:
+    - apt -y update
+    - apt -y install cmake clang-6.0
+    - mkdir build
+    - cd build
+    - export CXX=clang++
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make
+
+ubuntu18-gcc-debug:
+  stage: build
+  tags:
+    - docker
+  image: ubuntu:18.04
+  script:
+    - apt -y update
+    - apt -y install cmake clang-6.0
+    - mkdir build
+    - cd build
+    - export CXX=clang++
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - make
+
+
+
+
+
 
