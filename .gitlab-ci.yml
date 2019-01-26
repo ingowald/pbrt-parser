@@ -74,6 +74,7 @@ ubuntu18-gcc-release:
     - apt -y install cmake clang-6.0
     - mkdir build
     - cd build
+    - export CC=clang
     - export CXX=clang++
     - cmake -DCMAKE_BUILD_TYPE=Release ..
     - make
@@ -88,6 +89,7 @@ ubuntu18-gcc-debug:
     - apt -y install cmake clang-6.0
     - mkdir build
     - cd build
+    - export CC=clang
     - export CXX=clang++
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make
