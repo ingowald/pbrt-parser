@@ -59,8 +59,7 @@ namespace pbrt {
         numObjects.add(firstTime,1);
         // numLights.add(firstTime,object->lightSources.size());
         // numVolumes.add(firstTime,object->volumes.size());
-        // numShapes.add(firstTime,object->shapes.size());
-        numInstances.add(firstTime,object->instances.size());
+        numShapes.add(firstTime,object->shapes.size());
       
         for (auto geom : object->shapes) {
           usedMaterials.insert(geom->material);
@@ -76,6 +75,7 @@ namespace pbrt {
             std::cout << "un-handled geometry type : " << geom->toString() << std::endl;
         }
 
+        numInstances.add(firstTime,object->instances.size());
         for (auto inst : object->instances) {
           traverse(inst->object);
         }

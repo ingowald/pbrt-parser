@@ -638,7 +638,6 @@ namespace pbrt {
           v = xfmPoint(xfm,v);
         for (vec3f &v : ours->normal)
           v = xfmNormal(xfm,v);
-
         extractTextures(ours,shape);
       
         return ours;

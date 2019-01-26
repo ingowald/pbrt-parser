@@ -259,21 +259,21 @@ namespace pbrt {
             /* verify which properties these vertices have */
             has_fverts = FALSE;
             
-            // for (int j=0; j<nprops; j++) {
-            //   if (equal_strings("vertex_indices", plist[j]->name)) {
-            //     ply_get_property(ply, elem_name, &face_props[FACE_INDICES]);/* vertex_indices */
-            //     has_fverts = TRUE;
-            //   } else if (equal_strings("red", plist[j]->name)) {
-            //     ply_get_property(ply, elem_name, &face_props[FACE_RED]);/* vertex_indices */
-            //     has_face_red = TRUE;
-            //   } else if (equal_strings("green", plist[j]->name)) {
-            //     ply_get_property(ply, elem_name, &face_props[FACE_GREEN]);/* vertex_indices */
-            //     has_face_green = TRUE;
-            //   } else if (equal_strings("blue", plist[j]->name)) {
-            //     ply_get_property(ply, elem_name, &face_props[FACE_BLUE]);/* vertex_indices */
-            //     has_face_blue = TRUE;
-            //   }
-            // }
+            for (int j=0; j<nprops; j++) {
+              if (equal_strings("vertex_indices", plist[j]->name)) {
+                ply_get_property(ply, elem_name, &face_props[FACE_INDICES]);/* vertex_indices */
+                has_fverts = TRUE;
+              // } else if (equal_strings("red", plist[j]->name)) {
+              //   ply_get_property(ply, elem_name, &face_props[FACE_RED]);/* vertex_indices */
+              //   has_face_red = TRUE;
+              // } else if (equal_strings("green", plist[j]->name)) {
+              //   ply_get_property(ply, elem_name, &face_props[FACE_GREEN]);/* vertex_indices */
+              //   has_face_green = TRUE;
+              // } else if (equal_strings("blue", plist[j]->name)) {
+              //   ply_get_property(ply, elem_name, &face_props[FACE_BLUE]);/* vertex_indices */
+              //   has_face_blue = TRUE;
+              }
+            }
             // face_other =
               ply_get_other_properties (ply, elem_name,
                                                    offsetof(Face,other_props));

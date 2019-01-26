@@ -406,6 +406,9 @@ namespace pbrt {
       flattned scene */
     void Scene::makeSingleLevel()
     {
+      if (isSingleLevel())
+        return;
+      
       this->world = SingleLevelFlattener(world).result;
     }
 
