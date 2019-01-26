@@ -5,7 +5,7 @@ docker-test:
   stage: build
   tags:
     - docker
-  image: ubuntu:17.04
+  image: ubuntu:18.04
   script:
     - apt -y update
     - apt -y install cmake gcc
