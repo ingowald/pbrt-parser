@@ -1,40 +1,17 @@
 stages:
   - build
 
-build-linux-gcc-release:
+docker-test:
   stage: build
+  tags:
+    - docker
+  image: ubuntu:17.04
   script:
+    - apt -y update
+    - apt -y install cmake gcc
     - mkdir build-gcc-release
     - cd build-gcc-release
     - export CXX=g++
     - cmake -DCMAKE_BUILD_TYPE=Release ..
-    - make
-
-build-linux-gcc-debug:
-  stage: build
-  script:
-    - mkdir build-gcc-release
-    - cd build-gcc-release
-    - export CXX=g++
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - make
-
-
-build-linux-clang-release:
-  stage: build
-  script:
-    - mkdir build-clang-release
-    - cd build-clang-release
-    - export CXX=clang++
-    - cmake -DCMAKE_BUILD_TYPE=Release ..
-    - make
-
-build-linux-clang-debug:
-  stage: build
-  script:
-    - mkdir build-clang-release
-    - cd build-clang-release
-    - export CXX=clang++
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make
 
