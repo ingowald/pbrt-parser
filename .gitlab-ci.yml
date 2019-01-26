@@ -1,7 +1,7 @@
 stages:
   - build
 
-docker-test:
+ubuntu18-gcc-release:
   stage: build
   tags:
     - docker
@@ -13,5 +13,51 @@ docker-test:
     - cd build-gcc-release
     - export CXX=g++
     - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make
+
+ubuntu18-gcc-debug:
+  stage: build
+  tags:
+    - docker
+  image: ubuntu:18.04
+  script:
+    - apt -y update
+    - apt -y install cmake g++
+    - mkdir build-gcc-debug
+    - cd build-gcc-debug
+    - export CXX=g++
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - make
+
+
+
+
+
+ubuntu16-gcc-release:
+  stage: build
+  tags:
+    - docker
+  image: ubuntu:16.04
+  script:
+    - apt -y update
+    - apt -y install cmake g++
+    - mkdir build-gcc-release
+    - cd build-gcc-release
+    - export CXX=g++
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make
+
+ubuntu16-gcc-debug:
+  stage: build
+  tags:
+    - docker
+  image: ubuntu:16.04
+  script:
+    - apt -y update
+    - apt -y install cmake g++
+    - mkdir build-gcc-debug
+    - cd build-gcc-debug
+    - export CXX=g++
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make
 
