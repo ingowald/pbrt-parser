@@ -2,6 +2,7 @@ stages:
   - build
 
 build-linux-gcc-release:
+  stage: build
   script:
     - mkdir build-gcc-release
     - cd build-gcc-release
@@ -10,6 +11,7 @@ build-linux-gcc-release:
     - make
 
 build-linux-gcc-debug:
+  stage: build
   script:
     - mkdir build-gcc-release
     - cd build-gcc-release
@@ -19,6 +21,7 @@ build-linux-gcc-debug:
 
 
 build-linux-clang-release:
+  stage: build
   script:
     - mkdir build-clang-release
     - cd build-clang-release
@@ -27,6 +30,7 @@ build-linux-clang-release:
     - make
 
 build-linux-clang-debug:
+  stage: build
   script:
     - mkdir build-clang-release
     - cd build-clang-release
