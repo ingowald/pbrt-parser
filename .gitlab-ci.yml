@@ -8,7 +8,7 @@ docker-test:
   image: ubuntu:18.04
   script:
     - apt -y update
-    - apt -y install cmake gcc
+    - apt -y install cmake g++
     - mkdir build-gcc-release
     - cd build-gcc-release
     - export CXX=g++
