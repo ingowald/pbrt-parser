@@ -6,7 +6,6 @@ build-linux-gcc-release:
   script:
     - mkdir build-gcc-release
     - cd build-gcc-release
-    - apt -y install cmake
     - export CXX=g++
     - cmake -DCMAKE_BUILD_TYPE=Release ..
     - make
@@ -16,7 +15,6 @@ build-linux-gcc-debug:
   script:
     - mkdir build-gcc-release
     - cd build-gcc-release
-    - apt -y install cmake
     - export CXX=g++
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make
@@ -27,7 +25,6 @@ build-linux-clang-release:
   script:
     - mkdir build-clang-release
     - cd build-clang-release
-    - apt -y install cmake
     - export CXX=clang++
     - cmake -DCMAKE_BUILD_TYPE=Release ..
     - make
@@ -37,7 +34,6 @@ build-linux-clang-debug:
   script:
     - mkdir build-clang-release
     - cd build-clang-release
-    - apt -y install cmake
     - export CXX=clang++
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make
