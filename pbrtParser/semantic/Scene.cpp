@@ -218,13 +218,15 @@ namespace pbrt {
       for (auto inst : instances) {
         if (inst) {
           const box3f ib = inst->getBounds();
-          bounds.extend(ib);
+          if (!ib.empty())
+            bounds.extend(ib);
         }
       }
       for (auto geom : shapes) {
         if (geom) {
           const box3f gb = geom->getBounds();
-          bounds.extend(gb);
+          if (!gb.empty())
+            bounds.extend(gb);
         }
       }
       return bounds;
@@ -237,6 +239,9 @@ namespace pbrt {
     box3f Instance::getBounds() const
     {
       box3f ob = object->getBounds();
+      if (ob.empty()) 
+        return ob;
+
       box3f bounds = ospcommon::empty;
       bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
       bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));

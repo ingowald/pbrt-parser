@@ -37,7 +37,7 @@ namespace ospcommon {
 
     /*! returns the center of the box (not valid for empty boxes) */
     inline vec_t center() const { return 0.5f * (lower+upper); }
-    inline bool empty() const { return anyLessThan(upper,lower); }
+    inline bool  empty()  const { return anyLessThan(upper,lower); }
 
     inline bool contains(const vec_t &vec) const 
     { return !anyLessThan(vec,lower) && !anyLessThan(upper,vec); }
