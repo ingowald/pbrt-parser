@@ -15,6 +15,7 @@
 ## ======================================================================== ##
 
 set(SOURCES
+  ../common/math.h
   Lexer.h
   Lexer.cpp
   Parser.h
@@ -41,4 +42,5 @@ add_library(pbrtParser_syntactic_static
 install(TARGETS pbrtParser_syntactic DESTINATION lib)
 install(TARGETS pbrtParser_syntactic_static DESTINATION lib)
 install(FILES Scene.h DESTINATION include/pbrtParser/syntactic)
+install(FILES ../common/math.h DESTINATION include/pbrtParser/common)
 
