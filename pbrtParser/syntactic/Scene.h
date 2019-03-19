@@ -19,7 +19,7 @@
 /*! \file pbrt/sytax/Scene.h Defines the root pbrt scene - at least
   the *syntactci* part of it - to be created/parsed by this parser */
 
-#include "Math.h"
+#include "pbrtParser/common/math.h"
 
 // stl
 #include <map>
@@ -622,12 +622,6 @@ namespace pbrt {
       /*! the root scene shape, defined in the
         'WorldBegin'/'WorldEnd' statements */
       std::shared_ptr<Object> world;
-
-      // /*! list of named materials - this _should_ actually be part of
-      //     the attributes, but since in _one_ particular case (the mix
-      //     material) pbrt uses some implicit binding the final scene
-      //     currently _has_ to store this globally */
-      // std::map<std::string,Material::SP> namedMaterials;
     
       std::string makeGlobalFileName(const std::string &relativePath)
       { return basePath + relativePath; }
