@@ -25,7 +25,6 @@ set(SOURCES
   BinaryIO.h
   BinaryIO.cpp
   parsePLY.cpp
-  ../../3rdParty/ply.cpp
   )
 
 # ------------------------------------------------------------------
