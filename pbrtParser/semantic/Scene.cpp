@@ -17,6 +17,7 @@
 #include "pbrtParser/semantic/Scene.h"
 // std
 #include <set>
+#include <string.h>
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
