@@ -34,14 +34,11 @@ namespace pbrt {
     shapes, what their parameters mean, etc. Basically, at this
     level a triangle mesh is nothing but a shape that has a string
     with a given name, and parameters of given names and types */
-  namespace syntactic {
-  
-    using namespace std;
-
+  namespace syntactic {  
     int verbose = 0;
 
-    inline bool operator==(const TokenHandle &tk, const std::string &text)
-    { return (std::string)tk == text; }
+    inline bool operator==(const Token &tk, const std::string &text) { return tk.text == text; }
+    inline bool operator==(const Token &tk, const char* text) { return tk.text == text; }
   
     /* split a string on a single character delimiter */
     inline std::vector<std::string> split(const std::string &input, char delim)
@@ -72,10 +69,10 @@ namespace pbrt {
   
     inline float Parser::parseFloat()
     {
-      TokenHandle token = next();
+      Token token = next();
       if (!token)
         throw std::runtime_error("unexpected end of file\n@"+std::string(__PRETTY_FUNCTION__));
-      return std::stod(token);
+      return std::stod(token.text);
     }
 
     inline vec3f Parser::parseVec3f()
@@ -92,39 +89,39 @@ namespace pbrt {
 
     affine3f Parser::parseMatrix()
     {
-      const std::string open = *next();
+      const std::string open = next().text;
 
       assert(open == "[");
       affine3f xfm;
-      xfm.l.vx.x = std::stod(next()->c_str());
-      xfm.l.vx.y = std::stod(next()->c_str());
-      xfm.l.vx.z = std::stod(next()->c_str());
-      float vx_w = std::stod(next()->c_str());
+      xfm.l.vx.x = std::stod(next().text.c_str());
+      xfm.l.vx.y = std::stod(next().text.c_str());
+      xfm.l.vx.z = std::stod(next().text.c_str());
+      float vx_w = std::stod(next().text.c_str());
       assert(vx_w == 0.f);
       _unused(vx_w);
 
-      xfm.l.vy.x = std::stod(next()->c_str());
-      xfm.l.vy.y = std::stod(next()->c_str());
-      xfm.l.vy.z = std::stod(next()->c_str());
-      float vy_w = std::stod(next()->c_str());
+      xfm.l.vy.x = std::stod(next().text.c_str());
+      xfm.l.vy.y = std::stod(next().text.c_str());
+      xfm.l.vy.z = std::stod(next().text.c_str());
+      float vy_w = std::stod(next().text.c_str());
       assert(vy_w == 0.f);
       _unused(vy_w);
 
-      xfm.l.vz.x = std::stod(next()->c_str());
-      xfm.l.vz.y = std::stod(next()->c_str());
-      xfm.l.vz.z = std::stod(next()->c_str());
-      float vz_w = std::stod(next()->c_str());
+      xfm.l.vz.x = std::stod(next().text.c_str());
+      xfm.l.vz.y = std::stod(next().text.c_str());
+      xfm.l.vz.z = std::stod(next().text.c_str());
+      float vz_w = std::stod(next().text.c_str());
       assert(vz_w == 0.f);
       _unused(vz_w);
 
-      xfm.p.x    = std::stod(next()->c_str());
-      xfm.p.y    = std::stod(next()->c_str());
-      xfm.p.z    = std::stod(next()->c_str());
-      float p_w  = std::stod(next()->c_str());
+      xfm.p.x    = std::stod(next().text.c_str());
+      xfm.p.y    = std::stod(next().text.c_str());
+      xfm.p.z    = std::stod(next().text.c_str());
+      float p_w  = std::stod(next().text.c_str());
       assert(p_w == 1.f);
       _unused(p_w);
 
-      const std::string close = *next();
+      const std::string close = next().text;
       assert(close == "]");
 
       return xfm;
@@ -133,12 +130,12 @@ namespace pbrt {
 
     inline std::shared_ptr<Param> Parser::parseParam(std::string &name)
     {
-      TokenHandle token = peek();
+      Token token = peek();
 
-      if (token->type != Token::TOKEN_TYPE_STRING)
+      if (token.type != Token::TOKEN_TYPE_STRING)
         return std::shared_ptr<Param>();
 
-      std::vector<std::string> components = split(*next(),std::string(" \n\t"));
+      std::vector<std::string> components = split(next().text,std::string(" \n\t"));
 
       assert(components.size() == 2);
       std::string type = components[0];
@@ -176,13 +173,13 @@ namespace pbrt {
       } else if (type == "string") {
         ret = std::make_shared<ParamArray<std::string>>(type);
       } else {
-        throw std::runtime_error("unknown parameter type '"+type+"' "+token->loc.toString()
+        throw std::runtime_error("unknown parameter type '"+type+"' "+token.loc.toString()
                                  +std::string("\n@")+std::string(__PRETTY_FUNCTION__));
       }
 
-      std::string value = *next();
+      std::string value = next().text;
       if (value == "[") {
-        std::string p = *next();
+        std::string p = next().text;
         
         while (p != "]") {
           if (type == "texture") {
@@ -191,7 +188,7 @@ namespace pbrt {
           } else {
             ret->add(p);
           }
-          p = *next();
+          p = next().text;
         }
       } else {
         if (type == "texture") {
@@ -287,10 +284,10 @@ namespace pbrt {
       ctm.stack.pop();
     }
     
-    bool Parser::parseTransform(TokenHandle token)
+    bool Parser::parseTransform(const Token& token)
     {
       if (token == "ActiveTransform") {
-        const std::string which = *next();
+        const std::string which = next().text;
         if (which == "All") {
           ctm.startActive = true;
           ctm.endActive = true;
@@ -346,8 +343,8 @@ namespace pbrt {
         return true;
       }
       if (token == "ActiveTransform") {
-        std::string time = *next();
-        std::cout << "'ActiveTransform' not implemented" << endl;
+        std::string time = next().text;
+        std::cout << "'ActiveTransform' not implemented" << std::endl;
         return true;
       }
       if (token == "Identity") {
@@ -360,8 +357,8 @@ namespace pbrt {
         return true;
       }
       if (token == "CoordSysTransform") {
-        TokenHandle nameOfObject = next();
-        cout << "ignoring 'CoordSysTransform'" << endl;
+        Token nameOfObject = next();
+        std::cout << "ignoring 'CoordSysTransform'" << std::endl;
         return true;
       }
       return false;
@@ -369,17 +366,17 @@ namespace pbrt {
 
     void Parser::parseWorld()
     {
-      if (dbg) cout << "Parsing PBRT World" << endl;
+      if (dbg) std::cout << "Parsing PBRT World" << std::endl;
       while (1) {
-        TokenHandle token = next();
+        Token token = next();
         assert(token);
-        if (dbg) std::cout << "World token : " << token->toString() << std::endl;
+        if (dbg) std::cout << "World token : " << token.toString() << std::endl;
 
         // ------------------------------------------------------------------
         // WorldEnd - go back to regular parseScene
         // ------------------------------------------------------------------
         if (token == "WorldEnd") {
-          if (dbg) cout << "Parsing PBRT World - done!" << endl;
+          if (dbg) std::cout << "Parsing PBRT World - done!" << std::endl;
           break;
         }
       
@@ -388,7 +385,7 @@ namespace pbrt {
         // -------------------------------------------------------
         if (token == "LightSource") {
           std::shared_ptr<LightSource> lightSource
-            = std::make_shared<LightSource>(next());
+            = std::make_shared<LightSource>(next().text);
           parseParams(lightSource->param);
           getCurrentObject()->lightSources.push_back(lightSource);
           continue;
@@ -399,7 +396,7 @@ namespace pbrt {
         // ------------------------------------------------------------------
         if (token == "AreaLightSource") {
           std::shared_ptr<AreaLightSource> lightSource
-            = std::make_shared<AreaLightSource>(next());
+            = std::make_shared<AreaLightSource>(next().text);
           parseParams(lightSource->param);
           continue;
         }
@@ -408,7 +405,7 @@ namespace pbrt {
         // Material
         // -------------------------------------------------------
         if (token == "Material") {
-          std::string type = *next();
+          std::string type = next().text;
           std::shared_ptr<Material> material
             = std::make_shared<Material>(type);
           parseParams(material->param);
@@ -421,9 +418,9 @@ namespace pbrt {
         // Texture
         // ------------------------------------------------------------------
         if (token == "Texture") {
-          std::string name = *next();
-          std::string texelType = *next();
-          std::string mapType = *next();
+          std::string name = next().text;
+          std::string texelType = next().text;
+          std::string mapType = next().text;
           std::shared_ptr<Texture> texture
             = std::make_shared<Texture>(name,texelType,mapType);
           attributesStack.top()->namedTexture[name] = texture;
@@ -436,7 +433,7 @@ namespace pbrt {
         // MakeNamedMaterial
         // ------------------------------------------------------------------
         if (token == "MakeNamedMaterial") {        
-          std::string name = *next();
+          std::string name = next().text;
           std::shared_ptr<Material> material
             = std::make_shared<Material>("<implicit>");
           attributesStack.top()->namedMaterial[name] = material;
@@ -462,7 +459,7 @@ namespace pbrt {
         // MakeNamedMedium
         // ------------------------------------------------------------------
         if (token == "MakeNamedMedium") {
-          std::string name = *next();
+          std::string name = next().text;
           std::shared_ptr<Medium> medium
             = std::make_shared<Medium>("<implicit>");
           attributesStack.top()->namedMedium[name] = medium;
@@ -486,7 +483,7 @@ namespace pbrt {
         // NamedMaterial
         // ------------------------------------------------------------------
         if (token == "NamedMaterial") {
-          std::string name = *next();
+          std::string name = next().text;
         
           currentMaterial = attributesStack.top()->namedMaterial[name];
 
@@ -499,7 +496,7 @@ namespace pbrt {
         // MakeNamedMedium
         // ------------------------------------------------------------------
         if (token == "MakeNamedMedium") {
-          std::string name = *next();
+          std::string name = next().text;
           std::shared_ptr<Medium> medium
             = std::make_shared<Medium>("<implicit>");
           attributesStack.top()->namedMedium[name] = medium;
@@ -522,8 +519,8 @@ namespace pbrt {
         // MediumInterface
         // ------------------------------------------------------------------
         if (token == "MediumInterface") {
-          attributesStack.top()->mediumInterface.first = *next();
-          attributesStack.top()->mediumInterface.second = *next();
+          attributesStack.top()->mediumInterface.first = next().text;
+          attributesStack.top()->mediumInterface.second = next().text;
           continue;
         }
 
@@ -551,7 +548,7 @@ namespace pbrt {
           //   std::cout << "warning(pbrt_parser): shape, but no current material!" << std::endl;
           // }
           std::shared_ptr<Shape> shape
-            = std::make_shared<Shape>(next(),
+            = std::make_shared<Shape>(next().text,
                                       currentMaterial,
                                       attributesStack.top()->clone(),
                                       ctm);
@@ -565,7 +562,7 @@ namespace pbrt {
         // -------------------------------------------------------
         if (token == "Volume") {
           std::shared_ptr<Volume> volume
-            = std::make_shared<Volume>(next());
+            = std::make_shared<Volume>(next().text);
           parseParams(volume->param);
           getCurrentObject()->volumes.push_back(volume);
           continue;
@@ -581,7 +578,7 @@ namespace pbrt {
         // ObjectBegin
         // -------------------------------------------------------
         if (token == "ObjectBegin") {
-          std::string name = *next();
+          std::string name = next().text;
           std::shared_ptr<Object> object = findNamedObject(name,1);
 
           objectStack.push(object);
@@ -600,48 +597,48 @@ namespace pbrt {
         // ObjectInstance
         // -------------------------------------------------------
         if (token == "ObjectInstance") {
-          std::string name = *next();
+          std::string name = next().text;
           std::shared_ptr<Object> object = findNamedObject(name,1);
           std::shared_ptr<Object::Instance> inst
             = std::make_shared<Object::Instance>(object,ctm);
           getCurrentObject()->objectInstances.push_back(inst);
           if (verbose)
-            cout << "adding instance " << inst->toString()
-                 << " to object " << getCurrentObject()->toString() << endl;
+            std::cout << "adding instance " << inst->toString()
+                 << " to object " << getCurrentObject()->toString() << std::endl;
           continue;
         }
           
         // -------------------------------------------------------
         // ERROR - unrecognized token in worldbegin/end!!!
         // -------------------------------------------------------
-        throw std::runtime_error("unexpected token '"+token->toString()
-                                 +"' at "+token->loc.toString());
+        throw std::runtime_error("unexpected token '"+token.toString()
+                                 +"' at "+token.loc.toString());
       }
     }
 
-    TokenHandle Parser::next()
+    Token Parser::next()
     {
-      TokenHandle token = peek();
+      Token token = peek();
       if (!token)
         throw std::runtime_error("unexpected end of file ...");
       peekQueue.pop_front();
-      // lastLoc = token->loc;
+      // lastLoc = token.loc;
       return token;
     }
     
-    TokenHandle Parser::peek(unsigned int i)
+    Token Parser::peek(unsigned int i)
     {
       while (peekQueue.size() <= i) {
-        TokenHandle token = tokens->next();
+        Token token = tokens->next();
         // first, handle the 'Include' statement by inlining such files
         if (token && token == "Include") {
-          TokenHandle fileNameToken = tokens->next();
-          std::string includedFileName = (std::string)fileNameToken;
+          Token fileNameToken = tokens->next();
+          std::string includedFileName = fileNameToken.text;
           if (includedFileName[0] != '/') {
             includedFileName = rootNamePath+"/"+includedFileName;
           }
           // if (dbg)
-          cout << "... including file '" << includedFileName << " ..." << endl;
+          std::cout << "... including file '" << includedFileName << " ..." << std::endl;
         
           tokenizerStack.push(tokens);
           tokens = std::make_shared<Lexer>(includedFileName);
@@ -657,7 +654,7 @@ namespace pbrt {
         // file - see if we can pop back to another one off the stack
         if (tokenizerStack.empty())
           // nothing to back off to, return eof indicator
-          return TokenHandle();
+          return Token();
       
         tokens = tokenizerStack.top();
         tokenizerStack.pop();
@@ -671,12 +668,10 @@ namespace pbrt {
     {
       while (peek()) {
       
-        TokenHandle token = next();
-        if (!token)
-          break;
+        Token token = next();
+        if (!token) break;
 
-        if (dbg) 
-          cout << token->toString() << endl;
+        if (dbg) std::cout << token.toString() << std::endl;
 
         // -------------------------------------------------------
         // Transform
@@ -704,7 +699,7 @@ namespace pbrt {
           next(); // '['
           float mat[16];
           for (int i=0;i<16;i++)
-            mat[i] = std::stod(next());
+            mat[i] = std::stod(next().text);
 
           affine3f xfm;
           xfm.l.vx = vec3f(mat[0],mat[1],mat[2]);
@@ -717,71 +712,71 @@ namespace pbrt {
           continue;
         }
         if (token == "CoordSysTransform") {
-          std::string transformType = *next();
+          std::string transformType = next().text;
           continue;
         }
 
 
         if (token == "ActiveTransform") {
-          std::string type = *next();
+          std::string type = next().text;
           continue;
         }
 
         if (token == "Camera") {
-          std::shared_ptr<Camera> camera = std::make_shared<Camera>(next(),ctm);
+          std::shared_ptr<Camera> camera = std::make_shared<Camera>(next().text,ctm);
           parseParams(camera->param);
           scene->cameras.push_back(camera);
           continue;
         }
         if (token == "Sampler") {
-          std::shared_ptr<Sampler> sampler = std::make_shared<Sampler>(next());
+          std::shared_ptr<Sampler> sampler = std::make_shared<Sampler>(next().text);
           parseParams(sampler->param);
           scene->sampler = sampler;
           continue;
         }
         if (token == "Integrator") {
-          std::shared_ptr<Integrator> integrator = std::make_shared<Integrator>(next());
+          std::shared_ptr<Integrator> integrator = std::make_shared<Integrator>(next().text);
           parseParams(integrator->param);
           scene->integrator = integrator;
           continue;
         }
         if (token == "SurfaceIntegrator") {
           std::shared_ptr<SurfaceIntegrator> surfaceIntegrator
-            = std::make_shared<SurfaceIntegrator>(next());
+            = std::make_shared<SurfaceIntegrator>(next().text);
           parseParams(surfaceIntegrator->param);
           scene->surfaceIntegrator = surfaceIntegrator;
           continue;
         }
         if (token == "VolumeIntegrator") {
           std::shared_ptr<VolumeIntegrator> volumeIntegrator
-            = std::make_shared<VolumeIntegrator>(next());
+            = std::make_shared<VolumeIntegrator>(next().text);
           parseParams(volumeIntegrator->param);
           scene->volumeIntegrator = volumeIntegrator;
           continue;
         }
         if (token == "PixelFilter") {
-          std::shared_ptr<PixelFilter> pixelFilter = std::make_shared<PixelFilter>(next());
+          std::shared_ptr<PixelFilter> pixelFilter = std::make_shared<PixelFilter>(next().text);
           parseParams(pixelFilter->param);
           scene->pixelFilter = pixelFilter;
           continue;
         }
         if (token == "Accelerator") {
-          std::shared_ptr<Accelerator> accelerator = std::make_shared<Accelerator>(next());
+          std::shared_ptr<Accelerator> accelerator = std::make_shared<Accelerator>(next().text);
           parseParams(accelerator->param);
           continue;
         }
         if (token == "Film") {
-          scene->film = std::make_shared<Film>(next());
+          scene->film = std::make_shared<Film>(next().text);
           parseParams(scene->film->param);
           continue;
         }
         if (token == "Accelerator") {
-          std::shared_ptr<Accelerator> accelerator = std::make_shared<Accelerator>(next());
+          std::shared_ptr<Accelerator> accelerator = std::make_shared<Accelerator>(next().text);
           parseParams(accelerator->param);
           continue;
         }
         if (token == "Renderer") {
-          std::shared_ptr<Renderer> renderer = std::make_shared<Renderer>(next());
+          std::shared_ptr<Renderer> renderer = std::make_shared<Renderer>(next().text);
           parseParams(renderer->param);
           continue;
         }
@@ -796,8 +791,8 @@ namespace pbrt {
         // MediumInterface
         // ------------------------------------------------------------------
         if (token == "MediumInterface") {
-          attributesStack.top()->mediumInterface.first = *next();
-          attributesStack.top()->mediumInterface.second = *next();
+          attributesStack.top()->mediumInterface.first = next().text;
+          attributesStack.top()->mediumInterface.second = next().text;
           continue;
         }
 
@@ -805,7 +800,7 @@ namespace pbrt {
         // MakeNamedMedium
         // ------------------------------------------------------------------
         if (token == "MakeNamedMedium") {
-          std::string name = *next();
+          std::string name = next().text;
           std::shared_ptr<Medium> medium
             = std::make_shared<Medium>("<implicit>");
           attributesStack.top()->namedMedium[name] = medium;
@@ -833,8 +828,8 @@ namespace pbrt {
           continue;
         }
 
-        throw std::runtime_error("unexpected token '"+token->text
-                                 +"' at "+token->loc.toString());
+        throw std::runtime_error("unexpected token '"+token.text
+                                 +"' at "+token.loc.toString());
       }
     }
 

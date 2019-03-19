@@ -26,74 +26,10 @@ namespace pbrt {
     level a triangle mesh is nothing but a geometry that has a string
     with a given name, and parameters of given names and types */
   namespace syntactic {
-  
-    // =======================================================
-    // file
-    // =======================================================
-    File::File(const std::string &fn)
-      : name(fn)
-    {
-      file = fopen(fn.c_str(),"r");
-      if (!file)
-        throw std::runtime_error("could not open file '"+fn+"'");
-    }
-
-    File::~File()
-    { 
-      if (file) fclose(file);
-    }
-
-
-    // =======================================================
-    // loc
-    // =======================================================
-
-    //! constructor
-    Loc::Loc(const std::shared_ptr<File> &file) : file(file), line(1), col(0) 
-    {
-    }
-    
-    // //! copy-constructor
-    // Loc::Loc(const Loc &loc) : file(loc.file), line(loc.line), col(loc.col) 
-    // {
-    // }
-    
-    //! pretty-print
-    std::string Loc::toString() const 
-    {
-      std::stringstream ss;
-      ss << "@" << (file?file->getFileName():"<invalid>") << ":" << line << "." << col;
-      return ss.str();
-    }
-
-    // =======================================================
-    // token
-    // =======================================================
-
-    //! constructor
-    Token::Token(const Loc &loc, 
-                 const Type type,
-                 const std::string &text) 
-      : loc(loc), type(type), text(text) 
-    {}
-
-    //! pretty-print
-    std::string Token::toString() const 
-    {
-      std::stringstream ss;
-      ss << loc.toString() <<": '" << text << "'";
-      return ss.str();
-    }
-    
+      
     // =======================================================
     // Lexer
     // =======================================================
-
-    //! constructor
-    Lexer::Lexer(const std::string &fn)
-      : file(new File(fn)), loc(file), peekedChar(-1) 
-    {
-    }
 
     inline void Lexer::unget_char(int c)
     {
@@ -135,7 +71,7 @@ namespace pbrt {
       // return strchr("[,]",c)!=nullptr;
     }
 
-    TokenHandle Lexer::next() 
+    Token Lexer::next() 
     {
       // skip all white space and comments
       int c;
@@ -145,7 +81,7 @@ namespace pbrt {
       while (1) {
         c = get_char();
 
-        if (c < 0) { file->close(); return TokenHandle(); }
+        if (c < 0) { file->close(); return Token(); }
           
         if (isWhite(c)) {
           continue;
@@ -157,7 +93,7 @@ namespace pbrt {
           while (c != '\n') {
             // lastLoc = loc;
             c = get_char();
-            if (c < 0) return TokenHandle();
+            if (c < 0) return Token();
           }
           continue;
         }
@@ -181,7 +117,7 @@ namespace pbrt {
             break;
           ss << (char)c;
         }
-        return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_STRING,ss.str());
+        return Token(startLoc,Token::TOKEN_TYPE_STRING,ss.str());
       }
 
       // -------------------------------------------------------
@@ -189,7 +125,7 @@ namespace pbrt {
       // -------------------------------------------------------
       if (isSpecial(c)) {
         ss << (char)c;
-        return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_SPECIAL,ss.str());
+        return Token(startLoc,Token::TOKEN_TYPE_SPECIAL,ss.str());
       }
 
       ss << (char)c;
@@ -198,11 +134,11 @@ namespace pbrt {
         // lastLoc = loc;
         c = get_char();
         if (c < 0)
-          return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
+          return Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
         if (c == '#' || isSpecial(c) || isWhite(c) || c=='"') {
           // cout << "END OF TOKEN AT " << lastLoc.toString() << endl;
           unget_char(c);
-          return std::make_shared<Token>(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
+          return Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
         }
         ss << (char)c;
       }

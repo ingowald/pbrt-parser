@@ -178,10 +178,9 @@ namespace pbrt {
       /*! used during parsing, to add a newly parsed parameter value
         to the list */
       virtual void add(const std::string &text);
-      //    private:
-      std::string type;
 
-      // std::vector<T> paramVec;
+      /*! type */
+      std::string type;
     };
 
     struct Texture;
@@ -227,41 +226,24 @@ namespace pbrt {
       bool getParamBool(const std::string &name, const bool fallBack=false) const;
       std::string getParamString(const std::string &name) const;
       std::shared_ptr<Texture> getParamTexture(const std::string &name) const;
-      bool hasParamTexture(const std::string &name) const
-      {
+      bool hasParamTexture(const std::string &name) const {
         return (bool)findParam<Texture>(name);
       }
-      bool hasParamString(const std::string &name) const
-      {
+      bool hasParamString(const std::string &name) const {
         return (bool)findParam<std::string>(name);
       }
-      bool hasParam1i(const std::string &name) const
-      {
-        return
-          (bool)findParam<int>(name)
-          &&
-          findParam<int>(name)->size() == 1
-          ;
+      bool hasParam1i(const std::string &name) const {
+        return  (bool)findParam<int>(name) && findParam<int>(name)->size() == 1;
       }
-      bool hasParam1f(const std::string &name) const
-      {
-        return
-          (bool)findParam<float>(name)
-          &&
-          findParam<float>(name)->size() == 1
-          ;
+      bool hasParam1f(const std::string &name) const {
+        return (bool)findParam<float>(name) && findParam<float>(name)->size() == 1;
       }
-      bool hasParam3f(const std::string &name) const
-      {
-        return
-          (bool)findParam<float>(name)
-          &&
-          findParam<float>(name)->size() == 3
-          ;
+      bool hasParam3f(const std::string &name) const {
+        return (bool)findParam<float>(name) && findParam<float>(name)->size() == 3;
       }
     
       template<typename T>
-        std::shared_ptr<ParamArray<T> > findParam(const std::string &name) const {
+      std::shared_ptr<ParamArray<T> > findParam(const std::string &name) const {
         auto it = param.find(name);
         if (it == param.end()) return typename ParamArray<T>::SP();
         return it->second->as<T>(); //std::dynamic_pointer_cast<ParamArray<T> >(it->second);
@@ -271,7 +253,6 @@ namespace pbrt {
     };
 
     struct PBRT_PARSER_INTERFACE Material : public ParamSet {
-    
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
       typedef std::shared_ptr<Material> SP;
@@ -294,7 +275,6 @@ namespace pbrt {
     };
 
     struct PBRT_PARSER_INTERFACE Medium : public ParamSet {
-    
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
       typedef std::shared_ptr<Medium> SP;
@@ -309,7 +289,6 @@ namespace pbrt {
     };
 
     struct PBRT_PARSER_INTERFACE Texture : public ParamSet {
-    
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
       typedef std::shared_ptr<Texture> SP;
