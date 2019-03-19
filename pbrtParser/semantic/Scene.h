@@ -45,19 +45,12 @@ namespace pbrt {
 
     using vec2f    = syntactic::vec2f;
     using vec3f    = syntactic::vec3f;
+    using vec4f    = syntactic::vec4f;
+    using vec2i    = syntactic::vec2i;
     using vec3i    = syntactic::vec3i;
     using vec4i    = syntactic::vec4i;
     using affine3f = syntactic::affine3f;
-
-#if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
-    using vec2i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2i;
-    using vec4f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4f;
-    using box3f    = PBRT_PARSER_VECTYPE_NAMESPACE::box3f;
-#else
-    struct vec2i { int x, y; };
-    struct vec4f { float x,y,z,w; };
-    struct box3f { vec3f lower, upper; };
-#endif
+    using box3f    = syntactic::box3f;
     
     /*! internal class used for serializing a scene graph to/from disk */
     struct BinaryWriter;

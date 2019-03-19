@@ -17,6 +17,8 @@
 #include "Parser.h"
 #include "Scene.h"
 
+#include <fstream>
+
 /*! \file BinaryIO.h Defines the (internal) binary reader/writer
     classes. No app should ever need to include this file, it is only
     for internal code cleanliness (having the class definitions

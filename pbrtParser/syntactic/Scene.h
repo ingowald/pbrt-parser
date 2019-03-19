@@ -19,6 +19,8 @@
 /*! \file pbrt/sytax/Scene.h Defines the root pbrt scene - at least
   the *syntactci* part of it - to be created/parsed by this parser */
 
+#include "pbrtParser/common/math.h"
+
 // stl
 #include <map>
 #include <vector>
@@ -87,34 +89,21 @@ namespace pbrt {
 #if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
     using vec2f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2f;
     using vec3f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3f;
+    using vec4f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4f;
+    using vec2i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2i;
     using vec3i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3i;
     using vec4i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4i;
     using affine3f = PBRT_PARSER_VECTYPE_NAMESPACE::affine3f;
+    using box3f    = PBRT_PARSER_VECTYPE_NAMESPACE::box3f;
 #else
-    struct vec2f {
-      float x, y;
-    };
-    struct vec3f {
-      float x, y, z;
-    };
-    struct vec3i {
-      int x, y, z;
-    };
-    struct vec4i {
-      int x, y, z, w;
-    };
-    struct affine3f {
-      struct {
-        /*! x-basis vector of affine transform matrix */
-        vec3f vx;
-        /*! y-basis vector of affine transform matrix */
-        vec3f vy;
-        /*! z-basis vector of affine transform matrix */
-        vec3f vz;
-      } l;
-      /*! translational part */
-      vec3f p;
-    };
+    using vec2f    = math::vec2f;
+    using vec3f    = math::vec3f;
+    using vec4f    = math::vec4f;
+    using vec2i    = math::vec2i;
+    using vec3i    = math::vec3i;
+    using vec4i    = math::vec4i;
+    using affine3f = math::affine3f;
+    using box3f    = math::box3f;
 #endif
 
     /*! start-time and end-time transform - PBRT allows for specifying
@@ -226,7 +215,13 @@ namespace pbrt {
       /*! query parameter of 3f type, and if found, store in result and
         return true; else return false */
       bool getParam3f(float *result, const std::string &name) const;
-      vec3f getParam3f(const std::string &name, const vec3f &fallBack) const;
+      math::vec3f getParam3f(const std::string &name, const math::vec3f &fallBack) const;
+#if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
+      vec3f getParam3f(const std::string &name, const vec3f &fallBack) const {
+        math::vec3f res = getParam3f(name, (const math::vec3f&)fallBack);
+        return *(vec3f*)&res;
+      }
+#endif
       float getParam1f(const std::string &name, const float fallBack=0) const;
       int getParam1i(const std::string &name, const int fallBack=0) const;
       bool getParamBool(const std::string &name, const bool fallBack=false) const;
@@ -627,12 +622,6 @@ namespace pbrt {
       /*! the root scene shape, defined in the
         'WorldBegin'/'WorldEnd' statements */
       std::shared_ptr<Object> world;
-
-      // /*! list of named materials - this _should_ actually be part of
-      //     the attributes, but since in _one_ particular case (the mix
-      //     material) pbrt uses some implicit binding the final scene
-      //     currently _has_ to store this globally */
-      // std::map<std::string,Material::SP> namedMaterials;
     
       std::string makeGlobalFileName(const std::string &relativePath)
       { return basePath + relativePath; }

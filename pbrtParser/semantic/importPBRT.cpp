@@ -14,19 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ospcommon/vec.h"
-#include "ospcommon/AffineSpace.h"
-  
-#define PBRT_PARSER_VECTYPE_NAMESPACE  ospcommon
-
 #include "pbrtParser/semantic/Scene.h"
 #include "pbrtParser/syntactic/Scene.h"
 // std
 #include <map>
 #include <sstream>
-// #define _USE_MATH_DEFINES 1
-// #include <math.h>
-// #include <cmath>
 
 namespace pbrt {
   namespace semantic {
@@ -829,7 +821,7 @@ namespace pbrt {
         // float 	focaldistance 	10^30 	The focal distance of the lens. If "lensradius" is zero, this has no effect. Otherwise, it specifies the distance from the camera origin to the focal plane.
         const float focalDistance = 1.f;
     
-        const affine3f frame = rcp(camera->transform.atStart);
+        const affine3f frame = inverse(camera->transform.atStart);
     
         ours->simplified.lens_center = frame.p;
         ours->simplified.lens_du = lensRadius * frame.l.vx;
@@ -856,7 +848,7 @@ namespace pbrt {
       if (camera->hasParam1f("focaldistance"))
         ours->focalDistance = camera->getParam1f("focaldistance");
 
-      ours->frame = rcp(camera->transform.atStart);
+      ours->frame = inverse(camera->transform.atStart);
       
       ours->simplified.lens_center
         = ours->frame.p;

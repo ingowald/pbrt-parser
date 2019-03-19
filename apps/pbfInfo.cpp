@@ -14,10 +14,12 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// pbrt_parser
+// ospcommon, which we use for a vector class
+#include "ospcommon/vec.h"
+#include "ospcommon/AffineSpace.h"
+// pbrt-parser
+#define PBRT_PARSER_VECTYPE_NAMESPACE    ospcommon
 #include "pbrtParser/semantic/Scene.h"
-// ospcommon
-#include "ospcommon/common.h"
 // stl
 #include <iostream>
 #include <vector>
@@ -49,6 +51,7 @@ namespace pbrt {
         numCurveSegments.print("curve segments");
         numLights.print("lights");
         std::cout << "total num materials " << usedMaterials.size() << std::endl;
+        std::cout << "scene bounds " << scene->getBounds() << std::endl;
       }
 
       void traverse(Object::SP object)
@@ -71,6 +74,8 @@ namespace pbrt {
             numSpheres.add(firstTime,1);
           } else if (Disk::SP disk=std::dynamic_pointer_cast<Disk>(geom)){
             numDisks.add(firstTime,1);
+          } else if (Curve::SP curves=std::dynamic_pointer_cast<Curve>(geom)){
+            numCurves.add(firstTime,1);
           } else
             std::cout << "un-handled geometry type : " << geom->toString() << std::endl;
         }
@@ -96,7 +101,19 @@ namespace pbrt {
         size_t instanced = 0;
       };
 
-      Counter numInstances, numTriangles, numQuads, numSpheres, numDisks, numObjects, numVertices, numCurves, numCurveSegments, numShapes, numLights, numVolumes;
+      Counter
+      numInstances,
+                                            numTriangles,
+                                            numQuads,
+                                            numSpheres,
+                                            numDisks,
+                                            numObjects,
+                                            numVertices,
+                                            numCurves,
+                                            numCurveSegments,
+                                            numShapes,
+                                            numLights,
+                                            numVolumes;
       std::set<Material::SP> usedMaterials;
     };
   

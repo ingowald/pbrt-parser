@@ -21,13 +21,8 @@
   never have to look into this file directly, and only use \see
   pbrt_parser::Scene::parseFromFile() */
 
-#include "ospcommon/vec.h"
-#include "ospcommon/AffineSpace.h"
-  
-#define PBRT_PARSER_VECTYPE_NAMESPACE  ospcommon
-
-#include "Lexer.h"
 #include "Scene.h"
+#include "Lexer.h"
 // std
 #include <stack>
 
@@ -41,15 +36,13 @@ namespace pbrt {
     with a given name, and parameters of given names and types */
   namespace syntactic {
   
-    using namespace ospcommon;
-
     /*! the class that implements PBRT's "current transformation matrix
       (CTM)" stack */
     struct CTM : public Transform {
       void reset()
       {
         startActive = endActive = true;
-        (ospcommon::affine3f&)atStart = (ospcommon::affine3f&)atEnd = affine3f(ospcommon::one);
+          (math::affine3f&)atStart = (math::affine3f&)atEnd = math::affine3f::identity();
       }
       bool startActive { true };
       bool endActive   { true };
@@ -125,13 +118,13 @@ namespace pbrt {
       // add additional transform to current transform
       void addTransform(const affine3f &xfm)
       {
-        if (ctm.startActive) (ospcommon::affine3f&)ctm.atStart *= xfm;
-        if (ctm.endActive)   (ospcommon::affine3f&)ctm.atEnd   *= xfm;
+        if (ctm.startActive) (math::affine3f&)ctm.atStart = (math::affine3f&)ctm.atStart * (const math::affine3f&)xfm;
+        if (ctm.endActive)   (math::affine3f&)ctm.atEnd   = (math::affine3f&)ctm.atEnd * (const math::affine3f&)xfm;
       }
       void setTransform(const affine3f &xfm)
       {
-        if (ctm.startActive) (ospcommon::affine3f&)ctm.atStart = xfm;
-        if (ctm.endActive) (ospcommon::affine3f&)ctm.atEnd = xfm;
+        if (ctm.startActive) (math::affine3f&)ctm.atStart = (const math::affine3f&)xfm;
+        if (ctm.endActive) (math::affine3f&)ctm.atEnd = (const math::affine3f&)xfm;
       }
 
       std::stack<std::shared_ptr<Material> >   materialStack;
