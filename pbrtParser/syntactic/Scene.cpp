@@ -56,7 +56,7 @@ namespace pbrt {
     std::string Object::Instance::toString() const
     { 
       std::stringstream ss;
-      ss << "Inst: " << object->toString() << " xfm " << (ospcommon::affine3f&)xfm.atStart; 
+      ss << "Inst: " << object->toString() << " xfm " << (math::affine3f&)xfm.atStart; 
       return ss.str();
     }
 

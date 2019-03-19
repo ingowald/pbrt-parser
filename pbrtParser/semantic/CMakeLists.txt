@@ -15,6 +15,7 @@
 ## ======================================================================== ##
 
 set(SOURCES
+  Scene.h
   Scene.cpp
   BinaryFileFormat.cpp
   importPBRT.cpp
