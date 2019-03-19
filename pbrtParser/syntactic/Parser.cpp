@@ -351,7 +351,7 @@ namespace pbrt {
         return true;
       }
       if (token == "Identity") {
-        setTransform(affine3f(ospcommon::one));
+          setTransform(affine3f::identity());
         return true;
       }
       if (token == "ReverseOrientation") {
@@ -696,7 +696,7 @@ namespace pbrt {
           xfm.l.vy = cross(xfm.l.vx,xfm.l.vz);
           xfm.p    = v0;
         
-          addTransform(rcp(xfm));
+          addTransform(inverse(xfm));
           continue;
         }
 

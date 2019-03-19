@@ -15,12 +15,16 @@
 ## ======================================================================== ##
 
 set(SOURCES
+  Math.h
+  Lexer.h
   Lexer.cpp
+  Parser.h
   Parser.cpp
+  Scene.h
   Scene.cpp
+  BinaryIO.h
   BinaryIO.cpp
   parsePLY.cpp
-  ../../3rdParty/ply.cpp
   )
 
 # ------------------------------------------------------------------

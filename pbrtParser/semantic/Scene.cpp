@@ -14,14 +14,10 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ospcommon/vec.h"
-#include "ospcommon/AffineSpace.h"
-  
-#define PBRT_PARSER_VECTYPE_NAMESPACE  ospcommon
-
 #include "pbrtParser/semantic/Scene.h"
 // std
 #include <set>
+#include <string.h>
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
@@ -35,13 +31,13 @@ namespace pbrt {
   
     box3f Shape::getPrimBounds(const size_t primID)
     {
-      return getPrimBounds(primID,affine3f(ospcommon::one));
+      return getPrimBounds(primID,affine3f::identity());
     }
 
 
     box3f TriangleMesh::getPrimBounds(const size_t primID, const affine3f &xfm) 
     {
-      box3f primBounds = ospcommon::empty;
+      box3f primBounds = box3f::empty_box();
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].x]));
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].y]));
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].z]));
@@ -50,7 +46,7 @@ namespace pbrt {
     
     box3f TriangleMesh::getPrimBounds(const size_t primID) 
     {
-      box3f primBounds = ospcommon::empty;
+      box3f primBounds = box3f::empty_box();
       primBounds.extend(vertex[index[primID].x]);
       primBounds.extend(vertex[index[primID].y]);
       primBounds.extend(vertex[index[primID].z]);
@@ -62,7 +58,7 @@ namespace pbrt {
       if (!haveComputedBounds) {
         std::lock_guard<std::mutex> lock(mutex);
         if (haveComputedBounds) return bounds;
-        bounds = ospcommon::empty;
+        bounds = box3f::empty_box();
         for (auto v : vertex) bounds.extend(v);
         haveComputedBounds = true;
         return bounds;
@@ -78,7 +74,7 @@ namespace pbrt {
       box3f ob(vec3f(-radius),vec3f(+radius));
       affine3f _xfm = xfm * transform;
       
-      box3f bounds = ospcommon::empty;
+      box3f bounds = box3f::empty_box();
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
@@ -92,7 +88,7 @@ namespace pbrt {
     
     box3f Sphere::getPrimBounds(const size_t primID) 
     {
-      return getPrimBounds(primID,affine3f(ospcommon::one));
+      return getPrimBounds(primID,affine3f::identity());
     }
     
     box3f Sphere::getBounds() 
@@ -110,7 +106,7 @@ namespace pbrt {
       box3f ob(vec3f(-radius,-radius,0),vec3f(+radius,+radius,height));
       affine3f _xfm = xfm * transform;
       
-      box3f bounds = ospcommon::empty;
+      box3f bounds = box3f::empty_box();
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
       bounds.extend(xfmPoint(_xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
@@ -124,7 +120,7 @@ namespace pbrt {
     
     box3f Disk::getPrimBounds(const size_t primID) 
     {
-      return getPrimBounds(primID,affine3f(ospcommon::one));
+      return getPrimBounds(primID,affine3f::identity());
     }
     
     box3f Disk::getBounds() 
@@ -142,7 +138,7 @@ namespace pbrt {
 
     box3f QuadMesh::getPrimBounds(const size_t primID, const affine3f &xfm) 
     {
-      box3f primBounds = ospcommon::empty;
+      box3f primBounds = box3f::empty_box();
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].x]));
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].y]));
       primBounds.extend(xfmPoint(xfm,vertex[index[primID].z]));
@@ -152,7 +148,7 @@ namespace pbrt {
 
     box3f QuadMesh::getPrimBounds(const size_t primID) 
     {
-      box3f primBounds = ospcommon::empty;
+      box3f primBounds = box3f::empty_box();
       primBounds.extend(vertex[index[primID].x]);
       primBounds.extend(vertex[index[primID].y]);
       primBounds.extend(vertex[index[primID].z]);
@@ -165,7 +161,7 @@ namespace pbrt {
       if (!haveComputedBounds) {
         std::lock_guard<std::mutex> lock(mutex);
         if (haveComputedBounds) return bounds;
-        bounds = ospcommon::empty;
+        bounds = box3f::empty_box();
         for (auto v : vertex) bounds.extend(v);
         haveComputedBounds = true;
         return bounds;
@@ -182,23 +178,23 @@ namespace pbrt {
 
     box3f Curve::getPrimBounds(const size_t primID, const affine3f &xfm) 
     {
-      box3f primBounds = ospcommon::empty;
+      box3f primBounds = box3f::empty_box();
       for (auto p : P)
         primBounds.extend(xfmPoint(xfm,p));
-      float maxWidth = std::max(width0,width1);
-      primBounds.lower -= maxWidth;
-      primBounds.upper -= maxWidth;
+      vec3f maxWidth = vec3f(std::max(width0,width1));
+      primBounds.lower = primBounds.lower - maxWidth;
+      primBounds.upper = primBounds.upper + maxWidth;
       return primBounds;
     }
 
     box3f Curve::getPrimBounds(const size_t primID) 
     {
-      box3f primBounds = ospcommon::empty;
+      box3f primBounds = box3f::empty_box();
       for (auto p : P)
         primBounds.extend(p);
-      float maxWidth = std::max(width0,width1);
-      primBounds.lower -= maxWidth;
-      primBounds.upper -= maxWidth;
+      vec3f maxWidth = vec3f(std::max(width0,width1));
+      primBounds.lower = primBounds.lower - maxWidth;
+      primBounds.upper = primBounds.upper + maxWidth;
       return primBounds;
     }
     
@@ -214,7 +210,7 @@ namespace pbrt {
 
     box3f Object::getBounds() const
     {
-      box3f bounds = ospcommon::empty;
+      box3f bounds = box3f::empty_box();
       for (auto inst : instances) {
         if (inst) {
           const box3f ib = inst->getBounds();
@@ -242,7 +238,7 @@ namespace pbrt {
       if (ob.empty()) 
         return ob;
 
-      box3f bounds = ospcommon::empty;
+      box3f bounds = box3f::empty_box();
       bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
       bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
       bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
@@ -369,7 +365,7 @@ namespace pbrt {
       SingleLevelFlattener(Object::SP world)
         : result(std::make_shared<Object>())
       {
-        traverse(world, affine3f(ospcommon::one));
+        traverse(world, affine3f::identity());
       }
     
       Object::SP

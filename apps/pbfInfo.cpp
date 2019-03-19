@@ -14,10 +14,12 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// pbrt_parser
+// ospcommon, which we use for a vector class
+#include "ospcommon/vec.h"
+#include "ospcommon/AffineSpace.h"
+// pbrt-parser
+#define PBRT_PARSER_VECTYPE_NAMESPACE    ospcommon
 #include "pbrtParser/semantic/Scene.h"
-// ospcommon
-#include "ospcommon/common.h"
 // stl
 #include <iostream>
 #include <vector>
@@ -49,6 +51,7 @@ namespace pbrt {
         numCurveSegments.print("curve segments");
         numLights.print("lights");
         std::cout << "total num materials " << usedMaterials.size() << std::endl;
+        std::cout << "scene bounds " << scene->getBounds() << std::endl;
       }
 
       void traverse(Object::SP object)

@@ -14,11 +14,6 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ospcommon/vec.h"
-#include "ospcommon/AffineSpace.h"
-  
-#define PBRT_PARSER_VECTYPE_NAMESPACE  ospcommon
-
 #include "pbrtParser/semantic/Scene.h"
 // std
 #include <iostream>

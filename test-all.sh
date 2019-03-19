@@ -1,7 +1,7 @@
 #!/bin/bash
 
-PBRT_SCENE_PATH=/home/wald/models/pbrt-v3-scenes
-OUTPUT_PATH=/space/pbf/
+PBRT_SCENE_PATH=../pbrt-v3-scenes
+OUTPUT_PATH=./test/noosp/
 
 PBRT_SCENES=" \
 ./crown/crown.pbrt \
@@ -173,7 +173,7 @@ for scene in $PBRT_SCENES; do
     dir=`dirname $scene`
     mkdir -p $OUTPUT_PATH/$dir
     base=`basename $scene .pbrt`
-    ./pbrt2pbf $PBRT_SCENE_PATH/$scene -o $OUTPUT_PATH/$dir/$base.pbf
-#    ./pbfInfo $OUTPUT_PATH/$dir/$base.pbf
+    ./build/pbrt2pbf $PBRT_SCENE_PATH/$scene -o $OUTPUT_PATH/$dir/$base.pbf
+    ./build/pbfInfo $OUTPUT_PATH/$dir/$base.pbf
 done
 
