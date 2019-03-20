@@ -22,24 +22,6 @@ set(pbrtParser_VERSION_MAJOR 1)
 set(pbrtParser_VERSION_MINOR 1)
 set(pbrtParser_VERSION_PATCH 0)
 
-if(NOT SET_UP_CONFIGURATIONS_DONE)
-    set(SET_UP_CONFIGURATIONS_DONE 1)
-
-    # No reason to set CMAKE_CONFIGURATION_TYPES if it's not a multiconfig generator
-    # Also no reason mess with CMAKE_BUILD_TYPE if it's a multiconfig generator.
-    if(CMAKE_CONFIGURATION_TYPES) # multiconfig generator?
-        set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Profile" CACHE STRING "" FORCE) 
-    else()
-        if(NOT CMAKE_BUILD_TYPE)
-#            message("Defaulting to release build.")
-            set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
-        endif()
-        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY HELPSTRING "Choose the type of build")
-        # set the valid options for cmake-gui drop-down list
-        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release;Profile")
-    endif()
-endif()
-
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 
@@ -53,12 +35,16 @@ set(CMAKE_CXX_STANDARD 11)
   
 option(EXP_RIB_IMPORTER "Build experimental rib importer?" OFF)
 
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/internal/)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/internal/)
 
 add_subdirectory(internal/ospcommon EXCLUDE_FROM_ALL)
 
