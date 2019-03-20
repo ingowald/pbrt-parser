@@ -58,5 +58,7 @@ if(EXP_RIB_IMPORTER)
   add_subdirectory(experimental/rib)
 endif()
 
+add_subdirectory(amalgamation)
+
 add_subdirectory(apps)
 

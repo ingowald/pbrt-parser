@@ -25,10 +25,10 @@
 namespace pbrt {
   namespace semantic {
 
-#define    FORMAT_MAJOR 0
-#define    FORMAT_MINOR 5
+#define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 0
+#define    PBRT_PARSER_SEMANTIC_FORMAT_MINOR 5
   
-    const uint32_t ourFormatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
+    const uint32_t ourFormatID = (PBRT_PARSER_SEMANTIC_FORMAT_MAJOR << 16) + PBRT_PARSER_SEMANTIC_FORMAT_MINOR;
 
     enum {
       TYPE_ERROR,
