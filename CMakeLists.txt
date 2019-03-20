@@ -14,6 +14,8 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
+cmake_minimum_required(VERSION 2.8)
+
 project(pbrtParser)
 
 set(pbrtParser_VERSION_MAJOR 1)
@@ -38,7 +40,6 @@ if(NOT SET_UP_CONFIGURATIONS_DONE)
     endif()
 endif()
 
-cmake_minimum_required(VERSION 2.8)
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 
