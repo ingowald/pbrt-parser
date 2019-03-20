@@ -20,7 +20,18 @@
 #  define _USE_MATH_DEFINES
 #endif
 #ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
 #define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+
+#if defined(_WIN32) && defined(PBRT_PARSER_DLL_INTERFACE)
+#  ifdef pbrtParser_semantic_EXPORTS
+#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
+#  else
+#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
+#  endif
+#else
+#  define PBRT_PARSER_INTERFACE /* ignore on linux/osx */
 #endif
 
 #include <iostream>

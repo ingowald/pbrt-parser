@@ -23,16 +23,6 @@
 // std
 #include <mutex>
 
-#ifdef _WIN32
-#  ifdef pbrtParser_semantic_EXPORTS
-#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
-#  else
-#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
-#  endif
-#else
-#  define PBRT_PARSER_INTERFACE /* ignore on linux */
-#endif
-
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for final, *semantic* parser - unlike the syntactic
@@ -248,7 +238,7 @@ namespace pbrt {
       float clearCoatGloss { 1.f };
       vec3f color          { 1.f, 1.f, 1.f };
       float diffTrans      { 1.35f };
-      float eta            { 1.2 };
+      float eta            { 1.2f };
       float flatness       { 0.2f };
       float metallic       { 0.f };
       float roughness      { .9f };
@@ -348,9 +338,9 @@ namespace pbrt {
       /*! serialize _in_ from given binary file reader */
       virtual void readFrom(BinaryReader &) override;
 
-      float uRoughness { .001 };
+      float uRoughness { .001f };
       Texture::SP map_uRoughness;
-      float vRoughness { .001 };
+      float vRoughness { .001f };
       Texture::SP map_vRoughness;
       bool remapRoughness { false };
       
@@ -372,8 +362,8 @@ namespace pbrt {
       /*! serialize _in_ from given binary file reader */
       virtual void readFrom(BinaryReader &) override;
 
-      float uRoughness { .001 };
-      float vRoughness { .001 };
+      float uRoughness { .001f };
+      float vRoughness { .001f };
       bool  remapRoughness { false };
       /*! in the one pbrt v3 model that uses that, these materials
           carry 'name' fields like "Apple" etc - not sure if that's
@@ -424,7 +414,7 @@ namespace pbrt {
 
       vec3f kd { .65f };
       Texture::SP map_kd;
-      float sigma { 10 };
+      float sigma { 10.0f };
       Texture::SP map_sigma;
       Texture::SP map_bump;
     };

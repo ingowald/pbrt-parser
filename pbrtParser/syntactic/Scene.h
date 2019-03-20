@@ -28,16 +28,6 @@
 #include <memory>
 #include <assert.h>
 
-#ifdef _WIN32
-#  ifdef pbrtParser_syntactic_EXPORTS
-#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
-#  else
-#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
-#  endif
-#else
-#  define PBRT_PARSER_INTERFACE /* ignore on linux */
-#endif
-
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for syntax-only parser - this allows to distringuish
