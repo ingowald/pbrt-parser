@@ -16,15 +16,17 @@
 
 #pragma once
 
-#include <limits>
-
 #ifndef _USE_MATH_DEFINES
 #  define _USE_MATH_DEFINES
 #endif
-#include <math.h> // using cmath causes issues under Windows
-#include <cfloat>
+#ifdef _WIN32
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
 
 #include <iostream>
+#include <math.h> // using cmath causes issues under Windows
+#include <cfloat>
+#include <limits>
 
 /*! \file pbrt/Parser.h *Internal* parser class used by \see
   pbrt_parser::Scene::parseFromFile() - as end user, you should

@@ -72,7 +72,7 @@ namespace pbrt {
       Token token = next();
       if (!token)
         throw std::runtime_error("unexpected end of file\n@"+std::string(__PRETTY_FUNCTION__));
-      return std::stod(token.text);
+      return (float)std::stod(token.text);
     }
 
     inline vec3f Parser::parseVec3f()
@@ -93,31 +93,31 @@ namespace pbrt {
 
       assert(open == "[");
       affine3f xfm;
-      xfm.l.vx.x = std::stod(next().text.c_str());
-      xfm.l.vx.y = std::stod(next().text.c_str());
-      xfm.l.vx.z = std::stod(next().text.c_str());
-      float vx_w = std::stod(next().text.c_str());
+      xfm.l.vx.x = (float)std::stod(next().text.c_str());
+      xfm.l.vx.y = (float)std::stod(next().text.c_str());
+      xfm.l.vx.z = (float)std::stod(next().text.c_str());
+      float vx_w = (float)std::stod(next().text.c_str());
       assert(vx_w == 0.f);
       _unused(vx_w);
 
-      xfm.l.vy.x = std::stod(next().text.c_str());
-      xfm.l.vy.y = std::stod(next().text.c_str());
-      xfm.l.vy.z = std::stod(next().text.c_str());
-      float vy_w = std::stod(next().text.c_str());
+      xfm.l.vy.x = (float)std::stod(next().text.c_str());
+      xfm.l.vy.y = (float)std::stod(next().text.c_str());
+      xfm.l.vy.z = (float)std::stod(next().text.c_str());
+      float vy_w = (float)std::stod(next().text.c_str());
       assert(vy_w == 0.f);
       _unused(vy_w);
 
-      xfm.l.vz.x = std::stod(next().text.c_str());
-      xfm.l.vz.y = std::stod(next().text.c_str());
-      xfm.l.vz.z = std::stod(next().text.c_str());
-      float vz_w = std::stod(next().text.c_str());
+      xfm.l.vz.x = (float)std::stod(next().text.c_str());
+      xfm.l.vz.y = (float)std::stod(next().text.c_str());
+      xfm.l.vz.z = (float)std::stod(next().text.c_str());
+      float vz_w = (float)std::stod(next().text.c_str());
       assert(vz_w == 0.f);
       _unused(vz_w);
 
-      xfm.p.x    = std::stod(next().text.c_str());
-      xfm.p.y    = std::stod(next().text.c_str());
-      xfm.p.z    = std::stod(next().text.c_str());
-      float p_w  = std::stod(next().text.c_str());
+      xfm.p.x    = (float)std::stod(next().text.c_str());
+      xfm.p.y    = (float)std::stod(next().text.c_str());
+      xfm.p.z    = (float)std::stod(next().text.c_str());
+      float p_w  = (float)std::stod(next().text.c_str());
       assert(p_w == 1.f);
       _unused(p_w);
 
