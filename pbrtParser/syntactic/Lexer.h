@@ -34,9 +34,15 @@ namespace pbrt {
   
     /*! file name and handle, to be used by tokenizer and loc */
     struct PBRT_PARSER_INTERFACE File {
-      File(const std::string &fn);
+      File(const std::string &fn): name(fn) {
+        file = fopen(fn.c_str(),"r");
+        if (!file)
+          throw std::runtime_error("could not open file '"+fn+"'");
+      }
       void close() { fclose(file); file = NULL; }
-      virtual ~File();
+      virtual ~File() { 
+        if (file) fclose(file);
+      }
       /*! get name of the file */
       std::string getFileName() const { return name; }
 
@@ -47,17 +53,19 @@ namespace pbrt {
       FILE *file;
     };
 
-    /*! struct referring to a 'loc'ation in the input stream, given by
-      file name and line number */
+    /*! struct referring to a 'loc'ation in the input stream, given by file name 
+      and line number */
     struct PBRT_PARSER_INTERFACE Loc {
       //! constructor
-      Loc(const std::shared_ptr<File> &file=std::shared_ptr<File>());
+      Loc(const std::shared_ptr<File> &file=std::shared_ptr<File>()) : file(file), line(1), col(0) { }
       //! copy-constructor
       Loc(const Loc &loc) = default;
       Loc(Loc &&) = default;
 
       //! pretty-print
-      std::string toString() const;
+      std::string toString() const {
+        return "@" + (file?file->getFileName():"<invalid>") + ":" + std::to_string(line) + "." + std::to_string(col);
+      }
 
       friend struct Lexer;
     private:
@@ -67,39 +75,23 @@ namespace pbrt {
     };
 
     struct PBRT_PARSER_INTERFACE Token {
-
-      typedef enum { TOKEN_TYPE_STRING, TOKEN_TYPE_LITERAL, TOKEN_TYPE_SPECIAL } Type;
+      typedef enum { TOKEN_TYPE_STRING, TOKEN_TYPE_LITERAL, TOKEN_TYPE_SPECIAL, TOKEN_TYPE_NONE } Type;
 
       //! constructor
-      Token(const Loc &loc, 
-            const Type type,
-            const std::string &text);
+      Token() : loc{}, type{TOKEN_TYPE_NONE}, text{} {}
+      Token(const Loc &loc, const Type type, const std::string& text) : loc{loc}, type{type}, text{text} { }
       Token(const Token &other) = default;
       Token(Token &&) = default;
+
+      //! valid token
+      explicit operator bool() { return type != TOKEN_TYPE_NONE; }
     
       //! pretty-print
-      std::string toString() const;
+      std::string toString() const { return loc.toString() + ": '" + text + "'"; }
       
-      /*! auto-cast this to a string, so we can compare it as
-        'next()=="match"' without first having to write
-        'next()->text=="match"' */
-      operator std::string () const { return text; }
-    
-      inline const char *c_str() const { return text.c_str(); }
-
-      const Loc         loc;
-      const Type        type;
-      const std::string text;
-    };
-
-    struct PBRT_PARSER_INTERFACE TokenHandle : public std::shared_ptr<Token> {
-      TokenHandle() = default;
-      TokenHandle(std::shared_ptr<Token> handle) : std::shared_ptr<Token>(handle) {}
-      TokenHandle(const TokenHandle &other) : std::shared_ptr<Token>(other) {}
-      // TokenHandle(TokenHandle &&) = default;
-      TokenHandle &operator=(const TokenHandle &) = default;
-    
-      inline operator std::string() const { return get()->text; }
+      const Loc         loc = {};
+      const Type        type = TOKEN_TYPE_NONE;
+      const std::string text = "";
     };
 
     /*! class that does the lexing - ie, the breaking up of an input
@@ -107,9 +99,9 @@ namespace pbrt {
     struct PBRT_PARSER_INTERFACE Lexer {
 
       //! constructor
-      Lexer(const std::string &fn);
+      Lexer(const std::string &fn) : file(new File(fn)), loc(file), peekedChar(-1) { }
 
-      TokenHandle next();
+      Token next();
       
     private:
       Loc getLastLoc() { return loc; }

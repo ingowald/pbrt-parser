@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald & Xelathi                                  //
+// Copyright 2015-2019 Ingo Wald & Fabio Pellacini                          //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,15 +16,28 @@
 
 #pragma once
 
-#include <limits>
-
 #ifndef _USE_MATH_DEFINES
 #  define _USE_MATH_DEFINES
 #endif
-#include <math.h> // using cmath causes issues under Windows
-#include <cfloat>
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+
+#if defined(_WIN32) && defined(PBRT_PARSER_DLL_INTERFACE)
+#  ifdef pbrtParser_semantic_EXPORTS
+#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
+#  else
+#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
+#  endif
+#else
+#  define PBRT_PARSER_INTERFACE /* ignore on linux/osx */
+#endif
 
 #include <iostream>
+#include <math.h> // using cmath causes issues under Windows
+#include <cfloat>
+#include <limits>
 
 /*! \file pbrt/Parser.h *Internal* parser class used by \see
   pbrt_parser::Scene::parseFromFile() - as end user, you should

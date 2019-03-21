@@ -33,8 +33,7 @@ namespace pbrt {
 
     void usage(const std::string &msg)
     {
-      if (msg != "")
-        std::cerr << "Error: " << msg << std::endl << std::endl;
+      if (msg != "") std::cerr << "Error: " << msg << std::endl << std::endl;
       std::cout << "./pbrt2pbf inFile.pbrt|inFile.pbf <args>" << std::endl;
       std::cout << std::endl;
       std::cout << "  -o <out.pbf>   : where to write the output to" << std::endl;

@@ -79,7 +79,7 @@ namespace pbrt {
       
       /*! try parsing this token as some sort of transform token, and
         return true if successful, false if not recognized  */
-      bool parseTransform(TokenHandle token);
+      bool parseTransform(const Token& token);
 
       void pushTransform();
       void popTransform();
@@ -100,7 +100,7 @@ namespace pbrt {
     private:
       //! stack of parent files' token streams
       std::stack<std::shared_ptr<Lexer>> tokenizerStack;
-      std::deque<TokenHandle> peekQueue;
+      std::deque<Token> peekQueue;
     
       //! token stream of currently open file
       std::shared_ptr<Lexer> tokens;
@@ -108,21 +108,19 @@ namespace pbrt {
       /*! get the next token to process (either from current file, or
         parent file(s) if current file is EOL!); return NULL if
         complete end of input */
-      TokenHandle next();
+      Token next();
 
       /*! peek ahead by N tokens, (either from current file, or
         parent file(s) if current file is EOL!); return NULL if
         complete end of input */
-      TokenHandle peek(unsigned int ahead=0);
+      Token peek(unsigned int ahead=0);
 
       // add additional transform to current transform
-      void addTransform(const affine3f &xfm)
-      {
+      void addTransform(const affine3f &xfm) {
         if (ctm.startActive) (math::affine3f&)ctm.atStart = (math::affine3f&)ctm.atStart * (const math::affine3f&)xfm;
         if (ctm.endActive)   (math::affine3f&)ctm.atEnd   = (math::affine3f&)ctm.atEnd * (const math::affine3f&)xfm;
       }
-      void setTransform(const affine3f &xfm)
-      {
+      void setTransform(const affine3f &xfm) {
         if (ctm.startActive) (math::affine3f&)ctm.atStart = (const math::affine3f&)xfm;
         if (ctm.endActive) (math::affine3f&)ctm.atEnd = (const math::affine3f&)xfm;
       }

@@ -31,10 +31,10 @@ namespace pbrt {
     with a given name, and parameters of given names and types */
   namespace syntactic {
   
-#define    FORMAT_MAJOR 1
-#define    FORMAT_MINOR 0
+#define    PBRT_PARSER_SYNTACTIC_FORMAT_MAJOR 1
+#define    PBRT_PARSER_SYNTACTIC_FORMAT_MINOR 0
   
-    const uint32_t ourFormatID = (FORMAT_MAJOR << 16) + FORMAT_MINOR;
+    const uint32_t ourFormatID = (PBRT_PARSER_SYNTACTIC_FORMAT_MAJOR << 16) + PBRT_PARSER_SYNTACTIC_FORMAT_MINOR;
 
     typedef enum : uint8_t {
       Type_eof=0,

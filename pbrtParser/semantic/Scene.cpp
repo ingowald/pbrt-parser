@@ -18,6 +18,7 @@
 // std
 #include <set>
 #include <string.h>
+#include <algorithm>
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
