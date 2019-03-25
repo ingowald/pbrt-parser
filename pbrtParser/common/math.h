@@ -102,14 +102,14 @@ namespace pbrt {
       mat3f(const vec3f& x, const vec3f& y, const vec3f& z) : vx{x}, vy{y}, vz{z} { }
     };
     struct affine3f {
-      mat3f l;
-      vec3f p;
       affine3f() = default;
       affine3f(const mat3f& l, const vec3f& p) :  l{l}, p{p} { }
       static affine3f identity() { return affine3f(mat3f(vec3f(1)), vec3f(0)); }
       static affine3f scale(const vec3f& u) { return affine3f(mat3f(u),vec3f(0)); }
       static affine3f translate(const vec3f& u) { return affine3f(mat3f(vec3f(1)), u); }
       static affine3f rotate(const vec3f& _u, float r);
+      mat3f l;
+      vec3f p;
     };
     struct box3f {
       vec3f lower, upper;

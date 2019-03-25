@@ -33,7 +33,6 @@ endif(COMMAND cmake_policy)
 set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -Wall)
   
-option(EXP_RIB_IMPORTER "Build experimental rib importer?" OFF)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Release")
@@ -53,10 +52,6 @@ set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.
 # syntactic-only parser
 add_subdirectory(pbrtParser/syntactic)
 add_subdirectory(pbrtParser/semantic)
-
-if(EXP_RIB_IMPORTER)
-  add_subdirectory(experimental/rib)
-endif()
 
 add_subdirectory(amalgamation)
 
