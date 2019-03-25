@@ -173,5 +173,49 @@ namespace pbrt {
     inline std::ostream& operator<<(std::ostream& o, const mat3f& m) { return o << "{ vx = " << m.vx << ", vy = " << m.vy << ", vz = " << m.vz << "}"; }
     inline std::ostream& operator<<(std::ostream& o, const affine3f& m) { return o << "{ l = " << m.l << ", p = " << m.p << " }"; }
     inline std::ostream& operator<<(std::ostream &o, const box3f& b) { return o << "[" << b.lower <<":"<<b.upper<<"]"; }
+
+
+#ifdef __WIN32__
+#  define osp_snprintf sprintf_s
+#else
+#  define osp_snprintf snprintf
+#endif
+  
+  /*! added pretty-print function for large numbers, printing 10000000 as "10M" instead */
+  inline std::string prettyDouble(const double val) {
+    const double absVal = abs(val);
+    char result[1000];
+
+    if      (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e18f,'E');
+    else if (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e15f,'P');
+    else if (absVal >= 1e+12f) osp_snprintf(result,1000,"%.1f%c",val/1e12f,'T');
+    else if (absVal >= 1e+09f) osp_snprintf(result,1000,"%.1f%c",val/1e09f,'G');
+    else if (absVal >= 1e+06f) osp_snprintf(result,1000,"%.1f%c",val/1e06f,'M');
+    else if (absVal >= 1e+03f) osp_snprintf(result,1000,"%.1f%c",val/1e03f,'k');
+    else if (absVal <= 1e-12f) osp_snprintf(result,1000,"%.1f%c",val*1e15f,'f');
+    else if (absVal <= 1e-09f) osp_snprintf(result,1000,"%.1f%c",val*1e12f,'p');
+    else if (absVal <= 1e-06f) osp_snprintf(result,1000,"%.1f%c",val*1e09f,'n');
+    else if (absVal <= 1e-03f) osp_snprintf(result,1000,"%.1f%c",val*1e06f,'u');
+    else if (absVal <= 1e-00f) osp_snprintf(result,1000,"%.1f%c",val*1e03f,'m');
+    else osp_snprintf(result,1000,"%f",(float)val);
+    return result;
+  }
+
+  /*! added pretty-print function for large numbers, printing 10000000 as "10M" instead */
+  inline std::string prettyNumber(const size_t s) {
+    const double val = s;
+    char result[1000];
+
+    if      (val >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e18f,'E');
+    else if (val >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e15f,'P');
+    else if (val >= 1e+12f) osp_snprintf(result,1000,"%.1f%c",val/1e12f,'T');
+    else if (val >= 1e+09f) osp_snprintf(result,1000,"%.1f%c",val/1e09f,'G');
+    else if (val >= 1e+06f) osp_snprintf(result,1000,"%.1f%c",val/1e06f,'M');
+    else if (val >= 1e+03f) osp_snprintf(result,1000,"%.1f%c",val/1e03f,'k');
+    else osp_snprintf(result,1000,"%zu",s);
+    return result;
+  }
+#undef osp_snprintf
+
   }
 } // ::pbrt

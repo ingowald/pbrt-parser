@@ -14,13 +14,13 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "pbrtParser/semantic/Scene.h"
-#include "pbrtParser/syntactic/Scene.h"
+#include "pbrtParser/Scene.h"
+#include "../syntactic/Scene.h"
 // std
 #include <map>
 #include <sstream>
 // ply parser:
-#include "3rdParty/happly.h"
+#include "../3rdParty/happly.h"
 
 namespace pbrt {
 

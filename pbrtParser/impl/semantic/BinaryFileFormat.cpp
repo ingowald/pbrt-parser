@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "pbrtParser/semantic/Scene.h"
+#include "pbrtParser/Scene.h"
 // std
 #include <iostream>
 #include <sstream>

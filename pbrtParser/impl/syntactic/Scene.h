@@ -19,7 +19,7 @@
 /*! \file pbrt/sytax/Scene.h Defines the root pbrt scene - at least
   the *syntactci* part of it - to be created/parsed by this parser */
 
-#include "pbrtParser/common/math.h"
+#include "pbrtParser/math.h"
 
 // stl
 #include <map>

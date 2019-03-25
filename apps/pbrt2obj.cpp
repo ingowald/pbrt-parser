@@ -14,12 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// ospcommon, which we use for a vector class
-// #include "ospcommon/vec.h"
-// #include "ospcommon/AffineSpace.h"
-// pbrt-parser
-// #define PBRT_PARSER_VECTYPE_NAMESPACE    ospcommon
-#include "pbrtParser/semantic/Scene.h"
+#include "pbrtParser/Scene.h"
 // stl
 #include <iostream>
 #include <vector>
@@ -31,8 +26,6 @@ namespace pbrt {
   using std::cout;
   using std::endl;
 
-  // using namespace ospcommon;
-  
   // the output file we're writing.
   std::ofstream out;
   // FILE *out = NULL;

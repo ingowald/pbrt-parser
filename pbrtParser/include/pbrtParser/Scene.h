@@ -16,11 +16,11 @@
 
 #pragma once
 
-/*! \file pbrt/semantic/Scene.h Defines the final semantically parsed
-    scene */
+/*! \file pbrtParser/Scene.h The actual publicly visible Scene class
+    after parsing */
 
 
-#include "pbrtParser/common/math.h"
+#include "pbrtParser/math.h"
 // std
 #include <map>
 #include <vector>

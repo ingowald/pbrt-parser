@@ -15,11 +15,7 @@
 // ======================================================================== //
 
 // ospcommon, which we use for a vector class
-#include "ospcommon/vec.h"
-#include "ospcommon/AffineSpace.h"
-// pbrt-parser
-#define PBRT_PARSER_VECTYPE_NAMESPACE    ospcommon
-#include "pbrtParser/semantic/Scene.h"
+#include "pbrtParser/Scene.h"
 // stl
 #include <iostream>
 #include <vector>
@@ -92,8 +88,8 @@ namespace pbrt {
         void print(const std::string &name)
         {
           std::cout << "number of " << name << std::endl;
-          std::cout << " - unique    : " << ospcommon::prettyNumber(unique) << std::endl;
-          std::cout << " - instanced : " << ospcommon::prettyNumber(instanced) << std::endl;
+          std::cout << " - unique    : " << math::prettyNumber(unique) << std::endl;
+          std::cout << " - instanced : " << math::prettyNumber(instanced) << std::endl;
         }
         void add(bool firstTime, size_t N) { instanced += N; if (firstTime) unique += N; }
       

@@ -42,10 +42,15 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/internal/)
+# include out local 'include/' dir, we can include our two public
+# headers via pbrtParser/Scene.h and pbrtParser/math.h just the way an
+# app would include them through /usr/local/
+include_directories(${PROJECT_SOURCE_DIR}/pbrtParser/include)
 
-add_subdirectory(internal/ospcommon EXCLUDE_FROM_ALL)
+#include_directories(${PROJECT_SOURCE_DIR})
+#include_directories(${PROJECT_SOURCE_DIR}/internal/)
+
+#add_subdirectory(internal/ospcommon EXCLUDE_FROM_ALL)
 
 set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
 
