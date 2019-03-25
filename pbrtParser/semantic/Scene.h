@@ -19,28 +19,38 @@
 /*! \file pbrt/semantic/Scene.h Defines the final semantically parsed
     scene */
 
-#include "pbrtParser/syntactic/Scene.h"
+
+#include "pbrtParser/common/math.h"
 // std
+#include <map>
+#include <vector>
+#include <string>
+#include <memory>
+#include <assert.h>
 #include <mutex>
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
-  /*! namespace for final, *semantic* parser - unlike the syntactic
-    parser, the semantic one will distinguish between different
-    matieral types, differnet shape types, etc, and it will not only
-    store 'name:value' pairs for parameters, but figure out which
-    parameters which shape etc have, parse them from the
-    parameters, etc */
-  namespace semantic {
 
-    using vec2f    = syntactic::vec2f;
-    using vec3f    = syntactic::vec3f;
-    using vec4f    = syntactic::vec4f;
-    using vec2i    = syntactic::vec2i;
-    using vec3i    = syntactic::vec3i;
-    using vec4i    = syntactic::vec4i;
-    using affine3f = syntactic::affine3f;
-    using box3f    = syntactic::box3f;
+#if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
+    using vec2f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2f;
+    using vec3f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3f;
+    using vec4f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4f;
+    using vec2i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2i;
+    using vec3i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3i;
+    using vec4i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4i;
+    using affine3f = PBRT_PARSER_VECTYPE_NAMESPACE::affine3f;
+    using box3f    = PBRT_PARSER_VECTYPE_NAMESPACE::box3f;
+#else
+    using vec2f    = pbrt::math::vec2f;
+    using vec3f    = pbrt::math::vec3f;
+    using vec4f    = pbrt::math::vec4f;
+    using vec2i    = pbrt::math::vec2i;
+    using vec3i    = pbrt::math::vec3i;
+    using vec4i    = pbrt::math::vec4i;
+    using affine3f = pbrt::math::affine3f;
+    using box3f    = pbrt::math::box3f;
+#endif
     
     /*! internal class used for serializing a scene graph to/from disk */
     struct BinaryWriter;
@@ -875,5 +885,4 @@ namespace pbrt {
       the result over to a naivescenelayout */
     Scene::SP importPBRT(const std::string &fileName);
   
-  } // ::pbrt::semantic
 } // ::pbrt

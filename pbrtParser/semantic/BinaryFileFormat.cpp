@@ -23,7 +23,6 @@
 #include <string.h>
 
 namespace pbrt {
-  namespace semantic {
 
 #define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 0
 #define    PBRT_PARSER_SEMANTIC_FORMAT_MINOR 5
@@ -1254,5 +1253,4 @@ namespace pbrt {
       return scene;
     }
   
-  } // ::pbrt::scene
 } // ::pbrt

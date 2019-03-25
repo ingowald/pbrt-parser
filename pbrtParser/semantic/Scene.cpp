@@ -22,13 +22,6 @@
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
-  /*! namespace for final, *semantic* parser - unlike the syntactic
-    parser, the semantic one will distinguish between different
-    matieral types, differnet shape types, etc, and it will not only
-    store 'name:value' pairs for parameters, but figure out which
-    parameters which shape etc have, parse them from the
-    parameters, etc */
-  namespace semantic {
   
     box3f Shape::getPrimBounds(const size_t primID)
     {
@@ -425,5 +418,4 @@ namespace pbrt {
       return true;
     }
   
-  } // ::pbrt::semantic
 } // ::pbrt

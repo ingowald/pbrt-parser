@@ -21,7 +21,6 @@
 #include <sstream>
 
 namespace pbrt {
-  namespace semantic {
 
     using PBRTScene = pbrt::syntactic::Scene;
     using pbrt::syntactic::ParamArray;
@@ -38,11 +37,11 @@ namespace pbrt {
       // ==================================================================
       // MATERIALS
       // ==================================================================
-      std::map<pbrt::syntactic::Texture::SP,semantic::Texture::SP> textureMapping;
+      std::map<pbrt::syntactic::Texture::SP,Texture::SP> textureMapping;
 
       /*! do create a track representation of given texture, _without_
         checking whether that was already created */
-      semantic::Texture::SP createTextureFrom(pbrt::syntactic::Texture::SP in)
+      Texture::SP createTextureFrom(pbrt::syntactic::Texture::SP in)
       {
         if (in->mapType == "imagemap") {
           const std::string fileName = in->getParamString("filename");
@@ -128,7 +127,7 @@ namespace pbrt {
         return std::make_shared<Texture>();
       }
       
-      semantic::Texture::SP findOrCreateTexture(pbrt::syntactic::Texture::SP in)
+      Texture::SP findOrCreateTexture(pbrt::syntactic::Texture::SP in)
       {
         if (!textureMapping[in]) {
           textureMapping[in] = createTextureFrom(in);
@@ -140,15 +139,15 @@ namespace pbrt {
       // ==================================================================
       // MATERIALS
       // ==================================================================
-      std::map<pbrt::syntactic::Material::SP,semantic::Material::SP> materialMapping;
+      std::map<pbrt::syntactic::Material::SP,Material::SP> materialMapping;
 
       /*! do create a track representation of given material, _without_
         checking whether that was already created */
-      semantic::Material::SP createMaterialFrom(pbrt::syntactic::Material::SP in)
+      Material::SP createMaterialFrom(pbrt::syntactic::Material::SP in)
       {
         if (!in) {
           std::cerr << "warning: empty material!" << std::endl;
-          return semantic::Material::SP();
+          return Material::SP();
         }
       
         const std::string type = in->type=="" ? in->getParamString("type") : in->type;
@@ -513,7 +512,7 @@ namespace pbrt {
 #ifndef NDEBUG
         std::cout << "Warning: un-recognizd material type '"+type+"'" << std::endl;
 #endif
-        return std::make_shared<semantic::Material>();
+        return std::make_shared<Material>();
       }
 
       /*! check if this material has already been imported, and if so,
@@ -523,11 +522,11 @@ namespace pbrt {
         important: it is perfectly OK for this material to be a null
         object - the area ligths in moana have this features, for
         example */
-      semantic::Material::SP findOrCreateMaterial(pbrt::syntactic::Material::SP in)
+      Material::SP findOrCreateMaterial(pbrt::syntactic::Material::SP in)
       {
         // null materials get passed through ...
         if (!in)
-          return semantic::Material::SP();
+          return Material::SP();
       
         if (!materialMapping[in]) {
           materialMapping[in] = createMaterialFrom(in);
@@ -868,7 +867,7 @@ namespace pbrt {
       return ours;
     }
 
-    semantic::Scene::SP importPBRT(const std::string &fileName)
+    Scene::SP importPBRT(const std::string &fileName)
     {
       pbrt::syntactic::Scene::SP pbrt;
       if (endsWith(fileName,".pbsf"))
@@ -878,12 +877,11 @@ namespace pbrt {
       else
         throw std::runtime_error("could not detect input file format!? (unknown extension in '"+fileName+"')");
       
-      semantic::Scene::SP scene = SemanticParser(pbrt).result;
+      Scene::SP scene = SemanticParser(pbrt).result;
       createFilm(scene,pbrt);
       for (auto cam : pbrt->cameras)
         scene->cameras.push_back(createCamera(cam));
       return scene;
     }
 
-  } // ::pbrt::semantic
 } // ::pbrt
