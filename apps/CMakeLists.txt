@@ -14,22 +14,19 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-ADD_EXECUTABLE(pbrtinfo pbrtinfo.cpp)
-TARGET_LINK_LIBRARIES(pbrtinfo pbrtParser_syntactic)
-
-ADD_EXECUTABLE(pbrt2obj pbrt2obj.cpp)
-TARGET_LINK_LIBRARIES(pbrt2obj pbrtParser_syntactic)
+#ADD_EXECUTABLE(pbrt2obj pbrt2obj.cpp)
+#TARGET_LINK_LIBRARIES(pbrt2obj pbrtParser_syntactic)
 
 # '.pbrt' to '.pbsf' (pbrt binary syntactic file) converter
-ADD_EXECUTABLE(pbrt2pbsf pbrt2pbsf.cpp)
-TARGET_LINK_LIBRARIES(pbrt2pbsf pbrtParser_syntactic)
+#ADD_EXECUTABLE(pbrt2pbsf pbrt2pbsf.cpp)
+#TARGET_LINK_LIBRARIES(pbrt2pbsf pbrtParser_syntactic)
 
 # '.pbrt' to '.pbf' (pbrt binary format) converter
 ADD_EXECUTABLE(pbrt2pbf pbrt2pbf.cpp)
 TARGET_LINK_LIBRARIES(pbrt2pbf pbrtParser_semantic)
 
-ADD_EXECUTABLE(pbfInfo pbfInfo.cpp)
-TARGET_LINK_LIBRARIES(pbfInfo pbrtParser_semantic)
+ADD_EXECUTABLE(pbrtInfo pbrtInfo.cpp)
+TARGET_LINK_LIBRARIES(pbrtInfo pbrtParser_semantic)
 
-install(TARGETS pbfInfo  DESTINATION bin)
+install(TARGETS pbrtInfo DESTINATION bin)
 install(TARGETS pbrt2pbf DESTINATION bin)

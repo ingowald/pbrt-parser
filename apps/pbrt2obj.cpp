@@ -19,7 +19,7 @@
 #include "ospcommon/AffineSpace.h"
 // pbrt-parser
 #define PBRT_PARSER_VECTYPE_NAMESPACE    ospcommon
-#include "pbrtParser/syntactic/Scene.h"
+#include "pbrtParser/semantic/Scene.h"
 // stl
 #include <iostream>
 #include <vector>

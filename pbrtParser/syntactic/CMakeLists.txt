@@ -22,9 +22,9 @@ set(SOURCES
   Parser.cpp
   Scene.h
   Scene.cpp
-  BinaryIO.h
-  BinaryIO.cpp
-  parsePLY.cpp
+#  BinaryIO.h
+#  BinaryIO.cpp
+#  parsePLY.cpp
   )
 
 # ------------------------------------------------------------------

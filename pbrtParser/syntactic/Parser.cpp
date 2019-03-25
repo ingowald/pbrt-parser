@@ -28,6 +28,7 @@
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
+  
   /*! namespace for syntactic-only parser - this allows to distringuish
     high-level objects such as shapes from objects or transforms,
     but does *not* make any difference between what types of

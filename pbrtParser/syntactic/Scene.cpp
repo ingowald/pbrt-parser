@@ -30,14 +30,13 @@ namespace pbrt {
   namespace syntactic {
   
     /*! parse the given file name, return parsed scene */
-    std::shared_ptr<Scene> Scene::parseFromFile(const std::string &fileName)
+    std::shared_ptr<Scene> Scene::parse(const std::string &fileName)
     {
       std::shared_ptr<Parser> parser = std::make_shared<Parser>();
       parser->parse(fileName);
       return parser->getScene();
     }
     
-
     std::string Object::toString(int depth) const 
     { 
       std::stringstream ss;
@@ -277,12 +276,5 @@ namespace pbrt {
       return ss.str();
     }
 
-    extern "C" PBRT_PARSER_INTERFACE
-    void pbrt_syntactic_parse(pbrt::syntactic::Scene::SP &scene,
-                            const std::string &fileName)
-    {
-      scene = pbrt::syntactic::Scene::parseFromFile(fileName);
-    }
-    
   } // ::pbrt::syntactic
 } // ::pbrt

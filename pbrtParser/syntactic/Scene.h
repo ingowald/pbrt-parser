@@ -560,7 +560,7 @@ namespace pbrt {
         {}
 
       /*! parse the given file name, return parsed scene */
-      static std::shared_ptr<Scene> parseFromFile(const std::string &fileName);
+      static std::shared_ptr<Scene> parse(const std::string &fileName);
     
       //! pretty-print scene info into a std::string 
       std::string toString(const int depth = 0) { return world->toString(depth); }
@@ -595,7 +595,8 @@ namespace pbrt {
       std::string makeGlobalFileName(const std::string &relativePath)
       { return basePath + relativePath; }
     
-      /*! the base path for all filenames defined in this scene. In
+
+    /*! the base path for all filenames defined in this scene. In
         pbrt, lots of objects (a ply mesh shape, a texture, etc)
         will require additional files in other formats (e.g., the
         actual .ply file that the ply shape refers to; and the file
@@ -609,68 +610,12 @@ namespace pbrt {
 
     template<typename T> std::shared_ptr<ParamArray<T>> Param::as()
     { return std::dynamic_pointer_cast<ParamArray<T>>(shared_from_this()); }
-  
-  } // ::pbrt::syntx
-} // ::pbrt
 
-extern "C" PBRT_PARSER_INTERFACE
-void pbrt_syntactic_writeBinary(pbrt::syntactic::Scene::SP scene,
-                             const std::string &fileName);
+    extern "C" 
+    void pbrt_helper_loadPlyTriangles(const std::string &fileName,
+                                      std::vector<pbrt::syntactic::vec3f> &v,
+                                      std::vector<pbrt::syntactic::vec3f> &n,
+                                      std::vector<pbrt::syntactic::vec3i> &idx);
 
-/*! given an already created scene, read given binary file, and populate this scene */
-extern "C" PBRT_PARSER_INTERFACE
-void pbrt_syntactic_readBinary(pbrt::syntactic::Scene::SP &scene,
-                            const std::string &fileName);
-
-/*! load pbrt scene from a pbrt file */
-extern "C" PBRT_PARSER_INTERFACE
-void pbrt_syntactic_parse(pbrt::syntactic::Scene::SP &scene,
-                       const std::string &fileName);
-
-/*! a helper function to load a ply file */
-extern "C" PBRT_PARSER_INTERFACE
-void pbrt_helper_loadPlyTriangles(const std::string &fileName,
-                                  std::vector<pbrt::syntactic::vec3f> &v,
-                                  std::vector<pbrt::syntactic::vec3f> &n,
-                                  std::vector<pbrt::syntactic::vec3i> &idx);
-
-/*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
-namespace pbrt {
-  /*! namespace for syntactic-only parser - this allows to distringuish
-    high-level objects such as shapes from objects or transforms,
-    but does *not* make any difference between what types of
-    shapes, what their parameters mean, etc. Basically, at this
-    level a triangle mesh is nothing but a shape that has a string
-    with a given name, and parameters of given names and types */
-  namespace syntactic {
-  
-    /*! C++ function that uses the C entry point. We have to use this
-        trick to make visual studio happy: in visual studio, the
-        extern C declared C entry point cannot return a C++
-        std::shared_ptr; so that C entry point has to have it as a
-        reference parameter - which requires an additional (inline'ed,
-        and thus not linked) wrapper that reutrns this as a
-        parameter */
-    inline Scene::SP readBinary(const std::string &fn)
-    {
-      Scene::SP scene;
-      pbrt_syntactic_readBinary(scene, fn);
-      return scene; 
-    }
-
-    /*! C++ function that uses the C entry point. We have to use this
-        trick to make visual studio happy: in visual studio, the
-        extern C declared C entry point cannot return a C++
-        std::shared_ptr; so that C entry point has to have it as a
-        reference parameter - which requires an additional (inline'ed,
-        and thus not linked) wrapper that reutrns this as a
-        parameter */
-    inline Scene::SP parse(const std::string &fn)
-    {
-      Scene::SP scene;
-      pbrt_syntactic_parse(scene, fn);
-      return scene;
-    }
-  
   } // ::pbrt::syntactic
 } // ::pbrt

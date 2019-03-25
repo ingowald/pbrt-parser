@@ -14,10 +14,12 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// pbrt_parser
-#include "pbrtParser/syntactic/Scene.h"
-// ospcommon
-#include "ospcommon/common.h"
+// ospcommon, which we use for a vector class
+#include "ospcommon/vec.h"
+#include "ospcommon/AffineSpace.h"
+// pbrt-parser
+#define PBRT_PARSER_VECTYPE_NAMESPACE    ospcommon
+#include "pbrtParser/semantic/Scene.h"
 // stl
 #include <iostream>
 #include <vector>
@@ -25,7 +27,7 @@
 #include <set>
 
 namespace pbrt {
-  namespace syntactic {
+  namespace semantic {
     
     using std::cout;
     using std::endl;
@@ -42,29 +44,14 @@ namespace pbrt {
         numObjects.print("objects");
         numShapes.print("shapes");
         numTriangles.print("triangles");
+        numQuads.print("quads");
+        numDisks.print("disks");
+        numSpheres.print("spheres");
         numCurves.print("curves");
         numCurveSegments.print("curve segments");
         numLights.print("lights");
         std::cout << "total num materials " << usedMaterials.size() << std::endl;
-      }
-
-      void traverseTriangleMesh(Shape::SP mesh, bool firstTime)
-      {
-        if (mesh->findParam<float>("P") && mesh->findParam<int>("indices")) {
-          numTriangles.add(firstTime,mesh->findParam<int>("indices")->getSize()/3);
-        } else {
-          throw std::runtime_error("triangle mesh, but not loaded ....");
-        }
-      }
-
-      void traverseCurve(Shape::SP curve, bool firstTime)
-      {
-        if (curve->findParam<float>("P")) {
-          numCurves.add(firstTime,1);
-          numCurveSegments.add(firstTime,curve->findParam<float>("P")->getSize()-1);
-        } else {
-          throw std::runtime_error("curve, but no 'P' field!?");
-        }
+        std::cout << "scene bounds " << scene->getBounds() << std::endl;
       }
 
       void traverse(Object::SP object)
@@ -73,23 +60,28 @@ namespace pbrt {
         alreadyTraversed.insert(object);
 
         numObjects.add(firstTime,1);
-        numLights.add(firstTime,object->lightSources.size());
-        numVolumes.add(firstTime,object->volumes.size());
+        // numLights.add(firstTime,object->lightSources.size());
+        // numVolumes.add(firstTime,object->volumes.size());
         numShapes.add(firstTime,object->shapes.size());
-        numInstances.add(firstTime,object->objectInstances.size());
       
-        for (auto shape : object->shapes) {
-          usedMaterials.insert(shape->material);
-          const std::string type = shape->type;
-          if (type == "trianglemesh")
-            traverseTriangleMesh(shape,firstTime);
-          else if (type == "curve")
-            traverseCurve(shape,firstTime);
-          else
-            std::cout << "un-handled shape " << shape->type << std::endl;
+        for (auto geom : object->shapes) {
+          usedMaterials.insert(geom->material);
+          if (TriangleMesh::SP mesh=std::dynamic_pointer_cast<TriangleMesh>(geom)){
+            numTriangles.add(firstTime,mesh->index.size());
+          } else if (QuadMesh::SP mesh=std::dynamic_pointer_cast<QuadMesh>(geom)){
+            numQuads.add(firstTime,mesh->index.size());
+          } else if (Sphere::SP sphere=std::dynamic_pointer_cast<Sphere>(geom)){
+            numSpheres.add(firstTime,1);
+          } else if (Disk::SP disk=std::dynamic_pointer_cast<Disk>(geom)){
+            numDisks.add(firstTime,1);
+          } else if (Curve::SP curves=std::dynamic_pointer_cast<Curve>(geom)){
+            numCurves.add(firstTime,1);
+          } else
+            std::cout << "un-handled geometry type : " << geom->toString() << std::endl;
         }
 
-        for (auto inst : object->objectInstances) {
+        numInstances.add(firstTime,object->instances.size());
+        for (auto inst : object->instances) {
           traverse(inst->object);
         }
       }
@@ -109,11 +101,23 @@ namespace pbrt {
         size_t instanced = 0;
       };
 
-      Counter numInstances, numTriangles, numObjects, numVertices, numCurves, numCurveSegments, numShapes, numLights, numVolumes;
+      Counter
+      numInstances,
+                                            numTriangles,
+                                            numQuads,
+                                            numSpheres,
+                                            numDisks,
+                                            numObjects,
+                                            numVertices,
+                                            numCurves,
+                                            numCurveSegments,
+                                            numShapes,
+                                            numLights,
+                                            numVolumes;
       std::set<Material::SP> usedMaterials;
     };
   
-    void pbrtInfo(int ac, char **av)
+    void pbfInfo(int ac, char **av)
     {
       std::string fileName;
       bool parseOnly = false;
@@ -134,10 +138,11 @@ namespace pbrt {
     
       std::shared_ptr<Scene> scene;
       try {
-        if (endsWith(fileName,".pbsf"))
-          scene = pbrt::syntactic::readBinary(fileName);
-        else if (endsWith(fileName,".pbrt"))
-          scene = pbrt::syntactic::parse(fileName);
+        if (endsWith(fileName,".pbrt"))
+          scene = importPBRT(fileName);
+        else if (endsWith(fileName,".pbf"))
+          // scene = importPBRT(fileName);
+          scene = Scene::loadFrom(fileName);
         else
           throw std::runtime_error("un-recognized input file extension");
         
@@ -153,9 +158,9 @@ namespace pbrt {
   
     extern "C" int main(int ac, char **av)
     {
-      pbrtInfo(ac,av);
+      pbfInfo(ac,av);
       return 0;
     }
     
-  } // ::pbrt::syntactic
+  } // ::pbrt::semantic
 } // ::pbrt
