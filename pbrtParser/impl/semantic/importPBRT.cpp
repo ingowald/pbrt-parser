@@ -635,7 +635,6 @@ namespace pbrt {
 
     Shape::SP emitPlyMesh(pbrt::syntactic::Shape::SP shape)
     {
-      // const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
       const std::string fileName
         = pbrtScene->makeGlobalFileName(shape->getParamString("filename"));
       TriangleMesh::SP ours = std::make_shared<TriangleMesh>(findOrCreateMaterial(shape->material));

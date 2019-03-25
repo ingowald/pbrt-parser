@@ -262,8 +262,6 @@ namespace pbrt {
       attributesStack.push(std::make_shared<Attributes>(*attributesStack.top()));
       materialStack.push(currentMaterial);
       pushTransform();
-      // setTransform(ospcommon::one);
-
     }
 
     void Parser::popAttributes() 
