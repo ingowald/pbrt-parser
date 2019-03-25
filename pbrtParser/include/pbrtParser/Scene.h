@@ -866,6 +866,13 @@ namespace pbrt {
       box3f getBounds() const
       { assert(world); return world->getBounds(); }
 
+      /*! another way of querying the bounds, with the 'return value'
+          as a reference parameter. (unlike the "box3f getBounds()"
+          this allows for calling via
+          getBounds((pbrt::box3f&)userFormatBox) ) */
+      void getBounds(box3f &bounds)
+      { bounds = getBounds(); }
+      
       /*! just in case there's multiple cameras defined, this is a
         vector */
       std::vector<Camera::SP> cameras;
