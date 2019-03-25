@@ -117,7 +117,7 @@ namespace pbrt {
       std::set<Material::SP> usedMaterials;
     };
   
-    void pbfInfo(int ac, char **av)
+    void pbrtInfo(int ac, char **av)
     {
       std::string fileName;
       bool parseOnly = false;
@@ -141,7 +141,6 @@ namespace pbrt {
         if (endsWith(fileName,".pbrt"))
           scene = importPBRT(fileName);
         else if (endsWith(fileName,".pbf"))
-          // scene = importPBRT(fileName);
           scene = Scene::loadFrom(fileName);
         else
           throw std::runtime_error("un-recognized input file extension");
@@ -158,7 +157,7 @@ namespace pbrt {
   
     extern "C" int main(int ac, char **av)
     {
-      pbfInfo(ac,av);
+      pbrtInfo(ac,av);
       return 0;
     }
     

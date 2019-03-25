@@ -41,182 +41,62 @@ namespace pbrt {
     size_t numWritten = 0;
     size_t numVerticesWritten = 0;
   
-    std::string exportMaterial(Material::SP material)
-    {
-      if (!material) 
-        // default material
-        return "usemtl pbrt_parser_default_material\n\n";
-
-      std::stringstream ss;
-
-      static std::map<std::shared_ptr<Material>,std::string> alreadyExported;
-      if (alreadyExported.find(material) != alreadyExported.end()) {
-        ss << "usemtl " << alreadyExported[material] << std::endl << std::endl;
-        return ss.str();
-      }
-
-      const std::string type = material->type;
-      if (type == "mix") {
-        std::string matName = "pbrt_parser_error_material";
-        alreadyExported[material] = matName;
-        return "usemtl pbrt_parser_error_material\n\n";
-        //      throw std::runtime_error("'mix' material ..."+material->toString());
-      } else if (type == "uber") {
-        std::string matName = std::string("uber_material__")+std::to_string((unsigned long long)alreadyExported.size());
-        ss << "newmtl " << matName << std::endl;
-        { //----------- Kd -----------
-          vec3f v;
-          try {
-            v = material->getParam3f("Kd",vec3f(0.0f));
-          } catch (std::runtime_error e) {
-            v = vec3f(.6f);
-          };
-          ss << "Kd " << v.x << " " << v.y << " " << v.z << std::endl;
-        }
-        // ----------- done material -----------
-        ss << std::endl << "usemtl " << matName << std::endl << std::endl;
-        alreadyExported[material] = matName;
-        return ss.str();
-      } else {
-        std::string matName = "pbrt_parser_error_material";
-        alreadyExported[material] = matName;
-        return "usemtl pbrt_parser_error_material\n\n";
-      }
-    }
-
   
-    void writeTriangleMesh(std::shared_ptr<Shape> shape, const affine3f &instanceXfm)
+    void writeTriangleMesh(TriangleMesh::SP mesh, const affine3f &xfm)
     {
-      /*! call 'exportMateiral, which will return a string that properly
-        defined and/or activates the given mateirla */
-      std::string materialString = exportMaterial(shape->material);
-      out << materialString << std::endl;
-
-      const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
+      /* TODO: export the material of that shape, and use it */
       size_t firstVertexID = numVerticesWritten+1;
 
-      std::shared_ptr<ParamArray<float> > param_st = shape->findParam<float>("st");
-      if (param_st) {
-        const size_t numPoints = param_st->size() / 2;
-        for (size_t i=0;i<numPoints;i++) {
-          vec2f v(param_st->get(2*i+0),
-                  param_st->get(2*i+1));
-          out << "vt " << v.x << " " << v.y << std::endl;
-        }
-      }
-    
-      { // parse "point P"
-        std::shared_ptr<ParamArray<float> > param_P = shape->findParam<float>("P");
-        if (param_P) {
-          const size_t numPoints = param_P->size() / 3;
-          for (size_t i=0;i<numPoints;i++) {
-            vec3f v(param_P->get(3*i+0),
-                    param_P->get(3*i+1),
-                    param_P->get(3*i+2));
-            v = xfmPoint(xfm,v);
-            out << "v  " << v.x << " " << v.y << " " << v.z << std::endl;
-            numVerticesWritten++;
-          }
-        }
-      }
+      /* TODO: ignoring texture coordinates for now */
 
-      { // parse "int indices"
-        std::shared_ptr<ParamArray<int> > param_indices = shape->findParam<int>("indices");
-        if (param_indices) {
-          
-          const size_t numIndices = param_indices->size() / 3;
-          for (size_t i=0;i<numIndices;i++) {
-            vec3i v(param_indices->get(3*i+0),
-                    param_indices->get(3*i+1),
-                    param_indices->get(3*i+2));
-            if (param_st) {
-              out << "f " << (firstVertexID+v.x) << "//" << (firstVertexID+v.x)
-                  << "\t" << (firstVertexID+v.y) << "//" << (firstVertexID+v.y)
-                  << "\t" << (firstVertexID+v.z) << "//" << (firstVertexID+v.z)
-                  << std::endl;
-            } else {
-              out << "f " << (firstVertexID+v.x)
-                  << "\t" << (firstVertexID+v.y)
-                  << "\t" << (firstVertexID+v.z)
-                  << std::endl;
-            }
-            numWritten++;
-          }
-        }
-      }        
-    }
+      /* TODO: ignoring shading normals for now */
 
-    void writePlyMesh(std::shared_ptr<Scene> scene,
-                      std::shared_ptr<Shape> shape,
-                      const affine3f &instanceXfm)
-    {
-      /*! call 'exportMateiral, which will return a string that properly
-        defined and/or activates the given mateirla */
-      std::string materialString = exportMaterial(shape->material);
-      out << materialString << std::endl;
-      // fprintf(out,"%s\n",materialString.c_str());
-
-
-      std::vector<vec3f> p, n;
-      std::vector<vec3i> idx;
-      
-      // std::shared_ptr<ParamArray<std::string> > param_fileName = shape->findParam<std::string>("filename");
-      std::string fn = scene->makeGlobalFileName(shape->getParamString("filename"));
-      // param_fileName->get(0));
-      // std::string fn = basePath + "/" + param_fileName->get(0);
-      pbrt_helper_loadPlyTriangles(fn,p,n,idx);
-
-      const affine3f xfm = instanceXfm*(ospcommon::affine3f&)shape->transform.atStart;
-      size_t firstVertexID = numVerticesWritten+1;
-
-      for (size_t i=0;i<p.size();i++) {
-        vec3f v = xfmPoint(xfm,p[i]);
+      for (auto v : mesh->vertex) {
+        v = xfmPoint(xfm,v);
         out << "v  " << v.x << " " << v.y << " " << v.z << std::endl;
-        // fprintf(out,"v %f %f %f\n",v.x,v.y,v.z);
         numVerticesWritten++;
       }
 
-      for (size_t i=0;i<idx.size();i++) {
-        vec3i v = idx[i];
+      for (auto v : mesh->index) {
+        /* TODO : for texcoord and normal arrays, use x//x an x/x/x formats */
         out << "f " << (firstVertexID+v.x)
             << "\t" << (firstVertexID+v.y)
             << "\t" << (firstVertexID+v.z)
             << std::endl;
-        numWritten++;
       }
+      numWritten++;
     }
 
     void defineDefaultMaterials(std::ofstream &file)
     {
-      file << "newmtl pbrt_parser_error_material" << std::endl;
-      file << "Kd 1 0 0" << std::endl;
-      file << "" << std::endl;
-
-      file << "newmtl pbrt_parser_default_material" << std::endl;
+      file << "newmtl pbrt_parser_no_materials_yet" << std::endl;
       file << "Kd .6 .6 .6" << std::endl;
       file << "Ka .1 .1 .1" << std::endl;
-      file << "" << std::endl;
+      file << "usematerial pbrt_parser_no_materials_yet" << std::endl << std::endl;
     }
   
-    void writeObject(Scene::SP scene,
-                     Object::SP object, 
+    void writeObject(Object::SP object, 
                      const affine3f &instanceXfm)
     {
       cout << "writing " << object->toString() << endl;
-      for (size_t shapeID=0;shapeID<object->shapes.size();shapeID++) {
-        std::shared_ptr<Shape> shape = object->shapes[shapeID];
-        if (shape->type == "trianglemesh") {
-          writeTriangleMesh(shape,instanceXfm);
-        } else if (shape->type == "plymesh") {
-          writePlyMesh(scene,shape,instanceXfm);
-        } else 
-          cout << "**** invalid shape #" << shapeID << " : " << shape->type << endl;
+      for (auto shape : object->shapes) {
+        TriangleMesh::SP mesh = std::dynamic_pointer_cast<TriangleMesh>(shape);
+        if (mesh) {
+          std::cout << " - found mesh w/ " << prettyNumber(mesh->index.size()) << " tris" << std::endl;
+          writeTriangleMesh(mesh,instanceXfm);
+        } else
+          std::cout << " - warning: shape is not a triangle mesh : " << shape->toString() << std::endl;
       }
-      for (size_t instID=0;instID<object->objectInstances.size();instID++) {
-        writeObject(scene,
-                    object->objectInstances[instID]->object,
-                    instanceXfm*(ospcommon::affine3f&)object->objectInstances[instID]->xfm.atStart);
+      
+      for (auto inst : object->instances) {
+        writeObject(inst->object,
+                    instanceXfm*(ospcommon::affine3f&)inst->xfm);
       }
+    }
+
+    inline bool endsWith(const std::string &s, const std::string &suffix)
+    {
+      return s.substr(s.size()-suffix.size(),suffix.size()) == suffix;
     }
 
 
@@ -245,15 +125,22 @@ namespace pbrt {
       std::cout << "-------------------------------------------------------" << std::endl;
       std::cout << "parsing: " << inFileName << std::endl;
       
+      std::shared_ptr<Scene> scene;
       try {
-        std::cout << "==> parsing successful (grammar only for now)" << std::endl;
-        std::shared_ptr<Scene> scene = pbrt::syntactic::parse(inFileName);
+        if (endsWith(inFileName,".pbrt"))
+          scene = importPBRT(inFileName);
+        else if (endsWith(inFileName,".pbf"))
+          scene = Scene::loadFrom(inFileName);
+        else
+          throw std::runtime_error("un-recognized input file extension");
+        
+        std::cout << " => yay! parsing successful..." << std::endl;
+        
         std::cout << "done parsing, now exporting (triangular geometry from) scene" << std::endl;
-        writeObject(scene,scene->world,ospcommon::one);
-        // fclose(out);
-        cout << "Done exporting to OBJ; wrote a total of " << numWritten << " triangles" << endl;
+        writeObject(scene->world,ospcommon::one);
       } catch (std::runtime_error e) {
-        std::cout << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
+        std::cerr << "**** ERROR IN PARSING ****" << std::endl << e.what() << std::endl;
+        std::cerr << "(this means that either there's something wrong with that PBRT file, or that the parser can't handle it)" << std::endl;
         exit(1);
       }
     }

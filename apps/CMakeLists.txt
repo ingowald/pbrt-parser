@@ -14,8 +14,8 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-#ADD_EXECUTABLE(pbrt2obj pbrt2obj.cpp)
-#TARGET_LINK_LIBRARIES(pbrt2obj pbrtParser_syntactic)
+ADD_EXECUTABLE(pbrt2obj pbrt2obj.cpp)
+TARGET_LINK_LIBRARIES(pbrt2obj pbrtParser_semantic)
 
 # '.pbrt' to '.pbsf' (pbrt binary syntactic file) converter
 #ADD_EXECUTABLE(pbrt2pbsf pbrt2pbsf.cpp)
