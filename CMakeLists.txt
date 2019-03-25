@@ -50,8 +50,9 @@ add_subdirectory(internal/ospcommon EXCLUDE_FROM_ALL)
 set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
 
 # syntactic-only parser
-add_subdirectory(pbrtParser/syntactic)
-add_subdirectory(pbrtParser/semantic)
+#add_subdirectory(pbrtParser/syntactic)
+#add_subdirectory(pbrtParser/semantic)
+add_subdirectory(pbrtParser)
 
 add_subdirectory(amalgamation)
 

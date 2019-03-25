@@ -76,16 +76,6 @@ namespace pbrt {
       library itself internally uses this binary layout, so making the
       app use a different data layout will create trouble
     */
-// #if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
-//     using vec2f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2f;
-//     using vec3f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3f;
-//     using vec4f    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4f;
-//     using vec2i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2i;
-//     using vec3i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3i;
-//     using vec4i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4i;
-//     using affine3f = PBRT_PARSER_VECTYPE_NAMESPACE::affine3f;
-//     using box3f    = PBRT_PARSER_VECTYPE_NAMESPACE::box3f;
-// #else
     using vec2f    = math::vec2f;
     using vec3f    = math::vec3f;
     using vec4f    = math::vec4f;
@@ -94,7 +84,6 @@ namespace pbrt {
     using vec4i    = math::vec4i;
     using affine3f = math::affine3f;
     using box3f    = math::box3f;
-// #endif
 
     /*! start-time and end-time transform - PBRT allows for specifying
       transform at both 'start' and 'end' time, to allow for linear
