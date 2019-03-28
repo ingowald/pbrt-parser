@@ -34,3 +34,24 @@ TARGET_LINK_LIBRARIES(pbrtInfo pbrtParser)
 
 install(TARGETS pbrtInfo DESTINATION bin)
 install(TARGETS pbrt2pbf DESTINATION bin)
+
+
+
+
+
+
+option(BUILD_PTEX_TOOL "Build ptex bake-out tool" OFF)
+if(BUILD_PTEX_TOOL)
+  # this assumes that dwas ptex librayr has been installed in
+  # /usr/local
+  add_executable(brxBakeOutPtex
+    bakeOutPtex.cpp
+    )
+  
+  target_link_libraries(brxBakeOutPtex
+    pbrtParser
+    Ptex
+    tbb
+    )
+endif()
+
