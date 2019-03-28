@@ -18,8 +18,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(pbrtParser)
 
-set(pbrtParser_VERSION_MAJOR 1)
-set(pbrtParser_VERSION_MINOR 1)
+set(pbrtParser_VERSION_MAJOR 2)
+set(pbrtParser_VERSION_MINOR 0)
 set(pbrtParser_VERSION_PATCH 0)
 
 if(COMMAND cmake_policy)
@@ -33,7 +33,6 @@ endif(COMMAND cmake_policy)
 set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -Wall)
   
-option(EXP_RIB_IMPORTER "Build experimental rib importer?" OFF)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Release")
@@ -43,20 +42,22 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/internal/)
+# include out local 'include/' dir, we can include our two public
+# headers via pbrtParser/Scene.h and pbrtParser/math.h just the way an
+# app would include them through /usr/local/
+include_directories(${PROJECT_SOURCE_DIR}/pbrtParser/include)
 
-add_subdirectory(internal/ospcommon EXCLUDE_FROM_ALL)
+#include_directories(${PROJECT_SOURCE_DIR})
+#include_directories(${PROJECT_SOURCE_DIR}/internal/)
+
+#add_subdirectory(internal/ospcommon EXCLUDE_FROM_ALL)
 
 set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
 
 # syntactic-only parser
-add_subdirectory(pbrtParser/syntactic)
-add_subdirectory(pbrtParser/semantic)
-
-if(EXP_RIB_IMPORTER)
-  add_subdirectory(experimental/rib)
-endif()
+#add_subdirectory(pbrtParser/syntactic)
+#add_subdirectory(pbrtParser/semantic)
+add_subdirectory(pbrtParser)
 
 add_subdirectory(amalgamation)
 

@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2009-2019 Ingo Wald                                            ##
+## Copyright 2015-2019 Ingo Wald                                            ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -14,23 +14,33 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-ADD_EXECUTABLE(pbrt2obj pbrt2obj.cpp)
-TARGET_LINK_LIBRARIES(pbrt2obj pbrtParser)
+set(SOURCES
+  ../common/math.h
+  Lexer.h
+  Lexer.cpp
+  Parser.h
+  Parser.cpp
+  Scene.h
+  Scene.cpp
+#  BinaryIO.h
+#  BinaryIO.cpp
+#  parsePLY.cpp
+  )
 
-# '.pbrt' to '.pbf' (pbrt binary format) converter
-ADD_EXECUTABLE(pbrt2pbf pbrt2pbf.cpp)
-TARGET_LINK_LIBRARIES(pbrt2pbf pbrtParser)
+# ------------------------------------------------------------------
+add_library(pbrtParser_syntactic SHARED
+  ${SOURCES}
+  )
+set_target_properties(pbrtParser_syntactic PROPERTIES VERSION ${pbrtParser_VERSION})
 
-# simple example of loading a pbrt or pbf file, finding all triangle
-# meshes, and dumping all triangles in obj format. Note this is a
-# intentionally simplisitic example that lacks support for many things
-# (including, among other, vertex normals, texture coordinates,
-# materials, textures, etc) - it ONLY dumps triangles, nothing
-# else. Also be warned: since OBJ doesn't support instancing this can
-# produce preeeeetty big output files for heavily instanced scenes
-# (ie, do not try this on landscape, ecosys, or moana ...)
-ADD_EXECUTABLE(pbrtInfo pbrtInfo.cpp)
-TARGET_LINK_LIBRARIES(pbrtInfo pbrtParser)
+# ------------------------------------------------------------------
+add_library(pbrtParser_syntactic_static
+  ${SOURCES}
+  )
+ 
+# ------------------------------------------------------------------
+install(TARGETS pbrtParser_syntactic DESTINATION lib)
+install(TARGETS pbrtParser_syntactic_static DESTINATION lib)
+install(FILES Scene.h DESTINATION include/pbrtParser/syntactic)
+install(FILES ../common/math.h DESTINATION include/pbrtParser/common)
 
-install(TARGETS pbrtInfo DESTINATION bin)
-install(TARGETS pbrt2pbf DESTINATION bin)
