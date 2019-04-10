@@ -60,21 +60,23 @@ namespace pbrt {
         // numLights.add(firstTime,object->lightSources.size());
         // numVolumes.add(firstTime,object->volumes.size());
         numShapes.add(firstTime,object->shapes.size());
-      
-        for (auto geom : object->shapes) {
-          usedMaterials.insert(geom->material);
-          if (TriangleMesh::SP mesh=std::dynamic_pointer_cast<TriangleMesh>(geom)){
+        
+        for (auto shape : object->shapes) {
+          usedMaterials.insert(shape->material);
+          if (shape->areaLight)
+            numAreaLights.add(firstTime,1);
+          if (TriangleMesh::SP mesh=std::dynamic_pointer_cast<TriangleMesh>(shape)){
             numTriangles.add(firstTime,mesh->index.size());
-          } else if (QuadMesh::SP mesh=std::dynamic_pointer_cast<QuadMesh>(geom)){
+          } else if (QuadMesh::SP mesh=std::dynamic_pointer_cast<QuadMesh>(shape)){
             numQuads.add(firstTime,mesh->index.size());
-          } else if (Sphere::SP sphere=std::dynamic_pointer_cast<Sphere>(geom)){
+          } else if (Sphere::SP sphere=std::dynamic_pointer_cast<Sphere>(shape)){
             numSpheres.add(firstTime,1);
-          } else if (Disk::SP disk=std::dynamic_pointer_cast<Disk>(geom)){
+          } else if (Disk::SP disk=std::dynamic_pointer_cast<Disk>(shape)){
             numDisks.add(firstTime,1);
-          } else if (Curve::SP curves=std::dynamic_pointer_cast<Curve>(geom)){
+          } else if (Curve::SP curves=std::dynamic_pointer_cast<Curve>(shape)){
             numCurves.add(firstTime,1);
           } else
-            std::cout << "un-handled geometry type : " << geom->toString() << std::endl;
+            std::cout << "un-handled geometry type : " << shape->toString() << std::endl;
         }
 
         numInstances.add(firstTime,object->instances.size());
