@@ -30,6 +30,30 @@ A few screenshots:
 ![moana.pbrt](doc/jpg/moana.jpg "moana island, as shown at Siggraph 2018, using a slightly older version of this parser")
 
 
+Release Notes
+=============
+
+V 2.1:
+
+- added semantic parsing of 'AreaLights', which are now attached to
+  shapes, and stored to/loaded from PBF files.
+
+- significant cleanup of semantic parser: SemanticParser is now a
+  separate class in a sepa rate header file, with all texture-,
+  mateiral-, geometry-, etc based parsing in separate implementation
+  files. Also, the single giant "parseMaterial" etc have been split
+  into type-specific parse functions (eg, parseMaterial_disney vs
+  parsematieral_mix, etc), further increasing readability.
+
+V 2.0:
+
+- amalgamated all *public* API into a single header file
+  (include/pbrtParser/Scene.h) that now only contains the fully
+  semantically parsed Scene. All intermediary syntax-only parsing is
+  now hidden in the impl/ directory, is no longer installed, and is no
+  longer exported as a separate library. From now on, only a single
+  library with a single header files is required after install.
+
 STATUS
 ======
 

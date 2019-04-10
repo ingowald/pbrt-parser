@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // pbrt_parser
-#include "pbrtParser/semantic/Scene.h"
+#include "pbrtParser/Scene.h"
 // stl
 #include <iostream>
 #include <vector>
