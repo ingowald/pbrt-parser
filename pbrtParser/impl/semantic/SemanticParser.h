@@ -134,6 +134,8 @@ namespace pbrt {
     std::map<pbrt::syntactic::Object::SP,Object::SP> emittedObjects;
     std::map<pbrt::syntactic::Shape::SP,Shape::SP>   emittedShapes;
     
+    AreaLight::SP parseAreaLight(pbrt::syntactic::AreaLightSource::SP in);
+    
     /*! check if object has already been emitted, and return reference
         is so; else emit new and return reference */
     Object::SP findOrEmitObject(pbrt::syntactic::Object::SP pbrtObject);

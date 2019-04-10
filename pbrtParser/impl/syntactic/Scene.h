@@ -198,7 +198,9 @@ namespace pbrt {
       /*! query parameter of 3f type, and if found, store in result and
         return true; else return false */
       bool getParam3f(float *result, const std::string &name) const;
+      bool getParam2f(float *result, const std::string &name) const;
       math::vec3f getParam3f(const std::string &name, const math::vec3f &fallBack) const;
+      math::vec3f getParam2f(const std::string &name, const math::vec2f &fallBack) const;
 #if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
       vec3f getParam3f(const std::string &name, const vec3f &fallBack) const {
         math::vec3f res = getParam3f(name, (const math::vec3f&)fallBack);
@@ -221,6 +223,9 @@ namespace pbrt {
       }
       bool hasParam1f(const std::string &name) const {
         return (bool)findParam<float>(name) && findParam<float>(name)->size() == 1;
+      }
+      bool hasParam2f(const std::string &name) const {
+        return (bool)findParam<float>(name) && findParam<float>(name)->size() == 2;
       }
       bool hasParam3f(const std::string &name) const {
         return (bool)findParam<float>(name) && findParam<float>(name)->size() == 3;

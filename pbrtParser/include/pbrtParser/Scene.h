@@ -99,11 +99,39 @@ namespace pbrt {
     typedef std::shared_ptr<AreaLight> SP;
     
     /*! pretty-printer, for debugging */
-    virtual std::string toString() const override { return "Material"; }
+    virtual std::string toString() const override { return "AreaLight"; }
     /*! serialize out to given binary writer */
     virtual int writeTo(BinaryWriter &) override;
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
+  };
+  
+  /*! a area light of type 'diffuse', with a 'color L' parameter */
+  struct DiffuseAreaLightRGB : public AreaLight {
+    typedef std::shared_ptr<DiffuseAreaLightRGB> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "DiffuseAreaLightRGB"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    vec3f L;
+  };
+
+  /*! a area light of type 'diffuse', with a 'blackbody L' parameter */
+  struct DiffuseAreaLightBB : public AreaLight {
+    typedef std::shared_ptr<DiffuseAreaLightBB> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "DiffuseAreaLightBlackBody"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    float temperature, scale;
   };
   
   struct Texture : public Entity {
@@ -518,10 +546,17 @@ namespace pbrt {
       
     /*! the pbrt material assigned to the underlying shape */
     Material::SP material;
+    
     /*! textures directl assigned to the shape (ie, not to the
       material) */
     std::map<std::string,Texture::SP> textures;
-    std::vector<AreaLight::SP>        areaLights;
+    
+    /*! the area light that was active in the attributes when the
+        shape was defined. Though you could in theory have multiple
+        area lights active for a single shape we only support one,
+        because this is easier to use for the end user, and arguably
+        more than one doesn' tmake sense, nayway!? */
+    AreaLight::SP                     areaLight;
   };
 
   /*! a plain triangle mesh, with vec3f vertex and normal arrays, and

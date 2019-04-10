@@ -224,6 +224,56 @@ namespace pbrt {
     return Shape::SP();
   }
 
+  AreaLight::SP SemanticParser::parseAreaLight(pbrt::syntactic::AreaLightSource::SP in)
+  {
+    if (!in)
+      return AreaLight::SP();
+
+    if (in->type == "diffuse") {
+      /*! parsing here is a bit more tricky, because the L parameter
+          can be either an RGB, or a blackbody. Since the latter has
+          two floats to the former's three floats we'll simply switch
+          based on parameter count here .... */
+      if (in->hasParam2f("L")) {
+        DiffuseAreaLightBB::SP diffuse = std::make_shared<DiffuseAreaLightBB>();
+        vec2f v;
+        in->getParam3f(&v.x,"L");
+        diffuse->temperature = v.x;
+        diffuse->scale       = v.y;
+        return diffuse;
+      } else if (in->hasParam3f("L")) {
+        DiffuseAreaLightRGB::SP diffuse = std::make_shared<DiffuseAreaLightRGB>();
+        in->getParam3f(&diffuse->L.x,"L");
+        return diffuse;
+      } else {
+        std::cout << "Warning: diffuse area light, but no 'L' parameter, or L is neither two (blackbody) nor three (rgba) floats?! Ignoring." << std::endl;
+        return AreaLight::SP();
+      }
+      // auto L_it = in->param.find("L");
+      // if (L_it == in->param.end()) {
+      //   std::cout << "Warning: diffuse area light, but no 'L' parameter?! Ignoring." << std::endl;
+      //   return AreaLight::SP();
+      // }
+
+      // syntactic::Param::SP param = L_it->second;
+      // if (param->getType() == "blackbody") {
+      //   // not blackbody - assume it's RGB
+      //   DiffuseAreaLightBB::SP diffuse = std::make_shared<DiffuseAreaLightBB>();
+        
+      //   in->getParam3f(&diffuse->blackBody.x,"L");
+      //   return diffuse;
+      // } else {
+      //   // not blackbody - assume it's RGB
+      //   DiffuseAreaLightRGB::SP diffuse = std::make_shared<DiffuseAreaLightRGB>();
+      //   in->getParam3f(&diffuse->blackBody.x,"L");
+      //   return diffuse;
+      // }
+      
+    }
+
+    std::cout << "Warning: unknown area light type '" << in->type << "'." << std::endl;
+    return AreaLight::SP();
+  }
   
   /*! check if shapehas already been emitted, and return reference
     is so; else emit new and return reference */
@@ -233,6 +283,19 @@ namespace pbrt {
       return emittedShapes[pbrtShape];
 
     emittedShapes[pbrtShape] = emitShape(pbrtShape);
+    /* now, add area light sources */
+    if (!pbrtShape->attributes->areaLightSources.empty()) {
+      std::cout << "Shape has " << pbrtShape->attributes->areaLightSources.size()
+                << " area light sources..." << std::endl;
+      assert(pbrtShape->attributes);
+      auto &areaLights = pbrtShape->attributes->areaLightSources;
+      if (!areaLights.empty()) {
+        if (areaLights.size() > 1)
+          std::cout << "Warning: Shape has more than one area light!?" << std::endl;
+        emittedShapes[pbrtShape]->areaLight = parseAreaLight(areaLights[0]);
+      }
+    }
+    
     return emittedShapes[pbrtShape];
   }
 
