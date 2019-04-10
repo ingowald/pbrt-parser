@@ -387,6 +387,7 @@ namespace pbrt {
             = std::make_shared<LightSource>(next().text);
           parseParams(lightSource->param);
           getCurrentObject()->lightSources.push_back(lightSource);
+          // attributesStack.top()->lightSources.push_back(lightSource);
           continue;
         }
 
@@ -397,6 +398,8 @@ namespace pbrt {
           std::shared_ptr<AreaLightSource> lightSource
             = std::make_shared<AreaLightSource>(next().text);
           parseParams(lightSource->param);
+          // getCurrentObject()->lightSources.push_back(lightSource);
+          attributesStack.top()->areaLightSources.push_back(lightSource);
           continue;
         }
 

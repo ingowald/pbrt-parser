@@ -37,11 +37,14 @@ namespace pbrt {
     level a triangle mesh is nothing but a shape that has a string
     with a given name, and parameters of given names and types */
   namespace syntactic {
-  
+
+    /*! @{ forward definitions so we can use those in shared_ptrs in the attribute class */
+    struct AreaLightSource;
     struct Object;
     struct Material;
     struct Medium;
     struct Texture;
+    /* @} */
 
     /*! the PBRT_PARSER_VECTYPE_NAMESPACE #define allows the
       application/user to override the 'internal' vec3f, vec3i, and
@@ -103,8 +106,10 @@ namespace pbrt {
       Attributes(Attributes &&other) = default;
       Attributes(const Attributes &other) = default;
 
-      virtual std::shared_ptr<Attributes> clone() const { return std::make_shared<Attributes>(*this); }
+      virtual std::shared_ptr<Attributes> clone() const
+      { return std::make_shared<Attributes>(*this); }
 
+      std::vector<std::shared_ptr<AreaLightSource>>    areaLightSources;
       std::pair<std::string,std::string>               mediumInterface;
       std::map<std::string,std::shared_ptr<Material> > namedMaterial;
       std::map<std::string,std::shared_ptr<Medium> >   namedMedium;
@@ -442,6 +447,11 @@ namespace pbrt {
       virtual std::string toString() const override { return "LightSource<"+type+">"; }
     };
 
+    /*! area light sources are different from regular light sources in
+        that they get attached to getometry (shapes), whereas regular
+        light sources are not. Thus, from a type perspective a
+        AreaLightSource is _not_ "related" to a LightSource, which is
+        why we don't have one derived from the other. */
     struct PBRT_PARSER_INTERFACE AreaLightSource : public Node {
 
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code

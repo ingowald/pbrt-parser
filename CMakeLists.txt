@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 2.8)
 project(pbrtParser)
 
 set(pbrtParser_VERSION_MAJOR 2)
-set(pbrtParser_VERSION_MINOR 0)
+set(pbrtParser_VERSION_MINOR 1)
 set(pbrtParser_VERSION_PATCH 0)
 
 if(COMMAND cmake_policy)
@@ -59,7 +59,7 @@ set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.
 #add_subdirectory(pbrtParser/semantic)
 add_subdirectory(pbrtParser)
 
-add_subdirectory(amalgamation)
+#add_subdirectory(amalgamation)
 
 add_subdirectory(apps)
 

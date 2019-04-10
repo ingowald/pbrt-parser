@@ -16,14 +16,16 @@
 
 #include "pbrtParser/Scene.h"
 #include "../syntactic/Scene.h"
+#include "SemanticParser.h"
 // std
 #include <map>
 #include <sstream>
-// ply parser:
-#include "../3rdParty/happly.h"
+// // ply parser:
+// #include "../3rdParty/happly.h"
 
 namespace pbrt {
 
+#if 0
   namespace ply {
     void parse(const std::string &fileName,
                std::vector<vec3f> &pos,
@@ -80,11 +82,6 @@ namespace pbrt {
   using PBRTScene = pbrt::syntactic::Scene;
   using pbrt::syntactic::ParamArray;
 
-  inline bool endsWith(const std::string &s, const std::string &suffix)
-  {
-    return s.substr(s.size()-suffix.size(),suffix.size()) == suffix;
-  }
-
   struct SemanticParser
   {
     Scene::SP result;
@@ -93,103 +90,6 @@ namespace pbrt {
     // MATERIALS
     // ==================================================================
     std::map<pbrt::syntactic::Texture::SP,Texture::SP> textureMapping;
-
-    /*! do create a track representation of given texture, _without_
-      checking whether that was already created */
-    Texture::SP createTextureFrom(pbrt::syntactic::Texture::SP in)
-    {
-      if (in->mapType == "imagemap") {
-        const std::string fileName = in->getParamString("filename");
-        if (fileName == "")
-          std::cerr << "warning: pbrt image texture, but no filename!?" << std::endl;
-        return std::make_shared<ImageTexture>(fileName);
-      }
-      if (in->mapType == "constant") {
-        ConstantTexture::SP tex = std::make_shared<ConstantTexture>();
-        if (in->hasParam1f("value"))
-          tex->value = vec3f(in->getParam1f("value"));
-        else
-          in->getParam3f(&tex->value.x,"value");
-        return tex;
-      }
-      if (in->mapType == "fbm") {
-        FbmTexture::SP tex = std::make_shared<FbmTexture>();
-        return tex;
-      }
-      if (in->mapType == "windy") {
-        WindyTexture::SP tex = std::make_shared<WindyTexture>();
-        return tex;
-      }
-      if (in->mapType == "marble") {
-        MarbleTexture::SP tex = std::make_shared<MarbleTexture>();
-        if (in->hasParam1f("scale"))
-          tex->scale = in->getParam1f("scale");
-        return tex;
-      }
-      if (in->mapType == "wrinkled") {
-        WrinkledTexture::SP tex = std::make_shared<WrinkledTexture>();
-        return tex;
-      }
-      if (in->mapType == "scale") {
-        ScaleTexture::SP tex = std::make_shared<ScaleTexture>();
-        if (in->hasParamTexture("tex1"))
-          tex->tex1 = findOrCreateTexture(in->getParamTexture("tex1"));
-        else if (in->hasParam3f("tex1"))
-          in->getParam3f(&tex->scale1.x,"tex1");
-        else
-          tex->scale1 = vec3f(in->getParam1f("tex1"));
-          
-        if (in->hasParamTexture("tex2"))
-          tex->tex2 = findOrCreateTexture(in->getParamTexture("tex2"));
-        else if (in->hasParam3f("tex2"))
-          in->getParam3f(&tex->scale2.x,"tex2");
-        else
-          tex->scale2 = vec3f(in->getParam1f("tex2"));
-        return tex;
-      }
-      if (in->mapType == "mix") {
-        MixTexture::SP tex = std::make_shared<MixTexture>();
-
-        if (in->hasParam3f("amount"))
-          in->getParam3f(&tex->amount.x,"amount");
-        else if (in->hasParam1f("amount"))
-          tex->amount = vec3f(in->getParam1f("amount"));
-        else 
-          tex->map_amount = findOrCreateTexture(in->getParamTexture("amount"));
-          
-        if (in->hasParamTexture("tex1"))
-          tex->tex1 = findOrCreateTexture(in->getParamTexture("tex1"));
-        else if (in->hasParam3f("tex1"))
-          in->getParam3f(&tex->scale1.x,"tex1");
-        else
-          tex->scale1 = vec3f(in->getParam1f("tex1"));
-          
-        if (in->hasParamTexture("tex2"))
-          tex->tex2 = findOrCreateTexture(in->getParamTexture("tex2"));
-        else if (in->hasParam3f("tex2"))
-          in->getParam3f(&tex->scale2.x,"tex2");
-        else
-          tex->scale2 = vec3f(in->getParam1f("tex2"));
-        return tex;
-      }
-      if (in->mapType == "ptex") {
-        const std::string fileName = in->getParamString("filename");
-        if (fileName == "")
-          std::cerr << "warning: pbrt image texture, but no filename!?" << std::endl;
-        return std::make_shared<PtexFileTexture>(fileName);
-      }
-      throw std::runtime_error("un-handled pbrt texture type '"+in->toString()+"'");
-      return std::make_shared<Texture>();
-    }
-      
-    Texture::SP findOrCreateTexture(pbrt::syntactic::Texture::SP in)
-    {
-      if (!textureMapping[in]) {
-        textureMapping[in] = createTextureFrom(in);
-      }
-      return textureMapping[in];
-    }
-    
 
     // ==================================================================
     // MATERIALS
@@ -920,7 +820,7 @@ namespace pbrt {
 
     return ours;
   }
-
+#endif
   Scene::SP importPBRT(const std::string &fileName)
   {
     pbrt::syntactic::Scene::SP pbrt;

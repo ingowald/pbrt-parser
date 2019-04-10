@@ -26,7 +26,12 @@ set(SOURCES
   impl/syntactic/Parser.cpp
   impl/syntactic/Scene.h
   impl/syntactic/Scene.cpp
-  
+
+  # code for extracting the given entirires from syntactic to semantic
+  impl/semantic/Geometry.cpp
+  impl/semantic/Camera.cpp
+  impl/semantic/Textures.cpp
+  impl/semantic/Materials.cpp
   impl/semantic/Scene.cpp
   impl/semantic/BinaryFileFormat.cpp
   impl/semantic/importPBRT.cpp

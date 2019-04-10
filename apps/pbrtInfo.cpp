@@ -38,6 +38,7 @@ namespace pbrt {
       {
         traverse(scene->world);
         numObjects.print("objects");
+        numAreaLights.print("areaLights");
         numShapes.print("shapes");
         numTriangles.print("triangles");
         numQuads.print("quads");
@@ -82,9 +83,8 @@ namespace pbrt {
         }
       }
 
-      std::set<Object::SP> alreadyTraversed;
-    
-      struct Counter {
+      struct Counter
+      {
         void print(const std::string &name)
         {
           std::cout << "number of " << name << std::endl;
@@ -92,24 +92,26 @@ namespace pbrt {
           std::cout << " - instanced : " << math::prettyNumber(instanced) << std::endl;
         }
         void add(bool firstTime, size_t N) { instanced += N; if (firstTime) unique += N; }
-      
+        
         size_t unique = 0;
         size_t instanced = 0;
       };
-
-      Counter
-      numInstances,
-                                            numTriangles,
-                                            numQuads,
-                                            numSpheres,
-                                            numDisks,
-                                            numObjects,
-                                            numVertices,
-                                            numCurves,
-                                            numCurveSegments,
-                                            numShapes,
-                                            numLights,
-                                            numVolumes;
+      
+      Counter numInstances;
+      Counter numTriangles;
+      Counter numQuads;
+      Counter numSpheres;
+      Counter numDisks;
+      Counter numObjects;
+      Counter numAreaLights;
+      Counter numVertices;
+      Counter numCurves;
+      Counter numCurveSegments;
+      Counter numShapes;
+      Counter numLights;
+      Counter numVolumes;
+      
+      std::set<Object::SP> alreadyTraversed;
       std::set<Material::SP> usedMaterials;
     };
   
