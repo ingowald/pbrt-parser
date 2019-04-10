@@ -175,6 +175,37 @@ namespace pbrt {
       return vec3f(p->get(0),p->get(1),p->get(2));
     }
 
+    bool ParamSet::getParam2f(float *result, const std::string &name) const
+    {
+      std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+      if (it == param.end())
+        return 0;
+      std::shared_ptr<Param> pr = it->second;
+      const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
+      if (!p)
+        throw std::runtime_error("found param of given name, but of wrong type! (name was '"+name+"'");
+      if (p->getSize() != 2)
+        throw std::runtime_error("found param of given name and type, but wrong number of components! (2f, name='"+name+"'");
+      result[0] = p->get(0);
+      result[1] = p->get(1);
+      return true;
+    }
+
+    vec2f ParamSet::getParam2f(const std::string &name, const vec2f &fallBack) const
+    {
+      std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+      if (it == param.end())
+        return fallBack;
+      std::shared_ptr<Param> pr = it->second;
+      const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
+      if (!p)
+        throw std::runtime_error("2f: found param of given name, but of wrong type! (name was '"+name+"'");
+      if (p->getSize() != 2)
+        throw std::runtime_error("found param of given name and type, but wrong number of components! (2f, name='"+name+"'");
+      return vec2f(p->get(0),p->get(1));
+    }
+
+
     float ParamSet::getParam1f(const std::string &name, const float fallBack) const
     {
       std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);

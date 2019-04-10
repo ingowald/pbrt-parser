@@ -200,8 +200,12 @@ namespace pbrt {
       bool getParam3f(float *result, const std::string &name) const;
       bool getParam2f(float *result, const std::string &name) const;
       math::vec3f getParam3f(const std::string &name, const math::vec3f &fallBack) const;
-      math::vec3f getParam2f(const std::string &name, const math::vec2f &fallBack) const;
+      math::vec2f getParam2f(const std::string &name, const math::vec2f &fallBack) const;
 #if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
+      vec2f getParam2f(const std::string &name, const vec2f &fallBack) const {
+        math::vec2f res = getParam2f(name, (const math::vec2f&)fallBack);
+        return *(vec2f*)&res;
+      }
       vec3f getParam3f(const std::string &name, const vec3f &fallBack) const {
         math::vec3f res = getParam3f(name, (const math::vec3f&)fallBack);
         return *(vec3f*)&res;

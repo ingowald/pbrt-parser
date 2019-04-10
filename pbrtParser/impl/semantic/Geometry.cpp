@@ -237,7 +237,7 @@ namespace pbrt {
       if (in->hasParam2f("L")) {
         DiffuseAreaLightBB::SP diffuse = std::make_shared<DiffuseAreaLightBB>();
         vec2f v;
-        in->getParam3f(&v.x,"L");
+        in->getParam2f(&v.x,"L");
         diffuse->temperature = v.x;
         diffuse->scale       = v.y;
         return diffuse;
