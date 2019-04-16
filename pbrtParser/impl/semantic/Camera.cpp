@@ -93,7 +93,7 @@ namespace pbrt {
 
     Camera::SP ours = std::make_shared<Camera>();
     if (camera->hasParam1f("fov"))
-      ours->lensRadius = camera->getParam1f("fov");
+      ours->fov = camera->getParam1f("fov");
     if (camera->hasParam1f("lensradius"))
       ours->lensRadius = camera->getParam1f("lensradius");
     if (camera->hasParam1f("focaldistance"))
