@@ -203,6 +203,9 @@ namespace pbrt {
             else
               mat->vRoughness = in->getParam1f(name);
           }
+          else if (name == "remaproughness") {
+            mat->remapRoughness = in->getParamBool(name);
+          }
           else if (name == "eta") {
             if (in->hasParam3f(name))
               in->getParam3f(&mat->eta.x,name);

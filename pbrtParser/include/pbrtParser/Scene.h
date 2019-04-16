@@ -331,6 +331,7 @@ namespace pbrt {
     Texture::SP map_uRoughness;
     float vRoughness { 0.f };
     Texture::SP map_vRoughness;
+    bool remapRoughness { false };
     vec3f       eta  { 1.f, 1.f, 1.f };
     std::string spectrum_eta;
     vec3f       k    { 1.f, 1.f, 1.f };
