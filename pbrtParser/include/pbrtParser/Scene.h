@@ -590,6 +590,7 @@ namespace pbrt {
 
     std::vector<vec3f> vertex;
     std::vector<vec3f> normal;
+    std::vector<vec2f> texcoord;
     std::vector<vec3i> index;
     /*! mutex to lock anything within this object that might get
       changed by multiple threads (eg, computing bbox */
