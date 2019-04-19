@@ -65,7 +65,7 @@ namespace pbrt {
       if (ply.hasElement("face")) {
         happly::Element& elem = ply.getElement("face");
         if(elem.hasProperty("vertex_indices")) {
-          std::vector<std::vector<int>> fasces = elem.getListProperty<int>("vertex_indices");
+          std::vector<std::vector<int>> fasces = elem.getListPropertyAnySign<int>("vertex_indices");
           for(int j = 0; j < fasces.size(); j ++) {
             std::vector<int>& face = fasces[j];
             for (int i=2;i<face.size();i++) {
