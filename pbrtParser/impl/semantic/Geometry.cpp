@@ -103,7 +103,7 @@ namespace pbrt {
     for (vec3f &v : ours->vertex)
       v = xfmPoint(xfm,v);
     for (vec3f &v : ours->normal)
-      v = xfmVector(xfm,v);
+      v = xfmNormal(xfm,v);
 
     extractTextures(ours,shape);
     return ours;
