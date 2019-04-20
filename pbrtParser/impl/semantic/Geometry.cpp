@@ -24,6 +24,7 @@ namespace pbrt {
     void parse(const std::string &fileName,
                std::vector<vec3f> &pos,
                std::vector<vec3f> &nor,
+               std::vector<vec2f> &tex,
                std::vector<vec3i> &idx)
     {
       happly::PLYData ply(fileName);
@@ -50,13 +51,21 @@ namespace pbrt {
             nor[i] = vec3f(x[i], y[i], z[i]);
           }
         }
+        if(elem.hasProperty("u") && elem.hasProperty("v")) {
+          std::vector<float> u = elem.getProperty<float>("u");
+          std::vector<float> v = elem.getProperty<float>("v");
+          tex.resize(u.size());
+          for(int i = 0; i < u.size(); i ++) {
+            tex[i] = vec2f(u[i], v[i]);
+          }
+        }
       } else {
         throw std::runtime_error("missing positions in ply");
       }
       if (ply.hasElement("face")) {
         happly::Element& elem = ply.getElement("face");
         if(elem.hasProperty("vertex_indices")) {
-          std::vector<std::vector<int>> fasces = elem.getListProperty<int>("vertex_indices");
+          std::vector<std::vector<int>> fasces = elem.getListPropertyAnySign<int>("vertex_indices");
           for(int j = 0; j < fasces.size(); j ++) {
             std::vector<int>& face = fasces[j];
             for (int i=2;i<face.size();i++) {
@@ -88,7 +97,7 @@ namespace pbrt {
     const std::string fileName
       = pbrtScene->makeGlobalFileName(shape->getParamString("filename"));
     TriangleMesh::SP ours = std::make_shared<TriangleMesh>(findOrCreateMaterial(shape->material));
-    ply::parse(fileName,ours->vertex,ours->normal,ours->index);
+    ply::parse(fileName,ours->vertex,ours->normal,ours->texcoord,ours->index);
 
     affine3f xfm = shape->transform.atStart;
     for (vec3f &v : ours->vertex)
@@ -108,7 +117,9 @@ namespace pbrt {
     ours->vertex = extractVector<vec3f>(shape,"P");
     // vertex normals - param "N", 3x float each
     ours->normal = extractVector<vec3f>(shape,"N");
-    // triangle vertex indices - param "P", 3x int each
+    // per-vertex texture coordinates - param "uv", 2x float each
+    ours->texcoord = extractVector<vec2f>(shape,"uv");
+    // triangle vertex indices - param "indices", 3x int each
     ours->index = extractVector<vec3i>(shape,"indices");
 
     affine3f xfm = shape->transform.atStart;
