@@ -285,17 +285,17 @@ namespace pbrt {
     float anisotropic    { 0.f };
     float clearCoat      { 0.f };
     float clearCoatGloss { 1.f };
-    vec3f color          { 1.f, 1.f, 1.f };
-    float diffTrans      { 1.35f };
-    float eta            { 1.2f };
-    float flatness       { 0.2f };
+    vec3f color          { 0.5f, 0.5f, 0.5f };
+    float diffTrans      { 1.f };
+    float eta            { 1.5f };
+    float flatness       { 0.f };
     float metallic       { 0.f };
-    float roughness      { .9f };
-    float sheen          { .3f };
-    float sheenTint      { 0.68f };
+    float roughness      { .5f };
+    float sheen          { 0.f };
+    float sheenTint      { 0.5f };
     float specTrans      { 0.f };
     float specularTint   { 0.f };
-    bool  thin           { true };
+    bool  thin           { false };
   };
 
   struct MixMaterial : public Material
@@ -310,7 +310,7 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
 
     Material::SP material0, material1;
-    vec3f amount;
+    vec3f amount { 0.5f, 0.5f, 0.5f };
     Texture::SP map_amount;
   };
     
@@ -325,13 +325,13 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    float roughness  { 0.f };
+    float roughness  { 0.01f };
     Texture::SP map_roughness;
     float uRoughness { 0.f };
     Texture::SP map_uRoughness;
     float vRoughness { 0.f };
     Texture::SP map_vRoughness;
-    bool remapRoughness { false };
+    bool remapRoughness { true };
     vec3f       eta  { 1.f, 1.f, 1.f };
     std::string spectrum_eta;
     vec3f       k    { 1.f, 1.f, 1.f };
@@ -350,9 +350,9 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f transmit { 1.f, 1.f, 1.f };
-    vec3f reflect  { 0.f, 0.f, 0.f };
-    vec3f kd;
+    vec3f transmit { 0.5f, 0.5f, 0.5f };
+    vec3f reflect  { 0.5f, 0.5f, 0.5f };
+    vec3f kd { 0.25, 0.25, 0.25 };
     Texture::SP map_kd;
   };
     
@@ -367,14 +367,14 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f kd { .65f };
+    vec3f kd { .25f };
     Texture::SP map_kd;
-    vec3f ks { .0f };
+    vec3f ks { .25f };
     Texture::SP map_ks;
     Texture::SP map_bump;
-    float roughness { 0.00030000001f };
+    float roughness { 0.1f };
     Texture::SP map_roughness;
-    bool remapRoughness { false };
+    bool remapRoughness { true };
   };
     
   struct SubstrateMaterial : public Material
@@ -388,15 +388,15 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    float uRoughness { .001f };
+    float uRoughness { .1f };
     Texture::SP map_uRoughness;
-    float vRoughness { .001f };
+    float vRoughness { .1f };
     Texture::SP map_vRoughness;
-    bool remapRoughness { false };
+    bool remapRoughness { true };
       
-    vec3f kd { .65f };
+    vec3f kd { .5f };
     Texture::SP map_kd;
-    vec3f ks { .0f };
+    vec3f ks { .5f };
     Texture::SP map_ks;
     Texture::SP map_bump;
   };
@@ -412,9 +412,9 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    float uRoughness { .001f };
-    float vRoughness { .001f };
-    bool  remapRoughness { false };
+    float uRoughness { 0.f };
+    float vRoughness { 0.f };
+    bool  remapRoughness { true };
     /*! in the one pbrt v3 model that uses that, these materials
       carry 'name' fields like "Apple" etc - not sure if that's
       supposed to specify some sub-surface medium properties!? */
@@ -432,7 +432,7 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f kr { .7f };
+    vec3f kr { .9f };
     Texture::SP map_bump;
   };
     
@@ -462,9 +462,9 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f kd { .65f };
+    vec3f kd { .5f };
     Texture::SP map_kd;
-    float sigma { 10.0f };
+    float sigma { 0.f };
     Texture::SP map_sigma;
     Texture::SP map_bump;
   };
@@ -480,9 +480,9 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
     
-    vec3f kr { 2.5371551514f, 2.5371551514f, 2.5371551514f };
-    vec3f kt { 0.8627451062f, 0.9411764741f, 1.f };
-    float index { 1.2999999523f };
+    vec3f kr { 1.f, 1.f, 1.f };
+    vec3f kt { 1.f, 1.f, 1.f };
+    float index { 1.5f };
   };
     
   struct UberMaterial : public Material {
@@ -495,10 +495,10 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f kd { .65f };
+    vec3f kd { .25f };
     Texture::SP map_kd;
     
-    vec3f ks { 0.f };
+    vec3f ks { .25f };
     Texture::SP map_ks;
     
     vec3f kr { 0.f };
@@ -507,7 +507,7 @@ namespace pbrt {
     vec3f kt { 0.f };
     Texture::SP map_kt;
       
-    vec3f opacity { 0.f };
+    vec3f opacity { 1.f };
     Texture::SP map_opacity;
       
     float alpha { 0.f };
@@ -516,8 +516,8 @@ namespace pbrt {
     float shadowAlpha { 0.f };
     Texture::SP map_shadowAlpha;
 
-    float index { 1.33333f };
-    float roughness { 0.5f };
+    float index { 1.5f };
+    float roughness { 0.1f };
     Texture::SP map_roughness;
     Texture::SP map_bump;
   };
