@@ -87,6 +87,7 @@ namespace pbrt {
     using vec4i    = math::vec4i;
     using affine3f = math::affine3f;
     using box3f    = math::box3f;
+    using pairNf   = math::pairNf;
 
     /*! start-time and end-time transform - PBRT allows for specifying
       transform at both 'start' and 'end' time, to allow for linear
@@ -195,10 +196,13 @@ namespace pbrt {
       ParamSet(ParamSet &&) = default;
       ParamSet(const ParamSet &) = default;
 
+      /*! query number of (float,float) pairs N. Store in result if the former != NULL */
+      bool getParamPairNf(pairNf::value_type *result, std::size_t* N, const std::string &name) const;
       /*! query parameter of 3f type, and if found, store in result and
         return true; else return false */
       bool getParam3f(float *result, const std::string &name) const;
       bool getParam2f(float *result, const std::string &name) const;
+      math::pairNf getParamPairNf(const std::string &name, const math::pairNf &fallBack) const;
       math::vec3f getParam3f(const std::string &name, const math::vec3f &fallBack) const;
       math::vec2f getParam2f(const std::string &name, const math::vec2f &fallBack) const;
 #if defined(PBRT_PARSER_VECTYPE_NAMESPACE)

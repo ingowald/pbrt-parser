@@ -38,6 +38,8 @@
 #include <math.h> // using cmath causes issues under Windows
 #include <cfloat>
 #include <limits>
+#include <utility>
+#include <vector>
 
 /*! \file pbrt/Parser.h *Internal* parser class used by \see
   pbrt_parser::Scene::parseFromFile() - as end user, you should
@@ -120,6 +122,7 @@ namespace pbrt {
       void extend(const vec3f& a);
       void extend(const box3f& a);
     };
+    typedef std::vector<std::pair<float, float>> pairNf;
 
     inline vec3f operator-(const vec3f& a) { return vec3f(-a.x, -a.y, -a.z); }
     inline vec3f operator-(const vec3f& a, const vec3f& b) { return vec3f(a.x - b.x, a.y - b.y, a.z - b.z); }

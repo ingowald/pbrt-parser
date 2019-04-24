@@ -18,6 +18,7 @@
 // std
 #include <iostream>
 #include <sstream>
+#include <utility>
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
@@ -144,6 +145,48 @@ namespace pbrt {
     // ==================================================================
     // ParamSet
     // ==================================================================
+    bool ParamSet::getParamPairNf(pairNf::value_type *result, std::size_t* N, const std::string &name) const
+    {
+      std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+      if (it == param.end())
+        return 0;
+      std::shared_ptr<Param> pr = it->second;
+      const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
+      if (!p)
+        throw std::runtime_error("found param of given name, but of wrong type! (name was '"+name+"'");
+      if (p->getSize() % 2 != 0)
+        throw std::runtime_error("found param of given name and type, but components aren't pairs! (PairNf, name='"+name+"'");
+      *N = p->getSize()/2;
+      if (result != nullptr)
+      {
+        for (std::size_t i=0; i<p->getSize(); i+=2)
+        {
+          result[i/2] = std::make_pair(p->get(i), p->get(i+1));
+        }
+      }
+      return true;
+    }
+
+    pairNf ParamSet::getParamPairNf(const std::string &name, const pairNf &fallBack) const
+    {
+      std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);
+      if (it == param.end())
+        return fallBack;
+      std::shared_ptr<Param> pr = it->second;
+      const std::shared_ptr<ParamArray<float>> p = std::dynamic_pointer_cast<ParamArray<float>>(pr);
+      if (!p)
+        throw std::runtime_error("3f: found param of given name, but of wrong type! (name was '"+name+"'");
+      if (p->getSize() % 2 != 0)
+        throw std::runtime_error("found param of given name and type, but components aren't pairs! (PairNf, name='"+name+"'");
+      std::size_t N = p->getSize()/2;
+      pairNf res(N);
+      for (std::size_t i=0; i<p->getSize(); i+=2)
+      {
+        res[i/2] = std::make_pair(p->get(i), p->get(i+1));
+      }
+      return res;
+    }
+
     bool ParamSet::getParam3f(float *result, const std::string &name) const
     {
       std::map<std::string,std::shared_ptr<Param> >::const_iterator it=param.find(name);

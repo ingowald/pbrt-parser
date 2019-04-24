@@ -152,7 +152,7 @@ namespace pbrt {
       } else if (type == "rgb") {
         ret = std::make_shared<ParamArray<float> >(type);
       } else if (type == "spectrum") {
-        ret = std::make_shared<ParamArray<std::string>>(type);
+        ret = std::make_shared<ParamArray<float>>(type);
       } else if (type == "integer") {
         ret = std::make_shared<ParamArray<int>>(type);
       } else if (type == "bool") {
@@ -195,6 +195,21 @@ namespace pbrt {
         if (type == "texture") {
           std::dynamic_pointer_cast<ParamArray<Texture>>(ret)->texture 
             = getTexture(value);
+        } else if (type == "spectrum") {
+          /* parse (wavelength, value) pairs from file */
+          std::string includedFileName = value;
+          if (includedFileName[0] != '/') {
+            includedFileName = rootNamePath+"/"+includedFileName;
+          }
+          // if (dbg)
+          std::cout << "... including spd file '" << includedFileName << " ..." << std::endl;
+          auto tokens = std::make_shared<Lexer>(includedFileName);
+          Token t = tokens->next();
+          while (t)
+          {
+            ret->add(t.text);
+            t = tokens->next();
+          }
         } else {
           ret->add(value);
         }
