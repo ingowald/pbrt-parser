@@ -125,14 +125,22 @@ namespace pbrt {
       else if (name == "eta") {
         if (in->hasParam3f(name))
           in->getParam3f(&mat->eta.x,name);
-        else
-          mat->spectrum_eta = in->getParamString(name);
+        else {
+          std::size_t N=0;
+          in->getParamPairNf(nullptr,&N,name);
+          mat->spectrum_eta.spd.resize(N);
+          in->getParamPairNf(mat->spectrum_eta.spd.data(),&N,name);
+        }
       }
       else if (name == "k") {
         if (in->hasParam3f(name))
           in->getParam3f(&mat->k.x,name);
-        else
-          mat->spectrum_k = in->getParamString(name);
+        else {
+          std::size_t N=0;
+          in->getParamPairNf(nullptr,&N,name);
+          mat->spectrum_k.spd.resize(N);
+          in->getParamPairNf(mat->spectrum_k.spd.data(),&N,name);
+        }
       }
       else if (name == "bumpmap") {
         mat->map_bump = findOrCreateTexture(in->getParamTexture(name));

@@ -60,7 +60,10 @@ namespace pbrt {
       Loc(const std::shared_ptr<File> &file=std::shared_ptr<File>()) : file(file), line(1), col(0) { }
       //! copy-constructor
       Loc(const Loc &loc) = default;
-      Loc(Loc &&) = default;
+      Loc(Loc &&loc) = default;
+      //! assignment
+      Loc& operator=(const Loc &other) = default;
+      Loc& operator=(Loc &&) = default;
 
       //! pretty-print
       std::string toString() const {
@@ -83,15 +86,19 @@ namespace pbrt {
       Token(const Token &other) = default;
       Token(Token &&) = default;
 
+      //! assignment
+      Token& operator=(const Token &other) = default;
+      Token& operator=(Token &&) = default;
+
       //! valid token
       explicit operator bool() { return type != TOKEN_TYPE_NONE; }
     
       //! pretty-print
       std::string toString() const { return loc.toString() + ": '" + text + "'"; }
       
-      const Loc         loc = {};
-      const Type        type = TOKEN_TYPE_NONE;
-      const std::string text = "";
+      Loc         loc = {};
+      Type        type = TOKEN_TYPE_NONE;
+      std::string text = "";
     };
 
     /*! class that does the lexing - ie, the breaking up of an input

@@ -72,6 +72,8 @@ namespace pbrt {
 
     TYPE_DIFFUSE_AREALIGHT_BB,
     TYPE_DIFFUSE_AREALIGHT_RGB,
+
+    TYPE_SPECTRUM,
   };
     
   /*! a simple buffer for binary data */
@@ -218,6 +220,8 @@ namespace pbrt {
         return std::make_shared<DiffuseAreaLightBB>();
       case TYPE_DIFFUSE_AREALIGHT_RGB:
         return std::make_shared<DiffuseAreaLightRGB>();
+      case TYPE_SPECTRUM:
+        return std::make_shared<Spectrum>();
       default:
         std::cerr << "unknown entity type tag " << typeTag << " in binary file" << std::endl;
         return Entity::SP();
@@ -673,6 +677,23 @@ namespace pbrt {
   }
   
   
+  // ==================================================================
+  // Spectrum
+  // ==================================================================
+
+  /*! serialize out to given binary writer */
+  int Spectrum::writeTo(BinaryWriter &binary) 
+  {
+    binary.write(spd);
+    return TYPE_SPECTRUM;
+  }
+
+
+  /*! serialize out to given binary reader */
+  void Spectrum::readFrom(BinaryReader &binary) 
+  {
+    binary.read(spd);
+  }
 
   // ==================================================================
   // Texture

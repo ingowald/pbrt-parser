@@ -41,6 +41,7 @@ namespace pbrt {
   using vec4i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4i;
   using affine3f = PBRT_PARSER_VECTYPE_NAMESPACE::affine3f;
   using box3f    = PBRT_PARSER_VECTYPE_NAMESPACE::box3f;
+  using pairNf   = PBRT_PARSER_VECTYPE_NAMESPACE::pairNf;
 #else
   using vec2f    = pbrt::math::vec2f;
   using vec3f    = pbrt::math::vec3f;
@@ -50,6 +51,7 @@ namespace pbrt {
   using vec4i    = pbrt::math::vec4i;
   using affine3f = pbrt::math::affine3f;
   using box3f    = pbrt::math::box3f;
+  using pairNf   = pbrt::math::pairNf;
 #endif
     
   /*! internal class used for serializing a scene graph to/from disk */
@@ -133,7 +135,22 @@ namespace pbrt {
 
     float temperature, scale;
   };
-  
+
+  /*! a spectrum is defined by a spectral power distribution,
+    i.e. a list of (wavelength, value) pairs */
+  struct Spectrum : public Entity {
+    typedef std::shared_ptr<Spectrum> SP;
+
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "Spectrum"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    pairNf spd;
+  };
+
   struct Texture : public Entity {
     typedef std::shared_ptr<Texture> SP;
     
@@ -333,9 +350,9 @@ namespace pbrt {
     Texture::SP map_vRoughness;
     bool remapRoughness { true };
     vec3f       eta  { 1.f, 1.f, 1.f };
-    std::string spectrum_eta;
+    Spectrum spectrum_eta;
     vec3f       k    { 1.f, 1.f, 1.f };
-    std::string spectrum_k;
+    Spectrum spectrum_k;
     Texture::SP map_bump;
   };
     
