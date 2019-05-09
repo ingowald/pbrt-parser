@@ -361,17 +361,21 @@ namespace pbrt {
       {
         traverse(world, affine3f::identity());
       }
-    
+
+      /*! returns on object that contains all of the *shapes* in the
+          given input object, but not the instances */
       Object::SP
       getOrCreateEmittedShapeFrom(Object::SP object)
       {
         if (object->shapes.empty()) return Object::SP();
         if (alreadyEmitted[object]) return alreadyEmitted[object];
-      
+
         Object::SP ours = std::make_shared<Object>("ShapeFrom:"+object->name);
-        for (auto geom : object->shapes)
-          ours->shapes.push_back(geom);
+        ours->shapes = object->shapes;
+        // for (auto geom : object->shapes)
+        //   ours->shapes.push_back(geom);
         return alreadyEmitted[object] = ours;
+// #endif
       }
     
       void traverse(Object::SP object, const affine3f &xfm)

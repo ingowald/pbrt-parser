@@ -111,12 +111,19 @@ namespace pbrt {
                                         
       template<typename T> T read();
       template<typename T> std::vector<T> readVector();
-      template<typename T> void read(std::vector<T> &vt) { vt = readVector<T>(); }
+      template<typename T> std::vector<T> readVectorScalars();
+      
+      template<typename T> void read(std::vector<T> &vt)
+      { vt = std::move(readVector<T>()); }
+      
+      template<typename T> void readScalars(std::vector<T> &vt)
+      { vt = std::move(readVectorScalars<T>()); }
+      
       template<typename T> void read(std::vector<std::shared_ptr<T>> &vt)
-      {
-        vt = readVector<std::shared_ptr<T>>(); 
-      }
-      template<typename T> void read(T &t) { t = read<T>(); }
+      { vt = std::move(readVector<std::shared_ptr<T>>());  }
+      
+      template<typename T> void read(T &t)
+      { t = read<T>(); }
 
 
       template<typename T1, typename T2>
@@ -274,6 +281,18 @@ namespace pbrt {
       for (size_t i=0;i<length;i++) {
         read(vt[i]);
       }
+      return vt;
+    }
+
+  /*! like readVector, but reads all vector elemnets 'en block' rather
+      than one by one - do not use with vectors of vectors or vectors
+      of strings */
+    template<typename T>
+    std::vector<T> BinaryReader::readVectorScalars()
+    {
+      size_t length = read<size_t>();
+      std::vector<T> vt(length);
+      copyBytes(vt.data(),length*sizeof(T));
       return vt;
     }
   
@@ -501,10 +520,10 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     void TriangleMesh::readFrom(BinaryReader &binary) 
     {
-      Shape::readFrom(binary);
-      binary.read(vertex);
-      binary.read(normal);
-      binary.read(index);
+      Shape::readFrom(binary); 
+      binary.readScalars(vertex);
+      binary.readScalars(normal);
+      binary.readScalars(index);
     }
 
 
@@ -526,9 +545,9 @@ namespace pbrt {
     void QuadMesh::readFrom(BinaryReader &binary) 
     {
       Shape::readFrom(binary);
-      binary.read(vertex);
-      binary.read(normal);
-      binary.read(index);
+      binary.readScalars(vertex);
+      binary.readScalars(normal);
+      binary.readScalars(index);
     }
 
 
