@@ -98,6 +98,8 @@ namespace pbrt {
     checking whether that was already created */
   Texture::SP SemanticParser::createTextureFrom(pbrt::syntactic::Texture::SP in)
   {
+    if (!in) return Texture::SP();
+    
     // ------------------------------------------------------------------
     // switch to type-specialized parsing functions ...
     // ------------------------------------------------------------------

@@ -78,6 +78,21 @@ namespace pbrt {
         // else
         //   in->getParam3f(&mat->roughness.x,name);
       }
+      else if (name == "uroughness") {
+        // if (in->hasParamTexture(name))
+        //   mat->map_uRoughness = findOrCreateTexture(in->getParamTexture(name));
+        // else
+          mat->uRoughness = in->getParam1f(name);
+      }
+      else if (name == "vroughness") {
+        // if (in->hasParamTexture(name))
+        //   mat->map_vRoughness = findOrCreateTexture(in->getParamTexture(name));
+        // else
+          mat->vRoughness = in->getParam1f(name);
+      }
+      // else if (name == "remaproughness") {
+      //   mat->remapRoughness = in->getParamBool(name);
+      // }
       else if (name == "shadowalpha") {
         if (in->hasParamTexture(name)) {
           mat->shadowAlpha = 1.f;

@@ -535,6 +535,11 @@ namespace pbrt {
 
     float index { 1.5f };
     float roughness { 0.1f };
+    float uRoughness { 0.f };
+    Texture::SP map_uRoughness;
+    float vRoughness { 0.f };
+    Texture::SP map_vRoughness;
+
     Texture::SP map_roughness;
     Texture::SP map_bump;
   };
