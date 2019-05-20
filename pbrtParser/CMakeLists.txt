@@ -44,12 +44,10 @@ add_library(pbrtParser SHARED
 set_target_properties(pbrtParser PROPERTIES VERSION ${pbrtParser_VERSION})
 
 # ------------------------------------------------------------------
-add_library(pbrtParser_static
+add_library(pbrtParser_static STATIC
   ${SOURCES}
   )
-target_link_libraries(pbrtParser_static
-  pbrtParser_syntactic_static
-  )
+set_target_properties(pbrtParser_static PROPERTIES VERSION ${pbrtParser_VERSION})
 
 # ------------------------------------------------------------------
 install(TARGETS pbrtParser DESTINATION lib)
