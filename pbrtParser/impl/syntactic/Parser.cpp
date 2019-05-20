@@ -454,7 +454,6 @@ namespace pbrt {
           std::shared_ptr<Material> material
             = std::make_shared<Material>("<implicit>");
           attributesStack.top()->namedMaterial[name] = material;
-          // scene->namedMaterials[name] = material;
           parseParams(material->param);
           material->attributes = attributesStack.top();
           
@@ -469,6 +468,7 @@ namespace pbrt {
             throw std::runtime_error("named material has a type, but not a string!?");
           assert(asString->getSize() == 1);
           material->type = asString->get(0); //paramVec[0];
+          material->name = name;
           continue;
         }
 
@@ -504,8 +504,6 @@ namespace pbrt {
         
           currentMaterial = attributesStack.top()->namedMaterial[name];
 
-          // std::cout << "#NamedMaterial " << name << " : " << (currentMaterial?currentMaterial->toString():std::string("null")) << std::endl;
-        
           continue;
         }
 

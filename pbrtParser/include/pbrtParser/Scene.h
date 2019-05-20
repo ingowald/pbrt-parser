@@ -88,6 +88,9 @@ namespace pbrt {
     material type, which will return this (empty) base class */
   struct Material : public Entity {
     typedef std::shared_ptr<Material> SP;
+
+    /*! constructor */
+    Material(const std::string &name = "") : name(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "Material"; }
@@ -95,6 +98,11 @@ namespace pbrt {
     virtual int writeTo(BinaryWriter &) override;
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
+
+    /*! the logical name that this was defined under, such as
+        "BackWall". Note this may be an empty string for some scenes
+        (it is only defined for 'NamedMaterial's) */
+    const std::string name;
   };
 
   struct AreaLight : public Entity {
@@ -292,6 +300,9 @@ namespace pbrt {
   struct DisneyMaterial : public Material {
     typedef std::shared_ptr<DisneyMaterial> SP;
     
+    /*! constructor */
+    DisneyMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "DisneyMaterial"; }
     /*! serialize out to given binary writer */
@@ -319,6 +330,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<MixMaterial> SP;
     
+    /*! constructor */
+    MixMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "MixMaterial"; }
     /*! serialize out to given binary writer */
@@ -334,6 +348,9 @@ namespace pbrt {
   struct MetalMaterial : public Material
   {
     typedef std::shared_ptr<MetalMaterial> SP;
+    
+    /*! constructor */
+    MetalMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "MetalMaterial"; }
@@ -360,6 +377,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<TranslucentMaterial> SP;
     
+    /*! constructor */
+    TranslucentMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "TranslucentMaterial"; }
     /*! serialize out to given binary writer */
@@ -376,6 +396,9 @@ namespace pbrt {
   struct PlasticMaterial : public Material
   {
     typedef std::shared_ptr<PlasticMaterial> SP;
+    
+    /*! constructor */
+    PlasticMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "PlasticMaterial"; }
@@ -397,6 +420,9 @@ namespace pbrt {
   struct SubstrateMaterial : public Material
   {
     typedef std::shared_ptr<SubstrateMaterial> SP;
+    
+    /*! constructor */
+    SubstrateMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "SubstrateMaterial"; }
@@ -422,6 +448,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<SubSurfaceMaterial> SP;
     
+    /*! constructor */
+    SubSurfaceMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "SubSurfaceMaterial"; }
     /*! serialize out to given binary writer */
@@ -442,6 +471,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<MirrorMaterial> SP;
     
+    /*! constructor */
+    MirrorMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "MirrorMaterial"; }
     /*! serialize out to given binary writer */
@@ -458,6 +490,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<FourierMaterial> SP;
     
+    /*! constructor */
+    FourierMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "FourierMaterial"; }
     /*! serialize out to given binary writer */
@@ -471,6 +506,9 @@ namespace pbrt {
   struct MatteMaterial : public Material
   {
     typedef std::shared_ptr<MatteMaterial> SP;
+    
+    /*! constructor */
+    MatteMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "MatteMaterial"; }
@@ -490,6 +528,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<GlassMaterial> SP;
     
+    /*! constructor */
+    GlassMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "GlassMaterial"; }
     /*! serialize out to given binary writer */
@@ -504,6 +545,9 @@ namespace pbrt {
     
   struct UberMaterial : public Material {
     typedef std::shared_ptr<UberMaterial> SP;
+    
+    /*! constructor */
+    UberMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "UberMaterial"; }

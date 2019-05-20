@@ -269,6 +269,11 @@ namespace pbrt {
         command; for the 'makenamedmaterial' it uses an implicit
         'type' parameter */
       std::string type;
+
+    /*! the logical name that this was defined under, such as
+        "BackWall". Note this may be an empty string for some scenes
+        (it is only defined for 'NamedMaterial's) */
+      std::string name;
     };
 
     struct PBRT_PARSER_INTERFACE Medium : public ParamSet {
