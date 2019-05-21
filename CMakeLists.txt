@@ -20,7 +20,7 @@ project(pbrtParser)
 
 set(pbrtParser_VERSION_MAJOR 2)
 set(pbrtParser_VERSION_MINOR 1)
-set(pbrtParser_VERSION_PATCH 2)
+set(pbrtParser_VERSION_PATCH 3)
 
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
