@@ -30,8 +30,15 @@ A few screenshots:
 ![moana.pbrt](doc/jpg/moana.jpg "moana island, as shown at Siggraph 2018, using a slightly older version of this parser")
 
 
-Release Notes
-=============
+# Contributors (in "order of appearance")
+
+- Ingo Wald
+- Fabio Pellacini (University of Rome)
+- Stefan Zellman (University of Cologne)
+- lots of other people, through suggestions, bug reports, etc ...
+
+
+# Release Notes
 
 V 2.1:
 
@@ -54,8 +61,7 @@ V 2.0:
   longer exported as a separate library. From now on, only a single
   library with a single header files is required after install.
 
-STATUS
-======
+# Status
 
 The *semantical* parser currently supports:
 
@@ -90,8 +96,7 @@ parse everything that's in those files .... BUT:
   the app to load such files (else I'd require tons of external
   dependencies)
 
-Known Limitations
------------------
+## Known Limitations
 
 - `loopsubdiv` shapes are still ignored.
 
@@ -100,8 +105,11 @@ Known Limitations
 
 - some models use camera space for object definitions - this isn't supported yet.
 
-A Brief History of this Project
-===============================
+
+
+
+
+# A Brief History of this Project
 
 This project started out as being mostly a toy project for my own use,
 _originally_ with the sole goal of being able to load PBRT's heavily
