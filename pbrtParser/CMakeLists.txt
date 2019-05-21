@@ -28,6 +28,7 @@ set(SOURCES
   impl/syntactic/Scene.cpp
 
   # code for extracting the given entirires from syntactic to semantic
+  impl/semantic/SemanticParser.h
   impl/semantic/Geometry.cpp
   impl/semantic/Camera.cpp
   impl/semantic/Textures.cpp
