@@ -42,6 +42,8 @@ add_library(pbrtParser SHARED
   ${SOURCES}
   )
 set_target_properties(pbrtParser PROPERTIES VERSION ${pbrtParser_VERSION})
+set_target_properties(pbrtParser PROPERTIES CXX_VISIBILITY_PRESET hidden)
+target_compile_definitions(pbrtParser PUBLIC PBRT_PARSER_DLL_INTERFACE)
 
 # ------------------------------------------------------------------
 add_library(pbrtParser_static STATIC

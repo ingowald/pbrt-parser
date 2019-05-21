@@ -24,14 +24,25 @@
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-#if defined(_WIN32) && defined(PBRT_PARSER_DLL_INTERFACE)
+#if defined(_MSC_VER)
+#  define PBRT_PARSER_DLL_EXPORT __declspec(dllexport)
+#  define PBRT_PARSER_DLL_IMPORT __declspec(dllimport)
+#elif defined(__clang__) || defined(__GNUC__)
+#  define PBRT_PARSER_DLL_EXPORT __attribute__((visibility("default")))
+#  define PBRT_PARSER_DLL_IMPORT __attribute__((visibility("default")))
+#else
+#  define PBRT_PARSER_DLL_EXPORT
+#  define PBRT_PARSER_DLL_IMPORT
+#endif
+
+#if defined(PBRT_PARSER_DLL_INTERFACE)
 #  ifdef pbrtParser_semantic_EXPORTS
-#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
+#    define PBRT_PARSER_INTERFACE PBRT_PARSER_DLL_EXPORT
 #  else
-#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
+#    define PBRT_PARSER_INTERFACE PBRT_PARSER_DLL_IMPORT
 #  endif
 #else
-#  define PBRT_PARSER_INTERFACE /* ignore on linux/osx */
+#  define PBRT_PARSER_INTERFACE /*static lib*/
 #endif
 
 #include <iostream>
