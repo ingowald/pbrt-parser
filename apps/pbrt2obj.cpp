@@ -107,7 +107,7 @@ namespace pbrt {
         inFileName = arg;
       }          
     }
-    out = std::ofstream(outFileName);
+    out.open(outFileName);
     // out = fopen(outFileName.c_str(),"w");
     assert(out.good());
 
