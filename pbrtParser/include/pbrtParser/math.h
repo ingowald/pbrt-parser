@@ -36,7 +36,7 @@
 #endif
 
 #if defined(PBRT_PARSER_DLL_INTERFACE)
-#  ifdef pbrtParser_semantic_EXPORTS
+#  ifdef pbrtParser_EXPORTS
 #    define PBRT_PARSER_INTERFACE PBRT_PARSER_DLL_EXPORT
 #  else
 #    define PBRT_PARSER_INTERFACE PBRT_PARSER_DLL_IMPORT
