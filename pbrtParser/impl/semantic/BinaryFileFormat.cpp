@@ -24,14 +24,14 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 0
-#define    PBRT_PARSER_SEMANTIC_FORMAT_MINOR 6
+#define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 1
+#define    PBRT_PARSER_SEMANTIC_FORMAT_MINOR 0
 
   /* 
      V0.6: added diffuse area lights
    */
   
-  const uint32_t ourFormatID = (PBRT_PARSER_SEMANTIC_FORMAT_MAJOR << 16) + PBRT_PARSER_SEMANTIC_FORMAT_MINOR;
+  const uint32_t ourFormatTag = (PBRT_PARSER_SEMANTIC_FORMAT_MAJOR << 16) + PBRT_PARSER_SEMANTIC_FORMAT_MINOR;
 
   enum {
     TYPE_ERROR,
@@ -90,6 +90,17 @@ namespace pbrt {
       int formatTag;
       
       binFile.read((char*)&formatTag,sizeof(formatTag));
+      if (formatTag != ourFormatTag) {
+        std::cout << "Warning: pbf file uses a different format tag ("
+                  << ((int*)(size_t)formatTag) << ") than what this library is expeting ("
+                  << ((int *)(size_t)ourFormatTag) << ")" << std::endl;
+        int ourMajor = ourFormatTag >> 16;
+        int fileMajor = formatTag >> 16;
+        if (ourMajor != fileMajor)
+          std::cout << "**** WARNING ***** : Even the *major* file format version is different - "
+                    << "this means the file _should_ be incompatible with this library. "
+                    << "Please regenerate the pbf file." << std::endl;
+      }
       while (1) {
         size_t size;
         binFile.read((char*)&size,sizeof(size));
@@ -301,7 +312,7 @@ namespace pbrt {
     BinaryWriter(const std::string &fileName)
       : binFile(fileName)
     {
-      int formatTag = ourFormatID;
+      int formatTag = ourFormatTag;
       binFile.write((char*)&formatTag,sizeof(formatTag));
     }
 
@@ -891,6 +902,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int Material::writeTo(BinaryWriter &binary) 
   {
+    binary.write(name);
     /*! \todo serialize materials (can only do once mateirals are fleshed out) */
     return TYPE_MATERIAL;
   }
@@ -898,6 +910,7 @@ namespace pbrt {
   /*! serialize _in_ from given binary file reader */
   void Material::readFrom(BinaryReader &binary) 
   {
+    name = binary.read<std::string>();
     /*! \todo serialize materials (can only do once mateirals are fleshed out) */
   }
 

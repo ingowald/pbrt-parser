@@ -48,6 +48,8 @@ namespace pbrt {
         numCurveSegments.print("curve segments");
         numLights.print("lights");
         std::cout << "total num materials " << usedMaterials.size() << std::endl;
+        for (auto mat : usedMaterials)
+          std::cout << " - " << (mat ? mat->name : "<invalid material>") << std::endl;
         std::cout << "scene bounds " << scene->getBounds() << std::endl;
       }
 
