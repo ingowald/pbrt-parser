@@ -511,6 +511,7 @@ namespace pbrt {
   {
     binary.write(binary.serialize(material));
     binary.write(textures);
+    binary.write(areaLight);
     return TYPE_SHAPE;
   }
   
@@ -519,6 +520,7 @@ namespace pbrt {
   {
     binary.read(material);
     binary.read(textures);
+    binary.read(areaLight);
   }
 
 
