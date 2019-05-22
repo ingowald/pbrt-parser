@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 // ======================================================================== //
 // Copyright 2015-2019 Ingo Wald                                            //
 //                                                                          //
@@ -21,6 +20,7 @@
 #include <fstream>
 #include <sstream>
 #include <stack>
+#include <algorithm>
 // std
 #include <stdio.h>
 #include <string.h>
