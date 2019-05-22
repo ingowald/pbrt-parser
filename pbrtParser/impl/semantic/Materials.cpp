@@ -20,7 +20,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_uber(pbrt::syntactic::Material::SP in)
   {
-    UberMaterial::SP mat = std::make_shared<UberMaterial>();
+    UberMaterial::SP mat = std::make_shared<UberMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kd") {
@@ -113,7 +113,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_metal(pbrt::syntactic::Material::SP in)
   {
-    MetalMaterial::SP mat = std::make_shared<MetalMaterial>();
+    MetalMaterial::SP mat = std::make_shared<MetalMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "roughness") {
@@ -170,7 +170,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_matte(pbrt::syntactic::Material::SP in)
   {
-    MatteMaterial::SP mat = std::make_shared<MatteMaterial>();
+    MatteMaterial::SP mat = std::make_shared<MatteMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kd") {
@@ -199,7 +199,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_fourier(pbrt::syntactic::Material::SP in)
   {
-    FourierMaterial::SP mat = std::make_shared<FourierMaterial>();
+    FourierMaterial::SP mat = std::make_shared<FourierMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "bsdffile") {
@@ -215,7 +215,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_mirror(pbrt::syntactic::Material::SP in)
   {
-    MirrorMaterial::SP mat = std::make_shared<MirrorMaterial>();
+    MirrorMaterial::SP mat = std::make_shared<MirrorMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kr") {
@@ -237,7 +237,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_substrate(pbrt::syntactic::Material::SP in)
   {
-    SubstrateMaterial::SP mat = std::make_shared<SubstrateMaterial>();
+    SubstrateMaterial::SP mat = std::make_shared<SubstrateMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kd") {
@@ -284,7 +284,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_disney(pbrt::syntactic::Material::SP in)
   {
-    DisneyMaterial::SP mat = std::make_shared<DisneyMaterial>();
+    DisneyMaterial::SP mat = std::make_shared<DisneyMaterial>(in->name);
 
     in->getParam3f(&mat->color.x,"color");
     mat->anisotropic    = in->getParam1f("anisotropic",    0.f );
@@ -305,7 +305,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_mix(pbrt::syntactic::Material::SP in)
   {
-    MixMaterial::SP mat = std::make_shared<MixMaterial>();
+    MixMaterial::SP mat = std::make_shared<MixMaterial>(in->name);
           
     if (in->hasParamTexture("amount"))
       mat->map_amount = findOrCreateTexture(in->getParamTexture("amount"));
@@ -333,7 +333,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_plastic(pbrt::syntactic::Material::SP in)
   {
-    PlasticMaterial::SP mat = std::make_shared<PlasticMaterial>();
+    PlasticMaterial::SP mat = std::make_shared<PlasticMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kd") {
@@ -372,7 +372,7 @@ namespace pbrt {
   
   Material::SP SemanticParser::createMaterial_translucent(pbrt::syntactic::Material::SP in)
   {
-    TranslucentMaterial::SP mat = std::make_shared<TranslucentMaterial>();
+    TranslucentMaterial::SP mat = std::make_shared<TranslucentMaterial>(in->name);
 
     in->getParam3f(&mat->transmit.x,"transmit");
     in->getParam3f(&mat->reflect.x,"reflect");
@@ -386,7 +386,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_glass(pbrt::syntactic::Material::SP in)
   {
-    GlassMaterial::SP mat = std::make_shared<GlassMaterial>();
+    GlassMaterial::SP mat = std::make_shared<GlassMaterial>(in->name);
 
     in->getParam3f(&mat->kr.x,"Kr");
     in->getParam3f(&mat->kt.x,"Kt");

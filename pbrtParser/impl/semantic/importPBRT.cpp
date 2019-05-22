@@ -825,11 +825,11 @@ namespace pbrt {
     return ours;
   }
 #endif
-  Scene::SP importPBRT(const std::string &fileName)
+  Scene::SP importPBRT(const std::string &fileName, const std::string &basePath)
   {
     pbrt::syntactic::Scene::SP pbrt;
     if (endsWith(fileName,".pbrt"))
-      pbrt = pbrt::syntactic::Scene::parse(fileName);
+      pbrt = pbrt::syntactic::Scene::parse(fileName, basePath);
     else
       throw std::runtime_error("could not detect input file format!? (unknown extension in '"+fileName+"')");
       
