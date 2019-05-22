@@ -102,7 +102,7 @@ namespace pbrt {
     /*! the logical name that this was defined under, such as
         "BackWall". Note this may be an empty string for some scenes
         (it is only defined for 'NamedMaterial's) */
-    const std::string name;
+    std::string name;
   };
 
   struct PBRT_PARSER_INTERFACE AreaLight : public Entity {

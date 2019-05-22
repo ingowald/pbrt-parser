@@ -474,7 +474,7 @@ namespace pbrt {
     // null materials get passed through ...
     if (!in)
       return Material::SP();
-      
+
     if (!materialMapping[in]) {
       materialMapping[in] = createMaterialFrom(in);
     }

@@ -22,16 +22,21 @@
 #include <stack>
 #include <string.h>
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 0
-#define    PBRT_PARSER_SEMANTIC_FORMAT_MINOR 6
+#define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 1
+#define    PBRT_PARSER_SEMANTIC_FORMAT_MINOR 0
 
   /* 
      V0.6: added diffuse area lights
    */
   
-  const uint32_t ourFormatID = (PBRT_PARSER_SEMANTIC_FORMAT_MAJOR << 16) + PBRT_PARSER_SEMANTIC_FORMAT_MINOR;
+  const uint32_t ourFormatTag = (PBRT_PARSER_SEMANTIC_FORMAT_MAJOR << 16) + PBRT_PARSER_SEMANTIC_FORMAT_MINOR;
 
   enum {
     TYPE_ERROR,
@@ -90,6 +95,17 @@ namespace pbrt {
       int formatTag;
       
       binFile.read((char*)&formatTag,sizeof(formatTag));
+      if (formatTag != ourFormatTag) {
+        std::cout << "Warning: pbf file uses a different format tag ("
+                  << ((int*)(size_t)formatTag) << ") than what this library is expeting ("
+                  << ((int *)(size_t)ourFormatTag) << ")" << std::endl;
+        int ourMajor = ourFormatTag >> 16;
+        int fileMajor = formatTag >> 16;
+        if (ourMajor != fileMajor)
+          std::cout << "**** WARNING ***** : Even the *major* file format version is different - "
+                    << "this means the file _should_ be incompatible with this library. "
+                    << "Please regenerate the pbf file." << std::endl;
+      }
       while (1) {
         size_t size;
         binFile.read((char*)&size,sizeof(size));
@@ -127,6 +143,13 @@ namespace pbrt {
     }
     template<typename T> void read(T &t) { t = read<T>(); }
 
+    void read(std::string &t)
+    {
+      int32_t size;
+      read(size);
+      t = std::string(size,' ');
+      copyBytes(t.data(),size);
+    }
 
     template<typename T1, typename T2>
     void read(std::map<T1,T2> &result)
@@ -301,7 +324,7 @@ namespace pbrt {
     BinaryWriter(const std::string &fileName)
       : binFile(fileName)
     {
-      int formatTag = ourFormatID;
+      int formatTag = ourFormatTag;
       binFile.write((char*)&formatTag,sizeof(formatTag));
     }
 
@@ -488,6 +511,7 @@ namespace pbrt {
   {
     binary.write(binary.serialize(material));
     binary.write(textures);
+    binary.write(areaLight);
     return TYPE_SHAPE;
   }
   
@@ -496,6 +520,7 @@ namespace pbrt {
   {
     binary.read(material);
     binary.read(textures);
+    binary.read(areaLight);
   }
 
 
@@ -891,6 +916,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int Material::writeTo(BinaryWriter &binary) 
   {
+    binary.write(name);
     /*! \todo serialize materials (can only do once mateirals are fleshed out) */
     return TYPE_MATERIAL;
   }
@@ -898,6 +924,7 @@ namespace pbrt {
   /*! serialize _in_ from given binary file reader */
   void Material::readFrom(BinaryReader &binary) 
   {
+    name = binary.read<std::string>();
     /*! \todo serialize materials (can only do once mateirals are fleshed out) */
   }
 
@@ -908,6 +935,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int DisneyMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(anisotropic);
     binary.write(clearCoat);
     binary.write(clearCoatGloss);
@@ -953,6 +981,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int UberMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(kd);
     binary.write(binary.serialize(map_kd));
     binary.write(ks);
@@ -1004,6 +1033,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int SubstrateMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(kd);
     binary.write(binary.serialize(map_kd));
     binary.write(ks);
@@ -1039,6 +1069,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int SubSurfaceMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(uRoughness);
     binary.write(vRoughness);
     binary.write(remapRoughness);
@@ -1062,6 +1093,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int MixMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(binary.serialize(material0));
     binary.write(binary.serialize(material1));
     binary.write(binary.serialize(map_amount));
@@ -1086,6 +1118,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int TranslucentMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(binary.serialize(map_kd));
     binary.write(reflect);
     binary.write(transmit);
@@ -1110,6 +1143,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int GlassMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(kr);
     binary.write(kt);
     binary.write(index);
@@ -1130,6 +1164,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int MatteMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(binary.serialize(map_kd));
     binary.write(kd);
     binary.write(sigma);
@@ -1155,6 +1190,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int FourierMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(fileName);
     return TYPE_FOURIER_MATERIAL;
   }
@@ -1172,6 +1208,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int MetalMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(roughness);
     binary.write(uRoughness);
     binary.write(vRoughness);
@@ -1211,6 +1248,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int MirrorMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(binary.serialize(map_bump));
     binary.write(kr);
     return TYPE_MIRROR_MATERIAL;
@@ -1231,6 +1269,7 @@ namespace pbrt {
   /*! serialize out to given binary writer */
   int PlasticMaterial::writeTo(BinaryWriter &binary) 
   {
+    Material::writeTo(binary);
     binary.write(binary.serialize(map_kd));
     binary.write(binary.serialize(map_ks));
     binary.write(kd);
