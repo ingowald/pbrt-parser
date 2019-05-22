@@ -136,7 +136,10 @@ namespace pbrt {
                                         
     template<typename T> T read();
     template<typename T> std::vector<T> readVector();
-    template<typename T> void read(std::vector<T> &vt) { vt = readVector<T>(); }
+    template<typename T> void read(std::vector<T> &vt)
+    {
+      vt = readVector<T>();
+    }
     template<typename T> void read(std::vector<std::shared_ptr<T>> &vt)
     {
       vt = readVector<std::shared_ptr<T>>(); 
@@ -149,6 +152,11 @@ namespace pbrt {
       read(size);
       t = std::string(size,' ');
       copyBytes(t.data(),size);
+    }
+
+    void read(Spectrum &t)
+    {
+      ((Entity*)&t)->readFrom(*this);
     }
 
     template<typename T1, typename T2>
@@ -363,6 +371,12 @@ namespace pbrt {
       write((int32_t)t.size());
       writeRaw(&t[0],t.size());
     }
+
+    void write(Spectrum &t)
+    {
+      ((Entity*)&t)->writeTo(*this);
+    }
+
     
     template<typename T>
     void write(const std::vector<T> &t)
