@@ -49,7 +49,7 @@ namespace pbrt {
         numLights.print("lights");
         std::cout << "total num materials " << usedMaterials.size() << std::endl;
         for (auto mat : usedMaterials)
-          std::cout << " - " << (mat ? mat->name : "<invalid material>") << std::endl;
+          std::cout << " - " << (mat ? mat->name : "<null material> (ie, shape w/o material - possibly light source)") << std::endl;
         std::cout << "scene bounds " << scene->getBounds() << std::endl;
       }
 
