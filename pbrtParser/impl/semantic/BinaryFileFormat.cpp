@@ -90,7 +90,7 @@ namespace pbrt {
   struct BinaryReader {
 
     BinaryReader(const std::string &fileName)
-      : binFile(fileName)
+      : binFile(fileName, std::fstream::binary)
     {
       int formatTag;
       
@@ -142,6 +142,8 @@ namespace pbrt {
       vt = readVector<std::shared_ptr<T>>(); 
     }
     template<typename T> void read(T &t) { t = read<T>(); }
+
+    void read(Spectrum& s) { read(s.spd); }
 
     void read(std::string &t)
     {
@@ -297,10 +299,13 @@ namespace pbrt {
   template<>
   std::string BinaryReader::read()
   {
+    std::string s;
     int length = read<int>();
-    std::vector<char> cv(length);
-    copyBytes(&cv[0],length);
-    std::string s = std::string(cv.begin(),cv.end());
+    if (length) {
+      std::vector<char> cv(length);
+      copyBytes(&cv[0],length);
+      s = std::string(cv.begin(),cv.end());
+    }
     return s;
   }
 
@@ -322,7 +327,7 @@ namespace pbrt {
   struct BinaryWriter {
 
     BinaryWriter(const std::string &fileName)
-      : binFile(fileName)
+      : binFile(fileName, std::fstream::binary)
     {
       int formatTag = ourFormatTag;
       binFile.write((char*)&formatTag,sizeof(formatTag));
@@ -356,6 +361,11 @@ namespace pbrt {
     void write(std::shared_ptr<T> t)
     {
       write(serialize(t));
+    }
+
+    void write(const Spectrum& s)
+    {
+      write(s.spd);
     }
 
     void write(const std::string &t)
