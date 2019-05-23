@@ -90,7 +90,7 @@ namespace pbrt {
   struct BinaryReader {
 
     BinaryReader(const std::string &fileName)
-      : binFile(fileName)
+      : binFile(fileName, std::ios_base::binary)
     {
       int formatTag;
       
@@ -330,7 +330,7 @@ namespace pbrt {
   struct BinaryWriter {
 
     BinaryWriter(const std::string &fileName)
-      : binFile(fileName)
+      : binFile(fileName, std::ios_base::binary)
     {
       int formatTag = ourFormatTag;
       binFile.write((char*)&formatTag,sizeof(formatTag));
