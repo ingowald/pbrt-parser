@@ -92,7 +92,7 @@ namespace pbrt {
     BinaryReader(const std::string &fileName)
       : binFile(fileName, std::ios_base::binary)
     {
-      int formatTag;
+      int32_t formatTag;
       
       binFile.read((char*)&formatTag,sizeof(formatTag));
       if (formatTag != ourFormatTag) {
@@ -107,11 +107,11 @@ namespace pbrt {
                     << "Please regenerate the pbf file." << std::endl;
       }
       while (1) {
-        size_t size;
+        uint64_t size;
         binFile.read((char*)&size,sizeof(size));
         if (!binFile.good())
           break;
-        int tag;
+        int32_t tag;
         binFile.read((char*)&tag,sizeof(tag));
         currentEntityData.resize(size);
         binFile.read((char *)currentEntityData.data(),size);
@@ -162,7 +162,7 @@ namespace pbrt {
     template<typename T1, typename T2>
     void read(std::map<T1,T2> &result)
     {
-      int size = read<int>();
+      int32_t size = read<int32_t>();
       result.clear();
       for (int i=0;i<size;i++) {
         T1 t1; T2 t2;
@@ -174,7 +174,7 @@ namespace pbrt {
       
     template<typename T> inline void read(std::shared_ptr<T> &t)
     {
-      int ID = read<int>();
+      int32_t ID = read<int32_t>();
       t = getEntity<T>(ID);
     }
 
@@ -306,9 +306,9 @@ namespace pbrt {
   std::string BinaryReader::read()
   {
     std::string s;
-    int length = read<int>();
+    int32_t length = read<int32_t>();
     if (length) {
-      std::vector<char> cv(length);
+      std::vector<int8_t> cv(length);
       copyBytes(&cv[0],length);
       s = std::string(cv.begin(),cv.end());
     }
@@ -318,7 +318,7 @@ namespace pbrt {
   template<typename T>
   std::vector<T> BinaryReader::readVector()
   {
-    size_t length = read<size_t>();
+    uint64_t length = read<uint64_t>();
     std::vector<T> vt(length);
     for (size_t i=0;i<length;i++) {
       read(vt[i]);
@@ -335,7 +335,7 @@ namespace pbrt {
     BinaryWriter(const std::string &fileName)
       : binFile(fileName, std::ios_base::binary)
     {
-      int formatTag = ourFormatTag;
+      int32_t formatTag = ourFormatTag;
       binFile.write((char*)&formatTag,sizeof(formatTag));
     }
 
@@ -386,7 +386,7 @@ namespace pbrt {
     {
       const void *ptr = (const void *)t.data();
       size_t size = t.size();
-      write(size);
+      write((uint64_t)size);
       if (!t.empty())
         writeRaw(ptr,t.size()*sizeof(T));
     }
@@ -395,7 +395,7 @@ namespace pbrt {
     void write(const std::vector<std::shared_ptr<T>> &t)
     {
       size_t size = t.size();
-      write(size);
+      write((uint64_t)size);
       for (size_t i=0;i<size;i++)
         write(t[i]);
     }
@@ -405,7 +405,7 @@ namespace pbrt {
     template<typename T1, typename T2>
     void write(const std::map<T1,std::shared_ptr<T2>> &values)
     {
-      int size = values.size();
+      int32_t size = values.size();
       write(size);
       for (auto it : values) {
         write(it.first);
@@ -436,9 +436,9 @@ namespace pbrt {
     { serializedEntity.push(std::make_shared<SerializedEntity>()); }
     
     /*! write the topmost write buffer to disk, and free its memory */
-    void executeWrite(int tag)
+    void executeWrite(int32_t tag)
     {
-      size_t size = serializedEntity.top()->size();
+      uint64_t size = (uint64_t)serializedEntity.top()->size();
       // std::cout << "writing block of size " << size << std::endl;
       binFile.write((const char *)&size,sizeof(size));
       binFile.write((const char *)&tag,sizeof(tag));
@@ -449,7 +449,7 @@ namespace pbrt {
 
     std::map<Entity::SP,int> emittedEntity;
 
-    int serialize(Entity::SP entity)
+    int32_t serialize(Entity::SP entity)
     {
       if (!entity) {
         // std::cout << "warning: null entity" << std::endl;
@@ -460,7 +460,7 @@ namespace pbrt {
         return emittedEntity[entity];
 
       startNewEntity();
-      int tag = entity->writeTo(*this);
+      int32_t tag = (int32_t)entity->writeTo(*this);
       executeWrite(tag);
       return (emittedEntity[entity] = emittedEntity.size());
     }
@@ -1343,11 +1343,11 @@ namespace pbrt {
   int Object::writeTo(BinaryWriter &binary) 
   {
     binary.write(name);
-    binary.write((int)shapes.size());
+    binary.write((int32_t)shapes.size());
     for (auto geom : shapes) {
       binary.write(binary.serialize(geom));
     }
-    binary.write((int)instances.size());
+    binary.write((int32_t)instances.size());
     for (auto inst : instances) {
       binary.write(binary.serialize(inst));
     }
@@ -1359,15 +1359,15 @@ namespace pbrt {
   {
     name = binary.read<std::string>();
     // read shapes
-    int numShapes = binary.read<int>();
+    int32_t numShapes = binary.read<int32_t>();
     assert(shapes.empty());
-    for (int i=0;i<numShapes;i++)
-      shapes.push_back(binary.getEntity<Shape>(binary.read<int>()));
+    for (int32_t i=0;i<numShapes;i++)
+      shapes.push_back(binary.getEntity<Shape>(binary.read<int32_t>()));
     // read instances
-    int numInstances = binary.read<int>();
+    int32_t numInstances = binary.read<int32_t>();
     assert(instances.empty());
-    for (int i=0;i<numInstances;i++)
-      instances.push_back(binary.getEntity<Instance>(binary.read<int>()));
+    for (int32_t i=0;i<numInstances;i++)
+      instances.push_back(binary.getEntity<Instance>(binary.read<int32_t>()));
   }
 
 
