@@ -305,10 +305,13 @@ namespace pbrt {
   template<>
   std::string BinaryReader::read()
   {
+    std::string s;
     int length = read<int>();
-    std::vector<char> cv(length);
-    copyBytes(&cv[0],length);
-    std::string s = std::string(cv.begin(),cv.end());
+    if (length) {
+      std::vector<char> cv(length);
+      copyBytes(&cv[0],length);
+      s = std::string(cv.begin(),cv.end());
+    }
     return s;
   }
 
