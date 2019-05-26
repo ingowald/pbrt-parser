@@ -104,7 +104,7 @@ namespace pbrt {
         more concise, and easier to read */
       typedef std::shared_ptr<Attributes> SP;
     
-      Attributes();
+      Attributes() = default;
       Attributes(Attributes &&other) = default;
       Attributes(const Attributes &other) = default;
 

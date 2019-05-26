@@ -20,10 +20,12 @@ set(SOURCES
   include/pbrtParser/Scene.h
 
   # our actual implemenatation files
+  impl/syntactic/Buffer.h
+  impl/syntactic/Buffer.inl
   impl/syntactic/Lexer.h
-  impl/syntactic/Lexer.cpp
+  impl/syntactic/Lexer.inl
   impl/syntactic/Parser.h
-  impl/syntactic/Parser.cpp
+  impl/syntactic/Parser.inl
   impl/syntactic/Scene.h
   impl/syntactic/Scene.cpp
 

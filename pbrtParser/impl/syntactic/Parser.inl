@@ -36,7 +36,7 @@ namespace pbrt {
     level a triangle mesh is nothing but a shape that has a string
     with a given name, and parameters of given names and types */
   namespace syntactic {  
-    int verbose = 0;
+    static int verbose = 0;
 
     inline bool operator==(const Token &tk, const std::string &text) { return tk.text == text; }
     inline bool operator==(const Token &tk, const char* text) { return tk.text == text; }
@@ -67,8 +67,9 @@ namespace pbrt {
       }
     }
 
-  
-    inline float Parser::parseFloat()
+ 
+    template <typename DS>
+    inline float BasicParser<DS>::parseFloat()
     {
       Token token = next();
       if (!token)
@@ -76,7 +77,8 @@ namespace pbrt {
       return (float)std::stod(token.text);
     }
 
-    inline vec3f Parser::parseVec3f()
+    template <typename DS>
+    inline vec3f BasicParser<DS>::parseVec3f()
     {
       try {
         const float x = parseFloat();
@@ -88,7 +90,8 @@ namespace pbrt {
       }
     }
 
-    affine3f Parser::parseMatrix()
+    template <typename DS>
+    affine3f BasicParser<DS>::parseMatrix()
     {
       const std::string open = next().text;
 
@@ -129,7 +132,8 @@ namespace pbrt {
     }
 
 
-    inline std::shared_ptr<Param> Parser::parseParam(std::string &name)
+    template <typename DS>
+    inline std::shared_ptr<Param> BasicParser<DS>::parseParam(std::string &name)
     {
       Token token = peek();
 
@@ -203,7 +207,8 @@ namespace pbrt {
           }
           // if (dbg)
           std::cout << "... including spd file '" << includedFileName << " ..." << std::endl;
-          auto tokens = std::make_shared<Lexer>(includedFileName);
+          File::SP file = std::make_shared<File>(includedFileName);
+          auto tokens = std::make_shared<BasicLexer<File>>(file);
           Token t = tokens->next();
           while (t)
           {
@@ -217,7 +222,8 @@ namespace pbrt {
       return ret;
     }
 
-    void Parser::parseParams(std::map<std::string, std::shared_ptr<Param> > &params)
+    template <typename DS>
+    void BasicParser<DS>::parseParams(std::map<std::string, std::shared_ptr<Param> > &params)
     {
       while (1) {
         std::string name;
@@ -227,11 +233,8 @@ namespace pbrt {
       }
     }
 
-    Attributes::Attributes()
-    {
-    }
-
-    std::shared_ptr<Texture> Parser::getTexture(const std::string &name) 
+    template <typename DS>
+    std::shared_ptr<Texture> BasicParser<DS>::getTexture(const std::string &name) 
     {
       if (attributesStack.top()->namedTexture.find(name) == attributesStack.top()->namedTexture.end())
         // throw std::runtime_error(lastLoc.toString()+": no texture named '"+name+"'");
@@ -242,7 +245,8 @@ namespace pbrt {
       return attributesStack.top()->namedTexture[name]; 
     }
 
-    Parser::Parser(const std::string &basePath) 
+    template <typename DS>
+    BasicParser<DS>::BasicParser(const std::string &basePath) 
       : basePath(basePath), scene(std::make_shared<Scene>()), dbg(false)
     {
       ctm.reset();
@@ -250,14 +254,16 @@ namespace pbrt {
       objectStack.push(scene->world);//scene.cast<Object>());
     }
 
-    std::shared_ptr<Object> Parser::getCurrentObject() 
+    template <typename DS>
+    std::shared_ptr<Object> BasicParser<DS>::getCurrentObject() 
     {
       if (objectStack.empty())
         throw std::runtime_error("no active object!?");
       return objectStack.top(); 
     }
 
-    std::shared_ptr<Object> Parser::findNamedObject(const std::string &name, bool createIfNotExist)
+    template <typename DS>
+    std::shared_ptr<Object> BasicParser<DS>::findNamedObject(const std::string &name, bool createIfNotExist)
     {
       if (namedObjects.find(name) == namedObjects.end()) {
 
@@ -272,14 +278,16 @@ namespace pbrt {
     }
 
 
-    void Parser::pushAttributes() 
+    template <typename DS>
+    void BasicParser<DS>::pushAttributes() 
     {
       attributesStack.push(std::make_shared<Attributes>(*attributesStack.top()));
       materialStack.push(currentMaterial);
       pushTransform();
     }
 
-    void Parser::popAttributes() 
+    template <typename DS>
+    void BasicParser<DS>::popAttributes() 
     {
       popTransform();
       attributesStack.pop();
@@ -287,18 +295,21 @@ namespace pbrt {
       materialStack.pop();
     }
     
-    void Parser::pushTransform() 
+    template <typename DS>
+    void BasicParser<DS>::pushTransform() 
     {
       ctm.stack.push(ctm);
     }
 
-    void Parser::popTransform() 
+    template <typename DS>
+    void BasicParser<DS>::popTransform() 
     {
       (Transform&)ctm = ctm.stack.top();
       ctm.stack.pop();
     }
     
-    bool Parser::parseTransform(const Token& token)
+    template <typename DS>
+    bool BasicParser<DS>::parseTransform(const Token& token)
     {
       if (token == "ActiveTransform") {
         const std::string which = next().text;
@@ -379,7 +390,8 @@ namespace pbrt {
       return false;
     }
 
-    void Parser::parseWorld()
+    template <typename DS>
+    void BasicParser<DS>::parseWorld()
     {
       if (dbg) std::cout << "Parsing PBRT World" << std::endl;
       while (1) {
@@ -632,7 +644,8 @@ namespace pbrt {
       }
     }
 
-    Token Parser::next()
+    template <typename DS>
+    Token BasicParser<DS>::next()
     {
       Token token = peek();
       if (!token)
@@ -642,7 +655,8 @@ namespace pbrt {
       return token;
     }
     
-    Token Parser::peek(unsigned int i)
+    template <typename DS>
+    Token BasicParser<DS>::peek(unsigned int i)
     {
       while (peekQueue.size() <= i) {
         Token token = tokens->next();
@@ -657,7 +671,9 @@ namespace pbrt {
           std::cout << "... including file '" << includedFileName << " ..." << std::endl;
         
           tokenizerStack.push(tokens);
-          tokens = std::make_shared<Lexer>(includedFileName);
+          File::SP file = std::make_shared<File>(includedFileName);
+          if (!replace_tokens(std::make_shared<BasicLexer<File>>(file)))
+            throw std::runtime_error("incompatible lexers ...");
           continue;
         }
       
@@ -672,7 +688,7 @@ namespace pbrt {
           // nothing to back off to, return eof indicator
           return Token();
       
-        tokens = tokenizerStack.top();
+        replace_tokens(tokenizerStack.top());
         tokenizerStack.pop();
         // token = next();
         continue;
@@ -680,7 +696,8 @@ namespace pbrt {
       return peekQueue[i];
     }
     
-    void Parser::parseScene()
+    template <typename DS>
+    void BasicParser<DS>::parseScene()
     {
       while (peek()) {
       
@@ -856,7 +873,7 @@ namespace pbrt {
     const char path_sep = '/';
 #endif
 
-    std::string pathOf(const std::string &fn)
+    inline std::string pathOf(const std::string &fn)
     {
       size_t pos = fn.find_last_of(path_sep);
       if (pos == std::string::npos) return std::string();
@@ -865,17 +882,29 @@ namespace pbrt {
 
 
     /*! parse given file, and add it to the scene we hold */
-    void Parser::parse(const std::string &fn)
+    template <typename DS>
+    void BasicParser<DS>::parse(const std::string &fn)
     {
       rootNamePath
         = basePath==""
         ? (std::string)pathOf(fn)
         : (std::string)basePath;
-      this->tokens = std::make_shared<Lexer>(fn);
+      File::SP file = std::make_shared<File>(fn);
+      this->tokens = std::make_shared<BasicLexer<File>>(file);
       parseScene();
       scene->basePath = rootNamePath;
     }
 
     
+    /*! parse from any input stream, add to scene we hold */
+    template <typename DS>
+    template <typename Stream>
+    void BasicParser<DS>::parse(typename IStream<Stream>::SP is)
+    {
+      this->tokens = std::make_shared<BasicLexer<IStream<Stream>>>(is);
+      parseScene();
+    }
+
+
   } // ::pbrt::syntx
 } // ::pbrt

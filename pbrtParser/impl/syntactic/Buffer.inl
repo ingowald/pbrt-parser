@@ -14,14 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#pragma once
-
 #include "Buffer.h"
-#include "Scene.h"
-// stl
-#include <queue>
-#include <memory>
-#include <string.h>
 
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
@@ -32,47 +25,57 @@ namespace pbrt {
     level a triangle mesh is nothing but a geometry that has a string
     with a given name, and parameters of given names and types */
   namespace syntactic {
-  
-    struct PBRT_PARSER_INTERFACE Token {
-      typedef enum { TOKEN_TYPE_STRING, TOKEN_TYPE_LITERAL, TOKEN_TYPE_SPECIAL, TOKEN_TYPE_NONE } Type;
 
-      //! constructor
-      Token() : loc{}, type{TOKEN_TYPE_NONE}, text{} {}
-      Token(const Loc &loc, const Type type, const std::string& text) : loc{loc}, type{type}, text{text} { }
-      Token(const Token &other) = default;
-      Token(Token &&) = default;
+    // =======================================================
+    // ReadBuffer<DataSource>
+    // =======================================================
 
-      //! assignment
-      Token& operator=(const Token &other) = default;
-      Token& operator=(Token &&) = default;
+    template <typename DS>
+    ReadBuffer<DS>::ReadBuffer(DS s) : source(s) {}
 
-      //! valid token
-      explicit operator bool() { return type != TOKEN_TYPE_NONE; }
-    
-      //! pretty-print
-      std::string toString() const { return loc.toString() + ": '" + text + "'"; }
-      
-      Loc         loc = {};
-      Type        type = TOKEN_TYPE_NONE;
-      std::string text = "";
-    };
+    template <typename DS>
+    void ReadBuffer<DS>::unget_char(int c) {
+      if (peekBuffer[0] >= 0)
+        throw std::runtime_error("can't push back more than one char ...");
+      peekBuffer[0] = c;
+      line = lineBuffer[0];
+      col = colBuffer[0];
+    }
 
-    /*! class that does the lexing - ie, the breaking up of an input
-      stream of chars into an input stream of tokens.  */
-    template <typename DataSource>
-    struct PBRT_PARSER_INTERFACE BasicLexer {
+    template <typename DS>
+    int ReadBuffer<DS>::get_char() {
 
-      //! constructor
-      BasicLexer(typename DataSource::SP ds) : buffer(ds) {}
+      int c;
 
-      Token next();
-      
-    private:
-      ReadBuffer<typename DataSource::SP> buffer;
-    };
+      if (peekBuffer[0] >= 0) {
+        c = peekBuffer[0];
+        peekBuffer[0] = -1;
+      } else {
+        c = source->get();
+      }
 
-  } // ::pbrt::syntactic
+      // Loc
+      lineBuffer[0] = line;
+      colBuffer[0] = col;
+      if (c == '\n') {
+        line++;
+        col = 0;
+      } else {
+        col++;
+      }
+
+      return c;
+    }
+
+    namespace detail {
+      // disambiguate File::SP and IStream::SP, only File has valid ptr
+      template <typename DS> inline std::shared_ptr<File> filePointer(const DS& ptr) { return nullptr; }
+      inline std::shared_ptr<File> filePointer(const std::shared_ptr<File>& ptr) { return ptr; }
+    }
+
+    template <typename DS>
+    Loc ReadBuffer<DS>::get_loc() const {
+      return { detail::filePointer(source), line, col };
+    }
+  } // ::syntactic
 } // ::pbrt
-
-// Implementation
-#include "Lexer.inl"
