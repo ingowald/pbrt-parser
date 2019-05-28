@@ -20,6 +20,11 @@
 #include <string.h>
 #include <algorithm>
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   
@@ -28,6 +33,10 @@ namespace pbrt {
     return getPrimBounds(primID,affine3f::identity());
   }
 
+  std::string TriangleMesh::toString() const 
+  {
+    return "TriangleMesh";
+  }
 
   box3f TriangleMesh::getPrimBounds(const size_t primID, const affine3f &xfm) 
   {

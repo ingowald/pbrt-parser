@@ -637,7 +637,7 @@ namespace pbrt {
     TriangleMesh(Material::SP material=Material::SP()) : Shape(material) {}
     
     /*! pretty-printer, for debugging */
-    virtual std::string toString() const override { return "TriangleMesh"; }
+    virtual std::string toString() const override;
 
     /*! serialize out to given binary writer */
     virtual int writeTo(BinaryWriter &) override;

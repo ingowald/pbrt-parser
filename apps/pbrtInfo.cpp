@@ -22,6 +22,11 @@
 #include <sstream>
 #include <set>
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
 namespace pbrt {
   namespace semantic {
     
@@ -146,6 +151,8 @@ namespace pbrt {
           scene = Scene::loadFrom(fileName);
         else
           throw std::runtime_error("un-recognized input file extension");
+
+        scene->makeSingleLevel();
         
         std::cout << " => yay! parsing successful..." << std::endl;
         if (parseOnly) exit(0);
