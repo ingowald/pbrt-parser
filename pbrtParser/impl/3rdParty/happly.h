@@ -1033,8 +1033,9 @@ inline std::vector<std::string> tokenSplit(const std::string& input) {
   return result;
 }
 
-inline bool startsWith(const std::string& input, const std::string& query) { return input.compare(0, query.length(), query) == 0; }
-}; // namespace
+inline bool startsWith(const std::string& input, const std::string& query)
+{ return input.compare(0, query.length(), query) == 0; }
+} // namespace
 
 
 /**

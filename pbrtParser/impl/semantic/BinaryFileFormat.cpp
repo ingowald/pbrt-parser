@@ -672,7 +672,7 @@ namespace pbrt {
   // ==================================================================
 
   /*! serialize out to given binary writer */
-  int AreaLight::writeTo(BinaryWriter &binary) 
+  int AreaLight::writeTo(BinaryWriter &/*unused: binary*/) 
   {
     /* should never be stored as a final entity */ return -1;
   }
@@ -696,7 +696,7 @@ namespace pbrt {
   
 
   /*! serialize out to given binary reader */
-  void AreaLight::readFrom(BinaryReader &binary) 
+  void AreaLight::readFrom(BinaryReader &/*unused: binary*/) 
   {
     /* no fields */
   }
@@ -740,13 +740,13 @@ namespace pbrt {
   // ==================================================================
   
   /*! serialize out to given binary writer */
-  int Texture::writeTo(BinaryWriter &binary) 
+  int Texture::writeTo(BinaryWriter &/*unused: binary*/) 
   {
     return TYPE_TEXTURE;
   }
   
   /*! serialize _in_ from given binary file reader */
-  void Texture::readFrom(BinaryReader &binary) 
+  void Texture::readFrom(BinaryReader &/*unused: binary*/) 
   {
   }
 

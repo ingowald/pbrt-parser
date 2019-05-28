@@ -58,7 +58,7 @@ namespace pbrt {
         loc.col++;
       }
       return c;
-    };
+    }
       
     inline bool Lexer::isWhite(const char c)
     {

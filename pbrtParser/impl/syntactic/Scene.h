@@ -183,7 +183,7 @@ namespace pbrt {
     
       /*! used during parsing, to add a newly parsed parameter value
         to the list */
-      virtual void add(const std::string &text) { throw std::runtime_error("should never get called.."); }
+      virtual void add(const std::string &) { throw std::runtime_error("should never get called.."); }
       //    private:
       std::string type;
       std::shared_ptr<Texture> texture;
