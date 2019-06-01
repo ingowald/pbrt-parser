@@ -82,6 +82,7 @@ namespace pbrt {
     Texture::SP createTexture_scale(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_ptex(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_constant(pbrt::syntactic::Texture::SP in);
+    Texture::SP createTexture_checker(pbrt::syntactic::Texture::SP in);
     /*! @} */
     Texture::SP findOrCreateTexture(pbrt::syntactic::Texture::SP in);
     

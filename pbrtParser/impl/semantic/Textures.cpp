@@ -94,6 +94,32 @@ namespace pbrt {
     return tex;
   }
   
+  Texture::SP SemanticParser::createTexture_checker(pbrt::syntactic::Texture::SP in)
+  {
+    CheckerTexture::SP tex = std::make_shared<CheckerTexture>();
+    for (auto it : in->param) {
+      const std::string name = it.first;
+      if (name == "uscale") {
+        tex->uScale = in->getParam1f(name);
+        continue;
+      }
+      if (name == "vscale") {
+        tex->vScale = in->getParam1f(name);
+        continue;
+      }
+      if (name == "tex1") {
+        in->getParam3f(&tex->tex1.x,name);
+        continue;
+      }
+      if (name == "tex2") {
+        in->getParam3f(&tex->tex2.x,name);
+        continue;
+      }
+      throw std::runtime_error("unknown checker texture param '"+name+"'");
+    }
+    return tex;
+  }
+  
   /*! do create a track representation of given texture, _without_
     checking whether that was already created */
   Texture::SP SemanticParser::createTextureFrom(pbrt::syntactic::Texture::SP in)
@@ -111,6 +137,8 @@ namespace pbrt {
       return createTexture_ptex(in);
     if (in->mapType == "constant") 
       return createTexture_constant(in);
+    if (in->mapType == "checker") 
+      return createTexture_checker(in);
       
     // ------------------------------------------------------------------
     // do small ones right here (todo: move those to separate
