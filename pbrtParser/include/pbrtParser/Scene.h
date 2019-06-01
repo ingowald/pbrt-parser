@@ -105,6 +105,40 @@ namespace pbrt {
     std::string name;
   };
 
+
+
+  // ==================================================================
+  // Singular Light Sources
+  // ==================================================================
+  struct PBRT_PARSER_INTERFACE LightSource : public Entity {
+    typedef std::shared_ptr<LightSource> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "LightSource"; }
+    // /*! serialize out to given binary writer */
+    // virtual int writeTo(BinaryWriter &) override;
+    // /*! serialize _in_ from given binary file reader */
+    // virtual void readFrom(BinaryReader &) override;
+  };
+
+  struct PBRT_PARSER_INTERFACE InfiniteLightSource : public LightSource {
+    typedef std::shared_ptr<InfiniteLightSource> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "InfiniteLightSource"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    std::string mapName;
+    affine3f    transform;
+  };
+  
+  // ==================================================================
+  // Area Lights
+  // ==================================================================
+  
   struct PBRT_PARSER_INTERFACE AreaLight : public Entity {
     typedef std::shared_ptr<AreaLight> SP;
     
@@ -869,8 +903,12 @@ namespace pbrt {
 
     virtual box3f getBounds() const;
     
-    std::vector<Shape::SP>     shapes;
-    std::vector<Instance::SP>  instances;
+    std::vector<Shape::SP>       shapes;
+    /*! all _non_-area light sources; in the pbrt spec area light
+        sources get attached to shapes; only non-area light source
+        directly live in an object */
+    std::vector<LightSource::SP> lightSources;
+    std::vector<Instance::SP>    instances;
     std::string name = "";
   };
 

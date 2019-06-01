@@ -399,7 +399,7 @@ namespace pbrt {
         // -------------------------------------------------------
         if (token == "LightSource") {
           std::shared_ptr<LightSource> lightSource
-            = std::make_shared<LightSource>(next().text);
+            = std::make_shared<LightSource>(next().text,ctm);
           parseParams(lightSource->param);
           getCurrentObject()->lightSources.push_back(lightSource);
           // attributesStack.top()->lightSources.push_back(lightSource);
