@@ -137,7 +137,7 @@ namespace pbrt {
       return createTexture_ptex(in);
     if (in->mapType == "constant") 
       return createTexture_constant(in);
-    if (in->mapType == "checker") 
+    if (in->mapType == "checkerboard") 
       return createTexture_checker(in);
       
     // ------------------------------------------------------------------
