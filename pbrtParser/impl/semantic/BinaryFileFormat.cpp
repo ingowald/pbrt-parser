@@ -1399,6 +1399,8 @@ namespace pbrt {
     for (auto geom : shapes) {
       binary.write(binary.serialize(geom));
     }
+    if (!lightSources.empty())
+      PRINT(lightSources.size());
     binary.write((int32_t)lightSources.size());
     for (auto ls : lightSources) {
       binary.write(binary.serialize(ls));
@@ -1423,6 +1425,7 @@ namespace pbrt {
 
     // read lightSources
     int numLightSources = binary.read<int32_t>();
+    if (numLightSources) PRINT(numLightSources);
     assert(lightSources.empty());
     for (int i=0;i<numLightSources;i++)
       lightSources.push_back(binary.getEntity<LightSource>(binary.read<int32_t>()));

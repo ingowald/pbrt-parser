@@ -72,8 +72,7 @@ namespace pbrt {
         alreadyTraversed.insert(object);
  
         numObjects.add(firstTime,1);
-        // numLights.add(firstTime,object->lightSources.size());
-        // numVolumes.add(firstTime,object->volumes.size());
+        numLights.add(firstTime,object->lightSources.size());
         numShapes.add(firstTime,object->shapes.size());
         
         for (auto shape : object->shapes) {

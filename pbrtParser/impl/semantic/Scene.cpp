@@ -380,6 +380,8 @@ namespace pbrt {
       Object::SP ours = std::make_shared<Object>("ShapeFrom:"+object->name);
       for (auto geom : object->shapes)
         ours->shapes.push_back(geom);
+      for (auto lightSource : object->lightSources)
+        ours->lightSources.push_back(lightSource);
       return alreadyEmitted[object] = ours;
     }
     
