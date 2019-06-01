@@ -1377,15 +1377,11 @@ namespace pbrt {
     for (auto geom : shapes) {
       binary.write(binary.serialize(geom));
     }
-<<<<<<< HEAD
-    binary.write((int32_t)instances.size());
-=======
-    binary.write((int)lightSources.size());
+    binary.write((int32_t)lightSources.size());
     for (auto ls : lightSources) {
       binary.write(binary.serialize(ls));
     }
-    binary.write((int)instances.size());
->>>>>>> db5945adeba57d3342c2a7458e4f2503df527856
+    binary.write((int32_t)instances.size());
     for (auto inst : instances) {
       binary.write(binary.serialize(inst));
     }
@@ -1400,20 +1396,15 @@ namespace pbrt {
     // read shapes
     int32_t numShapes = binary.read<int32_t>();
     assert(shapes.empty());
-<<<<<<< HEAD
     for (int32_t i=0;i<numShapes;i++)
       shapes.push_back(binary.getEntity<Shape>(binary.read<int32_t>()));
-=======
-    for (int i=0;i<numShapes;i++)
-      shapes.push_back(binary.getEntity<Shape>(binary.read<int>()));
 
     // read lightSources
-    int numLightSources = binary.read<int>();
+    int numLightSources = binary.read<int32_t>();
     assert(lightSources.empty());
     for (int i=0;i<numLightSources;i++)
-      lightSources.push_back(binary.getEntity<LightSource>(binary.read<int>()));
+      lightSources.push_back(binary.getEntity<LightSource>(binary.read<int32_t>()));
 
->>>>>>> db5945adeba57d3342c2a7458e4f2503df527856
     // read instances
     int32_t numInstances = binary.read<int32_t>();
     assert(instances.empty());
