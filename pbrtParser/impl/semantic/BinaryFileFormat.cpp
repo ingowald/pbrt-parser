@@ -29,23 +29,27 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 1
+#define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 2
 #define    PBRT_PARSER_SEMANTIC_FORMAT_MINOR 0
 
   /* 
+     2.0: added light sources to objects
      V0.6: added diffuse area lights
    */
   
   const uint32_t ourFormatTag = (PBRT_PARSER_SEMANTIC_FORMAT_MAJOR << 16) + PBRT_PARSER_SEMANTIC_FORMAT_MINOR;
 
   enum {
-    TYPE_ERROR,
+    TYPE_ERROR=0,
     TYPE_SCENE,
     TYPE_OBJECT,
     TYPE_SHAPE,
     TYPE_INSTANCE,
     TYPE_CAMERA,
-    TYPE_MATERIAL,
+    TYPE_FILM,
+    TYPE_SPECTRUM,
+    
+    TYPE_MATERIAL=10,
     TYPE_DISNEY_MATERIAL,
     TYPE_UBER_MATERIAL,
     TYPE_MIX_MATERIAL,
@@ -58,7 +62,8 @@ namespace pbrt {
     TYPE_METAL_MATERIAL,
     TYPE_PLASTIC_MATERIAL,
     TYPE_TRANSLUCENT_MATERIAL,
-    TYPE_TEXTURE,
+    
+    TYPE_TEXTURE=30,
     TYPE_IMAGE_TEXTURE,
     TYPE_SCALE_TEXTURE,
     TYPE_PTEX_FILE_TEXTURE,
@@ -68,17 +73,17 @@ namespace pbrt {
     TYPE_MARBLE_TEXTURE,
     TYPE_MIX_TEXTURE,
     TYPE_WRINKLED_TEXTURE,
-    TYPE_FILM,
-    TYPE_TRIANGLE_MESH,
+    
+    TYPE_TRIANGLE_MESH=50,
     TYPE_QUAD_MESH,
     TYPE_SPHERE,
     TYPE_DISK,
     TYPE_CURVE,
 
-    TYPE_DIFFUSE_AREALIGHT_BB,
+    TYPE_DIFFUSE_AREALIGHT_BB=60,
     TYPE_DIFFUSE_AREALIGHT_RGB,
 
-    TYPE_SPECTRUM,
+    TYPE_INFINITE_LIGHT_SOURCE=70,
   };
     
   /*! a simple buffer for binary data */
@@ -243,6 +248,8 @@ namespace pbrt {
         return std::make_shared<DiffuseAreaLightBB>();
       case TYPE_DIFFUSE_AREALIGHT_RGB:
         return std::make_shared<DiffuseAreaLightRGB>();
+      case TYPE_INFINITE_LIGHT_SOURCE:
+        return std::make_shared<InfiniteLightSource>();
       case TYPE_SPECTRUM:
         return std::make_shared<Spectrum>();
       default:
@@ -650,6 +657,27 @@ namespace pbrt {
   }
 
 
+  // ==================================================================
+  // LightSources
+  // ==================================================================
+
+  /*! serialize out to given binary writer */
+  int InfiniteLightSource::writeTo(BinaryWriter &binary) 
+  {
+    binary.write(mapName);
+    binary.write(transform);
+    return TYPE_INFINITE_LIGHT_SOURCE;
+  }
+
+  /*! serialize out to given binary reader */
+  void InfiniteLightSource::readFrom(BinaryReader &binary) 
+  {
+    binary.read(mapName);
+    binary.read(transform);
+  }
+  
+  
+  
 
 
   // ==================================================================
@@ -1332,6 +1360,10 @@ namespace pbrt {
     for (auto geom : shapes) {
       binary.write(binary.serialize(geom));
     }
+    binary.write((int)lightSources.size());
+    for (auto ls : lightSources) {
+      binary.write(binary.serialize(ls));
+    }
     binary.write((int)instances.size());
     for (auto inst : instances) {
       binary.write(binary.serialize(inst));
@@ -1343,11 +1375,19 @@ namespace pbrt {
   void Object::readFrom(BinaryReader &binary) 
   {
     name = binary.read<std::string>();
+
     // read shapes
     int numShapes = binary.read<int>();
     assert(shapes.empty());
     for (int i=0;i<numShapes;i++)
       shapes.push_back(binary.getEntity<Shape>(binary.read<int>()));
+
+    // read lightSources
+    int numLightSources = binary.read<int>();
+    assert(lightSources.empty());
+    for (int i=0;i<numLightSources;i++)
+      lightSources.push_back(binary.getEntity<LightSource>(binary.read<int>()));
+
     // read instances
     int numInstances = binary.read<int>();
     assert(instances.empty());

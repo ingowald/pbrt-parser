@@ -321,11 +321,19 @@ namespace pbrt {
       
     Object::SP ourObject = std::make_shared<Object>();
     ourObject->name = pbrtObject->name;
+    
+    for (auto lightSource : pbrtObject->lightSources) {
+      LightSource::SP ourLightSource = findOrCreateLightSource(lightSource);
+      if (ourLightSource)
+        ourObject->lightSources.push_back(ourLightSource);
+    }
+    
     for (auto shape : pbrtObject->shapes) {
       Shape::SP ourShape = findOrCreateShape(shape);
       if (ourShape)
         ourObject->shapes.push_back(ourShape);
     }
+    
     for (auto instance : pbrtObject->objectInstances)
       ourObject->instances.push_back(emitInstance(instance));
 
