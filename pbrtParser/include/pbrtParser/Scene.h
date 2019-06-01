@@ -134,6 +134,27 @@ namespace pbrt {
     std::string mapName;
     affine3f    transform;
   };
+
+  // LightSource "distant" 
+  //         "point from" [ 0 0 0 ] 
+  //         "point to" [ 0 0 1 ] 
+  //         "rgb L" [ 3.1359820366 2.4853198528 1.4146273136 ] 
+  //         "rgb scale" [ 3.2500000000 3.2500000000 3.2500000000 ] 
+  struct PBRT_PARSER_INTERFACE DistantLightSource : public LightSource {
+    typedef std::shared_ptr<DistantLightSource> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "DistantLightSource"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    vec3f from  { 0.f,0.f,0.f };
+    vec3f to    { 0.f,0.f,1.f };
+    vec3f L     { 1.f,1.f,1.f };
+    vec3f scale { 1.f,1.f,1.f };
+  };
   
   // ==================================================================
   // Area Lights

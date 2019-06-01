@@ -37,6 +37,33 @@ namespace pbrt {
     return light;
   }
   
+  LightSource::SP SemanticParser::createLightSource_distant
+  (pbrt::syntactic::LightSource::SP in)
+  {
+    DistantLightSource::SP light = std::make_shared<DistantLightSource>();
+    for (auto it : in->param) {
+      std::string name = it.first;
+      if (name == "from") {
+        in->getParam3f(&light->from.x,name);
+        continue;
+      }
+      if (name == "to") {
+        in->getParam3f(&light->to.x,name);
+        continue;
+      }
+      if (name == "L") {
+        in->getParam3f(&light->L.x,name);
+        continue;
+      }
+      if (name == "scale") {
+        in->getParam3f(&light->scale.x,name);
+        continue;
+      }
+      throw std::runtime_error("unknown 'distant' light srouce param '"+name+"'");
+    }
+    return light;
+  }
+  
   /*! do create a track representation of given light, _without_
     checking whether that was already created */
   LightSource::SP SemanticParser::createLightSourceFrom(pbrt::syntactic::LightSource::SP in)
@@ -51,6 +78,10 @@ namespace pbrt {
     // ==================================================================
     if (type == "infinite") 
       return createLightSource_infinite(in);
+
+    // ==================================================================
+    if (type == "distant") 
+      return createLightSource_distant(in);
 
     // ==================================================================
 #ifndef NDEBUG

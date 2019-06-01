@@ -84,6 +84,7 @@ namespace pbrt {
     TYPE_DIFFUSE_AREALIGHT_RGB,
 
     TYPE_INFINITE_LIGHT_SOURCE=70,
+    TYPE_DISTANT_LIGHT_SOURCE,
   };
     
   /*! a simple buffer for binary data */
@@ -258,6 +259,8 @@ namespace pbrt {
         return std::make_shared<DiffuseAreaLightRGB>();
       case TYPE_INFINITE_LIGHT_SOURCE:
         return std::make_shared<InfiniteLightSource>();
+      case TYPE_DISTANT_LIGHT_SOURCE:
+        return std::make_shared<DistantLightSource>();
       case TYPE_SPECTRUM:
         return std::make_shared<Spectrum>();
       default:
@@ -691,6 +694,25 @@ namespace pbrt {
   {
     binary.read(mapName);
     binary.read(transform);
+  }
+  
+  /*! serialize out to given binary writer */
+  int DistantLightSource::writeTo(BinaryWriter &binary) 
+  {
+    binary.write(from);
+    binary.write(to);
+    binary.write(L);
+    binary.write(scale);
+    return TYPE_DISTANT_LIGHT_SOURCE;
+  }
+
+  /*! serialize out to given binary reader */
+  void DistantLightSource::readFrom(BinaryReader &binary) 
+  {
+    binary.read(from);
+    binary.read(to);
+    binary.read(L);
+    binary.read(scale);
   }
   
   
