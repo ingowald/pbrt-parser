@@ -40,6 +40,7 @@ namespace pbrt {
 
     /*! @{ forward definitions so we can use those in shared_ptrs in the attribute class */
     struct AreaLightSource;
+    struct LightSource;
     struct Object;
     struct Material;
     struct Medium;
@@ -459,10 +460,16 @@ namespace pbrt {
         more concise, and easier to read */
       typedef std::shared_ptr<LightSource> SP;
     
-      LightSource(const std::string &type) : Node(type) {};
+      LightSource(const std::string &type, 
+                  const Transform &transform)
+        : Node(type),
+        transform(transform)
+      {}
 
       /*! pretty-printing, for debugging */
       virtual std::string toString() const override { return "LightSource<"+type+">"; }
+
+      const Transform transform;
     };
 
     /*! area light sources are different from regular light sources in

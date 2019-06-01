@@ -53,8 +53,20 @@ namespace pbrt {
         numCurveSegments.print("curve segments");
         numLights.print("lights");
         std::cout << "total num materials " << usedMaterials.size() << std::endl;
+        std::map<std::string,int> matsUsedByType;
         for (auto mat : usedMaterials)
+<<<<<<< HEAD
           std::cout << " - " << (mat ? mat->name : "<null material> (ie, shape w/o material - possibly light source)") << std::endl;
+=======
+          if (mat)
+            matsUsedByType[mat->toString()]++;
+          else
+            matsUsedByType["null"]++;
+            
+        std::cout << "material usage by type:" << std::endl;
+        for (auto it : matsUsedByType)
+          std::cout << " - " << it.second << "x\t" << it.first << std::endl;
+>>>>>>> db5945adeba57d3342c2a7458e4f2503df527856
         std::cout << "scene bounds " << scene->getBounds() << std::endl;
       }
 
@@ -62,7 +74,7 @@ namespace pbrt {
       {
         const bool firstTime = (alreadyTraversed.find(object) == alreadyTraversed.end());
         alreadyTraversed.insert(object);
-
+ 
         numObjects.add(firstTime,1);
         // numLights.add(firstTime,object->lightSources.size());
         // numVolumes.add(firstTime,object->volumes.size());

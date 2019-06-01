@@ -16,6 +16,11 @@
 
 #include "SemanticParser.h"
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
 namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_uber(pbrt::syntactic::Material::SP in)
