@@ -668,6 +668,10 @@ namespace pbrt {
       
     /*! the pbrt material assigned to the underlying shape */
     Material::SP material;
+
+    /*! if enabled, the geometry normal of this shape should get
+        flipped during rendering */
+    bool reverseOrientation { false };
     
     /*! textures directl assigned to the shape (ie, not to the
       material) */

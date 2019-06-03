@@ -368,6 +368,7 @@ namespace pbrt {
       if (token == "ReverseOrientation") {
         /* according to the docs, 'ReverseOrientation' only flips the
            normals, not the actual transform */
+        attributesStack.top()->reverseOrientation = !attributesStack.top()->reverseOrientation;
         return true;
       }
       if (token == "CoordSysTransform") {

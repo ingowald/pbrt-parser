@@ -116,6 +116,7 @@ namespace pbrt {
       std::map<std::string,std::shared_ptr<Material> > namedMaterial;
       std::map<std::string,std::shared_ptr<Medium> >   namedMedium;
       std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
+      bool reverseOrientation { false };
     };
 
     /*! forward definition of a typed parameter */

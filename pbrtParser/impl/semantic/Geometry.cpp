@@ -294,6 +294,8 @@ namespace pbrt {
       return emittedShapes[pbrtShape];
 
     emittedShapes[pbrtShape] = emitShape(pbrtShape);
+    if (emittedShapes[pbrtShape])
+      emittedShapes[pbrtShape]->reverseOrientation = pbrtShape->attributes->reverseOrientation;
     /* now, add area light sources */
     if (!pbrtShape->attributes->areaLightSources.empty()) {
       std::cout << "Shape has " << pbrtShape->attributes->areaLightSources.size()
@@ -303,6 +305,7 @@ namespace pbrt {
       if (!areaLights.empty()) {
         if (areaLights.size() > 1)
           std::cout << "Warning: Shape has more than one area light!?" << std::endl;
+        assert(emittedShapes[pbrtShape]);
         emittedShapes[pbrtShape]->areaLight = parseAreaLight(areaLights[0]);
       }
     }

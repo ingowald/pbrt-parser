@@ -19,8 +19,8 @@ cmake_minimum_required(VERSION 2.8)
 project(pbrtParser)
 
 set(pbrtParser_VERSION_MAJOR 2)
-set(pbrtParser_VERSION_MINOR 1)
-set(pbrtParser_VERSION_PATCH 4)
+set(pbrtParser_VERSION_MINOR 2)
+set(pbrtParser_VERSION_PATCH 0)
 
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)

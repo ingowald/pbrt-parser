@@ -29,15 +29,15 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 2
-#define    PBRT_PARSER_SEMANTIC_FORMAT_MINOR 0
+#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 3
 
   /* 
-     2.0: added light sources to objects
+     3: added Shape::reverseOrientatetion
+     2: added light sources to objects
      V0.6: added diffuse area lights
    */
   
-  const uint32_t ourFormatTag = (PBRT_PARSER_SEMANTIC_FORMAT_MAJOR << 16) + PBRT_PARSER_SEMANTIC_FORMAT_MINOR;
+  const uint32_t ourFormatTag = (PBRT_PARSER_SEMANTIC_FORMAT_ID);
 
   enum {
     TYPE_ERROR=0,
@@ -539,6 +539,7 @@ namespace pbrt {
     binary.write(binary.serialize(material));
     binary.write(textures);
     binary.write(areaLight);
+    binary.write((int8_t)reverseOrientation);
     return TYPE_SHAPE;
   }
   
@@ -548,6 +549,7 @@ namespace pbrt {
     binary.read(material);
     binary.read(textures);
     binary.read(areaLight);
+    reverseOrientation = binary.read<int8_t>();
   }
 
 
