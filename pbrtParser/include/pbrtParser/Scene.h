@@ -133,6 +133,9 @@ namespace pbrt {
 
     std::string mapName;
     affine3f    transform;
+    vec3f       L { 1.f,1.f,1.f };
+    vec3f       scale { 1.f,1.f,1.f };
+    int         nSamples { 1 };
   };
 
   // LightSource "distant" 

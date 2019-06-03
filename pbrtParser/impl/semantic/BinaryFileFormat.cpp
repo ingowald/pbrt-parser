@@ -29,9 +29,10 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 3
+#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 4
 
   /* 
+     4: InfiniteLight::L,nsamples,scale
      3: added Shape::reverseOrientatetion
      2: added light sources to objects
      V0.6: added diffuse area lights
@@ -691,6 +692,9 @@ namespace pbrt {
   {
     binary.write(mapName);
     binary.write(transform);
+    binary.write(L);
+    binary.write(scale);
+    binary.write(nSamples);
     return TYPE_INFINITE_LIGHT_SOURCE;
   }
 
@@ -699,6 +703,9 @@ namespace pbrt {
   {
     binary.read(mapName);
     binary.read(transform);
+    binary.read(L);
+    binary.read(scale);
+    binary.read(nSamples);
   }
   
   /*! serialize out to given binary writer */

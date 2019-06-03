@@ -44,6 +44,7 @@ V 2.2:
 
 - have first area light sources (distant and infinite)
 - added reverseorientation
+- added InfiniteLight::{nsamples,L,scale}
 
 V 2.1.4: Various bugfixes:
 

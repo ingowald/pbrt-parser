@@ -27,12 +27,33 @@ namespace pbrt {
   (pbrt::syntactic::LightSource::SP in)
   {
     InfiniteLightSource::SP light = std::make_shared<InfiniteLightSource>();
-    const std::string mapName = in->getParamString("mapname");
-    if (mapName == "")
-      std::cerr << "warning: no 'mapname' in infinite lightsource!?" << std::endl;
+    // const std::string mapName = in->getParamString("mapname");
+    // if (mapName == "")
+    //   std::cerr << "warning: no 'mapname' in infinite lightsource!?" << std::endl;
     
     light->transform = in->transform.atStart;
-    light->mapName = mapName;
+    // light->mapName = mapName;
+
+    for (auto it : in->param) {
+      std::string name = it.first;
+      if (name == "mapname") {
+        light->mapName = in->getParamString(name);
+        continue;
+      }
+      if (name == "L") {
+        in->getParam3f(&light->L.x,name);
+        continue;
+      }
+      if (name == "scale") {
+        in->getParam3f(&light->scale.x,name);
+        continue;
+      }
+      if (name == "nsamples") {
+        light->nSamples = in->getParam1i(name,light->nSamples);
+        continue;
+      }
+      throw std::runtime_error("unknown 'infinite' light source param '"+name+"'");
+    }
     
     return light;
   }
@@ -59,7 +80,7 @@ namespace pbrt {
         in->getParam3f(&light->scale.x,name);
         continue;
       }
-      throw std::runtime_error("unknown 'distant' light srouce param '"+name+"'");
+      throw std::runtime_error("unknown 'distant' light source param '"+name+"'");
     }
     return light;
   }
