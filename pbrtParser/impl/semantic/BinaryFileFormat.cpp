@@ -68,6 +68,7 @@ namespace pbrt {
     TYPE_SCALE_TEXTURE,
     TYPE_PTEX_FILE_TEXTURE,
     TYPE_CONSTANT_TEXTURE,
+    TYPE_CHECKER_TEXTURE,
     TYPE_WINDY_TEXTURE,
     TYPE_FBM_TEXTURE,
     TYPE_MARBLE_TEXTURE,
@@ -199,6 +200,8 @@ namespace pbrt {
         return std::make_shared<PtexFileTexture>();
       case TYPE_CONSTANT_TEXTURE:
         return std::make_shared<ConstantTexture>();
+      case TYPE_CHECKER_TEXTURE:
+        return std::make_shared<CheckerTexture>();
       case TYPE_WINDY_TEXTURE:
         return std::make_shared<WindyTexture>();
       case TYPE_FBM_TEXTURE:
@@ -822,6 +825,29 @@ namespace pbrt {
   {
     Texture::readFrom(binary);
     binary.read(value);
+  }
+
+
+
+  /*! serialize out to given binary writer */
+  int CheckerTexture::writeTo(BinaryWriter &binary) 
+  {
+    Texture::writeTo(binary);
+    binary.write(uScale);
+    binary.write(vScale);
+    binary.write(tex1);
+    binary.write(tex2);
+    return TYPE_CHECKER_TEXTURE;
+  }
+  
+  /*! serialize _in_ from given binary file reader */
+  void CheckerTexture::readFrom(BinaryReader &binary) 
+  {
+    Texture::readFrom(binary);
+    binary.read(uScale);
+    binary.read(vScale);
+    binary.read(tex1);
+    binary.read(tex2);
   }
 
 

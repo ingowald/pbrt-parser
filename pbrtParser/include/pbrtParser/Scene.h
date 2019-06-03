@@ -351,6 +351,22 @@ namespace pbrt {
     vec3f value;
   };
   
+  struct PBRT_PARSER_INTERFACE CheckerTexture : public Texture {
+    typedef std::shared_ptr<CheckerTexture> SP;
+
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "CheckerTexture"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    float uScale { 1.f};
+    float vScale { 1.f};
+    vec3f tex1 { 0.f, 0.f, 0.f };
+    vec3f tex2 { 1.f, 1.f, 1.f };
+  };
+  
   /*! disney 'principled' material, as used in moana model */
   struct PBRT_PARSER_INTERFACE DisneyMaterial : public Material {
     typedef std::shared_ptr<DisneyMaterial> SP;
