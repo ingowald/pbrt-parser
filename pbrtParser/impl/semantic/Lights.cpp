@@ -14,6 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#include <cmath>
+
 #include "SemanticParser.h"
 
 #ifndef PRINT
@@ -131,4 +133,97 @@ namespace pbrt {
   }
 
 
+  // ==================================================================
+  // CIE 1931 color matching functions
+  //
+  // From:
+  // https://research.nvidia.com/publication/simple-analytic-approximations-cie-xyz-color-matching-functions
+  // ==================================================================
+
+  inline float cie_x(float lambda)
+  {
+      float t1 = (lambda - 442.0f) * ((lambda < 442.0f) ? 0.0624f : 0.0374f);
+      float t2 = (lambda - 599.8f) * ((lambda < 599.8f) ? 0.0264f : 0.0323f);
+      float t3 = (lambda - 501.1f) * ((lambda < 501.1f) ? 0.0490f : 0.0382f);
+  
+      return 0.362f * std::exp(-0.5f * t1 * t1) + 1.056f * std::exp(-0.5f * t2 * t2) - 0.065f * std::exp(-0.5f * t3 * t3);
+  }
+  
+  inline float cie_y(float lambda)
+  {
+      float t1 = (lambda - 568.8f) * ((lambda < 568.8f) ? 0.0213f : 0.0247f);
+      float t2 = (lambda - 530.9f) * ((lambda < 530.9f) ? 0.0613f : 0.0322f);
+  
+      return 0.821f * std::exp(-0.5f * t1 * t1) + 0.286f * std::exp(-0.5f * t2 * t2);
+  }
+  
+  inline float cie_z(float lambda)
+  {
+      float t1 = (lambda - 437.0f) * ((lambda < 437.0f) ? 0.0845f : 0.0278f);
+      float t2 = (lambda - 459.0f) * ((lambda < 459.0f) ? 0.0385f : 0.0725f);
+  
+      return 1.217f * std::exp(-0.5f * t1 * t1) + 0.681f * std::exp(-0.5f * t2 * t2);
+  }
+
+  // ==================================================================
+  // see: http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+  // ==================================================================
+
+  inline vec3f xyz_to_rgb(const vec3f& xyz)
+  {
+      // Assume sRGB working space and D65 reference white
+      return mat3f(
+          {  3.2404542, -0.9692660,  0.0556434 },
+          { -1.5371385,  1.8760108, -0.2040259 },
+          { -0.4985314,  0.0415560,  1.0572252 }
+          ) * xyz;
+  }
+
+  // ==================================================================
+  // DiffuseAreaLightBB
+  // ==================================================================
+
+  /*! convert blackbody temperature to linear rgb */
+  vec3f DiffuseAreaLightBB::LinRGB() const
+  {
+    // Doubles: c (speed of light) is huge, h (Planck's constant) is small..
+    static double const k = 1.3806488E-23;
+    static double const h = 6.62606957E-34;
+    static double const c = 2.99792458E8;
+
+    static double const lmin = 400.0;
+    static double const lmax = 700.0;
+    static double const step = 1.0;
+
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    float n = 0.0f;
+
+    // Evaluate blackbody spd at lambda nm
+    auto bb = [this](float lambda) {
+      lambda *= 1E-3; // nm to microns
+
+      return ( ( 2.0 * 1E24 * h * c * c ) / std::pow(lambda, 5.0) )
+           * ( 1.0 / (std::exp((1E6 * h * c) / (lambda * k * temperature)) - 1.0) );
+    };
+
+    // lambda where radiance is max
+    float lambda_max_radiance = 2.8977721e-3 / temperature * 1e9 /* m2nm */;
+
+    float max_radiance = bb(lambda_max_radiance);
+
+    // Evaluate blackbody spd and convert to xyz
+    for (double lambda = lmin; lambda <= lmax; lambda += step)
+    {
+        float p = bb(lambda) / max_radiance;
+
+        x += p * cie_x(lambda);
+        y += p * cie_y(lambda);
+        z += p * cie_z(lambda);
+        n +=     cie_y(lambda);
+    }
+
+    return xyz_to_rgb(vec3f(x / n, y / n, z / n));
+  }
 } // ::pbrt

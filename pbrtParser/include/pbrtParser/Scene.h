@@ -39,6 +39,7 @@ namespace pbrt {
   using vec2i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2i;
   using vec3i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3i;
   using vec4i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4i;
+  using mat3f    = PBRT_PARSER_VECTYPE_NAMESPACE::mat3f;
   using affine3f = PBRT_PARSER_VECTYPE_NAMESPACE::affine3f;
   using box3f    = PBRT_PARSER_VECTYPE_NAMESPACE::box3f;
   using pairNf   = PBRT_PARSER_VECTYPE_NAMESPACE::pairNf;
@@ -49,6 +50,7 @@ namespace pbrt {
   using vec2i    = pbrt::math::vec2i;
   using vec3i    = pbrt::math::vec3i;
   using vec4i    = pbrt::math::vec4i;
+  using mat3f    = pbrt::math::mat3f;
   using affine3f = pbrt::math::affine3f;
   using box3f    = pbrt::math::box3f;
   using pairNf   = pbrt::math::pairNf;
@@ -198,6 +200,9 @@ namespace pbrt {
     virtual int writeTo(BinaryWriter &) override;
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
+
+    /*! rgb from temperature */
+    vec3f LinRGB() const;
 
     float temperature, scale;
   };
