@@ -22,6 +22,8 @@
 
 #include "pbrtParser/math.h"
 // std
+#include <istream>
+#include <ostream>
 #include <map>
 #include <vector>
 #include <string>
@@ -1043,8 +1045,13 @@ namespace pbrt {
     typedef std::shared_ptr<Scene> SP;
 
 
-    /*! save scene to given file name, and reutrn number of bytes written */
+    /*! save scene to given stream, and return number of bytes written */
+    size_t saveTo(std::ostream &outStream);
+    /*! save scene to given file name, and return number of bytes written */
     size_t saveTo(const std::string &outFileName);
+    /*! load scene from given stream */
+    static Scene::SP loadFrom(std::istream &inStream);
+    /*! load scene from given file name */
     static Scene::SP loadFrom(const std::string &inFileName);
 
     /*! pretty-printer, for debugging */

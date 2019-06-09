@@ -101,12 +101,12 @@ namespace pbrt {
 
   struct BinaryReader {
 
-    BinaryReader(const std::string &fileName)
-      : binFile(fileName, std::ios_base::binary)
+    BinaryReader(std::istream &str)
+      : binStream(str)
     {
       int32_t formatTag;
       
-      binFile.read((char*)&formatTag,sizeof(formatTag));
+      binStream.read((char*)&formatTag,sizeof(formatTag));
       if (formatTag != ourFormatTag) {
         std::cout << "Warning: pbf file uses a different format tag ("
                   << ((int*)(size_t)formatTag) << ") than what this library is expeting ("
@@ -120,13 +120,13 @@ namespace pbrt {
       }
       while (1) {
         uint64_t size;
-        binFile.read((char*)&size,sizeof(size));
-        if (!binFile.good())
+        binStream.read((char*)&size,sizeof(size));
+        if (!binStream.good())
           break;
         int32_t tag;
-        binFile.read((char*)&tag,sizeof(tag));
+        binStream.read((char*)&tag,sizeof(tag));
         currentEntityData.resize(size);
-        binFile.read((char *)currentEntityData.data(),size);
+        binStream.read((char *)currentEntityData.data(),size);
         currentEntityOffset = 0;
 
         Entity::SP newEntity = createEntity(tag);
@@ -365,7 +365,7 @@ namespace pbrt {
     std::vector<uint8_t> currentEntityData;
     size_t currentEntityOffset;
     std::vector<Entity::SP> readEntities;
-    std::ifstream binFile;
+    std::istream& binStream;
   };
 
 
@@ -374,11 +374,11 @@ namespace pbrt {
     that is much faster to parse */
   struct BinaryWriter {
 
-    BinaryWriter(const std::string &fileName)
-      : binFile(fileName, std::ios_base::binary)
+    BinaryWriter(std::ostream& str)
+      : binStream(str)
     {
       int32_t formatTag = ourFormatTag;
-      binFile.write((char*)&formatTag,sizeof(formatTag));
+      binStream.write((char*)&formatTag,sizeof(formatTag));
     }
 
     /*! our stack of output buffers - each object we're writing might
@@ -390,8 +390,8 @@ namespace pbrt {
       own writes. */
     std::stack<SerializedEntity::SP> serializedEntity;
 
-    /*! the file we'll be writing the buffers to */
-    std::ofstream binFile;
+    /*! the stream we'll be writing the buffers to */
+    std::ostream& binStream;
 
     void writeRaw(const void *ptr, size_t size)
     {
@@ -483,9 +483,9 @@ namespace pbrt {
     {
       uint64_t size = (uint64_t)serializedEntity.top()->size();
       // std::cout << "writing block of size " << size << std::endl;
-      binFile.write((const char *)&size,sizeof(size));
-      binFile.write((const char *)&tag,sizeof(tag));
-      binFile.write((const char *)serializedEntity.top()->data(),size);
+      binStream.write((const char *)&size,sizeof(size));
+      binStream.write((const char *)&tag,sizeof(tag));
+      binStream.write((const char *)serializedEntity.top()->data(),size);
       serializedEntity.pop();
       
     }
@@ -1503,23 +1503,38 @@ namespace pbrt {
   
 
 
-  /*! save scene to given file name, and reutrn number of bytes written */
-  size_t Scene::saveTo(const std::string &outFileName)
+  /*! save scene to given stream, and return number of bytes written */
+  size_t Scene::saveTo(std::ostream &outStream)
   {
-    BinaryWriter binary(outFileName);
+    BinaryWriter binary(outStream);
     Entity::SP sp = shared_from_this();
     binary.serialize(sp);
-    return binary.binFile.tellp();
+    return binary.binStream.tellp();
   }
 
-  Scene::SP Scene::loadFrom(const std::string &inFileName)
+  /*! save scene to given file name, and return number of bytes written */
+  size_t Scene::saveTo(const std::string &outFileName)
   {
-    BinaryReader binary(inFileName);
+    std::ofstream outFile(outFileName, std::ios_base::binary);
+    return saveTo(outFile);
+  }
+
+  /*! load scene from given stream */
+  Scene::SP Scene::loadFrom(std::istream &inStream)
+  {
+    BinaryReader binary(inStream);
     if (binary.readEntities.empty())
       throw std::runtime_error("error in Scene::load - no entities");
     Scene::SP scene = std::dynamic_pointer_cast<Scene>(binary.readEntities.back());
     assert(scene);
     return scene;
+  }
+
+  /*! load scene from given file name */
+  Scene::SP Scene::loadFrom(const std::string &inFileName)
+  {
+    std::ifstream inFile(inFileName, std::ios_base::binary);
+    return loadFrom(inFile);
   }
   
 } // ::pbrt
