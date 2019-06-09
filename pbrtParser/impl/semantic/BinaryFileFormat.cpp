@@ -461,7 +461,7 @@ namespace pbrt {
       
     }
 
-    std::map<Entity::SP,int> emittedEntity;
+    std::map<Entity::SP,int32_t> emittedEntity;
 
     int32_t serialize(Entity::SP entity)
     {
@@ -476,7 +476,8 @@ namespace pbrt {
       startNewEntity();
       int32_t tag = (int32_t)entity->writeTo(*this);
       executeWrite(tag);
-      return (emittedEntity[entity] = emittedEntity.size());
+      int32_t num = (int32_t)emittedEntity.size();
+      return emittedEntity[entity] = num;
     }
   };
 
