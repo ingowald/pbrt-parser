@@ -68,7 +68,8 @@ script:
 
   # compile and execute unit tests
   - mkdir -p build && cd build
-  - cmake .. ${CMAKE_OPTIONS} -GNinja && cmake --build . --config Release
+  - cmake .. ${CMAKE_OPTIONS} -DpbrtParser_ENABLE_UNITTESTS=ON -GNinja && cmake --build . --config Release
   # - if [[ (-x $(which brew)) ]]; then ctest -j 4; fi
   # - ctest -j 4
+  - ./unittests
   - cd ..
