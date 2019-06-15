@@ -22,6 +22,11 @@
 #include <sstream>
 #include <set>
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
 namespace pbrt {
   namespace semantic {
     
@@ -48,8 +53,16 @@ namespace pbrt {
         numCurveSegments.print("curve segments");
         numLights.print("lights");
         std::cout << "total num materials " << usedMaterials.size() << std::endl;
+        std::map<std::string,int> matsUsedByType;
         for (auto mat : usedMaterials)
-          std::cout << " - " << (mat ? mat->name : "<invalid material>") << std::endl;
+          if (mat)
+            matsUsedByType[mat->toString()]++;
+          else
+            matsUsedByType["null"]++;
+            
+        std::cout << "material usage by type:" << std::endl;
+        for (auto it : matsUsedByType)
+          std::cout << " - " << it.second << "x\t" << it.first << std::endl;
         std::cout << "scene bounds " << scene->getBounds() << std::endl;
       }
 
@@ -57,10 +70,9 @@ namespace pbrt {
       {
         const bool firstTime = (alreadyTraversed.find(object) == alreadyTraversed.end());
         alreadyTraversed.insert(object);
-
+ 
         numObjects.add(firstTime,1);
-        // numLights.add(firstTime,object->lightSources.size());
-        // numVolumes.add(firstTime,object->volumes.size());
+        numLights.add(firstTime,object->lightSources.size());
         numShapes.add(firstTime,object->shapes.size());
         
         for (auto shape : object->shapes) {
@@ -146,6 +158,8 @@ namespace pbrt {
           scene = Scene::loadFrom(fileName);
         else
           throw std::runtime_error("un-recognized input file extension");
+
+        scene->makeSingleLevel();
         
         std::cout << " => yay! parsing successful..." << std::endl;
         if (parseOnly) exit(0);

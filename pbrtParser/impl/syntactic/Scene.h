@@ -40,6 +40,7 @@ namespace pbrt {
 
     /*! @{ forward definitions so we can use those in shared_ptrs in the attribute class */
     struct AreaLightSource;
+    struct LightSource;
     struct Object;
     struct Material;
     struct Medium;
@@ -115,6 +116,7 @@ namespace pbrt {
       std::map<std::string,std::shared_ptr<Material> > namedMaterial;
       std::map<std::string,std::shared_ptr<Medium> >   namedMedium;
       std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
+      bool reverseOrientation { false };
     };
 
     /*! forward definition of a typed parameter */
@@ -183,7 +185,7 @@ namespace pbrt {
     
       /*! used during parsing, to add a newly parsed parameter value
         to the list */
-      virtual void add(const std::string &text) { throw std::runtime_error("should never get called.."); }
+      virtual void add(const std::string &) { throw std::runtime_error("should never get called.."); }
       //    private:
       std::string type;
       std::shared_ptr<Texture> texture;
@@ -216,7 +218,7 @@ namespace pbrt {
       }
 #endif
       float getParam1f(const std::string &name, const float fallBack=0) const;
-      int getParam1i(const std::string &name, const int fallBack=0) const;
+      int   getParam1i(const std::string &name, const int fallBack=0) const;
       bool getParamBool(const std::string &name, const bool fallBack=false) const;
       std::string getParamString(const std::string &name) const;
       std::shared_ptr<Texture> getParamTexture(const std::string &name) const;
@@ -459,10 +461,16 @@ namespace pbrt {
         more concise, and easier to read */
       typedef std::shared_ptr<LightSource> SP;
     
-      LightSource(const std::string &type) : Node(type) {};
+      LightSource(const std::string &type, 
+                  const Transform &transform)
+        : Node(type),
+        transform(transform)
+      {}
 
       /*! pretty-printing, for debugging */
       virtual std::string toString() const override { return "LightSource<"+type+">"; }
+
+      const Transform transform;
     };
 
     /*! area light sources are different from regular light sources in

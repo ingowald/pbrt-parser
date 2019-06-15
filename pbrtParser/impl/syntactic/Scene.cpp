@@ -333,7 +333,7 @@ namespace pbrt {
         material(material),
         attributes(attributes),
         transform(transform)
-    {};
+    {}
 
     // ==================================================================
     // Material

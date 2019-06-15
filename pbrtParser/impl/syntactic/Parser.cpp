@@ -369,6 +369,7 @@ namespace pbrt {
       if (token == "ReverseOrientation") {
         /* according to the docs, 'ReverseOrientation' only flips the
            normals, not the actual transform */
+        attributesStack.top()->reverseOrientation = !attributesStack.top()->reverseOrientation;
         return true;
       }
       if (token == "CoordSysTransform") {
@@ -400,7 +401,7 @@ namespace pbrt {
         // -------------------------------------------------------
         if (token == "LightSource") {
           std::shared_ptr<LightSource> lightSource
-            = std::make_shared<LightSource>(next().text);
+            = std::make_shared<LightSource>(next().text,ctm);
           parseParams(lightSource->param);
           getCurrentObject()->lightSources.push_back(lightSource);
           // attributesStack.top()->lightSources.push_back(lightSource);

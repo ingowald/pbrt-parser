@@ -40,6 +40,18 @@ A few screenshots:
 
 # Release Notes
 
+V 2.2:
+
+- have first area light sources (distant and infinite)
+- added reverseorientation
+- added InfiniteLight::{nsamples,L,scale}
+
+V 2.1.4: Various bugfixes:
+
+- textures now have 'name' field, which now gets read and written to/from binary
+- fixed core dump when reading/writing spectrum values in pbfs.
+- bumped binary file format to v1.0 (due to changes in format)
+
 V 2.1:
 
 - added semantic parsing of 'AreaLights', which are now attached to

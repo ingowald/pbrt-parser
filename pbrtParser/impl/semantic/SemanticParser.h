@@ -82,9 +82,29 @@ namespace pbrt {
     Texture::SP createTexture_scale(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_ptex(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_constant(pbrt::syntactic::Texture::SP in);
+    Texture::SP createTexture_checker(pbrt::syntactic::Texture::SP in);
     /*! @} */
     Texture::SP findOrCreateTexture(pbrt::syntactic::Texture::SP in);
     
+    // ==================================================================
+    // LigthSources
+    // ==================================================================
+    std::map<pbrt::syntactic::LightSource::SP,LightSource::SP> lightSourceMapping;
+    
+    /*! do create a track representation of given light, _without_
+      checking whether that was already created */
+    LightSource::SP createLightSourceFrom(pbrt::syntactic::LightSource::SP in);
+
+    /*! check if this light has already been imported, and if so,
+      find what we imported, and reutrn this. otherwise import and
+      store for later use.
+      
+      important: it is perfectly OK for this light to be a null
+      object - the area ligths in moana have this features, for
+      example */
+    LightSource::SP findOrCreateLightSource(pbrt::syntactic::LightSource::SP in);
+    LightSource::SP createLightSource_infinite(pbrt::syntactic::LightSource::SP in);
+    LightSource::SP createLightSource_distant(pbrt::syntactic::LightSource::SP in);
 
     // ==================================================================
     // Materials

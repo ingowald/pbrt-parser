@@ -29,23 +29,28 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_MAJOR 1
-#define    PBRT_PARSER_SEMANTIC_FORMAT_MINOR 0
+#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 4
 
   /* 
+     4: InfiniteLight::L,nsamples,scale
+     3: added Shape::reverseOrientatetion
+     2: added light sources to objects
      V0.6: added diffuse area lights
    */
   
-  const uint32_t ourFormatTag = (PBRT_PARSER_SEMANTIC_FORMAT_MAJOR << 16) + PBRT_PARSER_SEMANTIC_FORMAT_MINOR;
+  const uint32_t ourFormatTag = (PBRT_PARSER_SEMANTIC_FORMAT_ID);
 
   enum {
-    TYPE_ERROR,
+    TYPE_ERROR=0,
     TYPE_SCENE,
     TYPE_OBJECT,
     TYPE_SHAPE,
     TYPE_INSTANCE,
     TYPE_CAMERA,
-    TYPE_MATERIAL,
+    TYPE_FILM,
+    TYPE_SPECTRUM,
+    
+    TYPE_MATERIAL=10,
     TYPE_DISNEY_MATERIAL,
     TYPE_UBER_MATERIAL,
     TYPE_MIX_MATERIAL,
@@ -58,27 +63,30 @@ namespace pbrt {
     TYPE_METAL_MATERIAL,
     TYPE_PLASTIC_MATERIAL,
     TYPE_TRANSLUCENT_MATERIAL,
-    TYPE_TEXTURE,
+    
+    TYPE_TEXTURE=30,
     TYPE_IMAGE_TEXTURE,
     TYPE_SCALE_TEXTURE,
     TYPE_PTEX_FILE_TEXTURE,
     TYPE_CONSTANT_TEXTURE,
+    TYPE_CHECKER_TEXTURE,
     TYPE_WINDY_TEXTURE,
     TYPE_FBM_TEXTURE,
     TYPE_MARBLE_TEXTURE,
     TYPE_MIX_TEXTURE,
     TYPE_WRINKLED_TEXTURE,
-    TYPE_FILM,
-    TYPE_TRIANGLE_MESH,
+    
+    TYPE_TRIANGLE_MESH=50,
     TYPE_QUAD_MESH,
     TYPE_SPHERE,
     TYPE_DISK,
     TYPE_CURVE,
 
-    TYPE_DIFFUSE_AREALIGHT_BB,
+    TYPE_DIFFUSE_AREALIGHT_BB=60,
     TYPE_DIFFUSE_AREALIGHT_RGB,
 
-    TYPE_SPECTRUM,
+    TYPE_INFINITE_LIGHT_SOURCE=70,
+    TYPE_DISTANT_LIGHT_SOURCE,
   };
     
   /*! a simple buffer for binary data */
@@ -90,9 +98,9 @@ namespace pbrt {
   struct BinaryReader {
 
     BinaryReader(const std::string &fileName)
-      : binFile(fileName)
+      : binFile(fileName, std::ios_base::binary)
     {
-      int formatTag;
+      int32_t formatTag;
       
       binFile.read((char*)&formatTag,sizeof(formatTag));
       if (formatTag != ourFormatTag) {
@@ -107,11 +115,11 @@ namespace pbrt {
                     << "Please regenerate the pbf file." << std::endl;
       }
       while (1) {
-        size_t size;
+        uint64_t size;
         binFile.read((char*)&size,sizeof(size));
         if (!binFile.good())
           break;
-        int tag;
+        int32_t tag;
         binFile.read((char*)&tag,sizeof(tag));
         currentEntityData.resize(size);
         binFile.read((char *)currentEntityData.data(),size);
@@ -136,7 +144,10 @@ namespace pbrt {
                                         
     template<typename T> T read();
     template<typename T> std::vector<T> readVector();
-    template<typename T> void read(std::vector<T> &vt) { vt = readVector<T>(); }
+    template<typename T> void read(std::vector<T> &vt)
+    {
+      vt = readVector<T>();
+    }
     template<typename T> void read(std::vector<std::shared_ptr<T>> &vt)
     {
       vt = readVector<std::shared_ptr<T>>(); 
@@ -151,10 +162,15 @@ namespace pbrt {
       copyBytes(t.data(),size);
     }
 
+    void read(Spectrum &t)
+    {
+      ((Entity*)&t)->readFrom(*this);
+    }
+
     template<typename T1, typename T2>
     void read(std::map<T1,T2> &result)
     {
-      int size = read<int>();
+      int32_t size = read<int32_t>();
       result.clear();
       for (int i=0;i<size;i++) {
         T1 t1; T2 t2;
@@ -166,7 +182,7 @@ namespace pbrt {
       
     template<typename T> inline void read(std::shared_ptr<T> &t)
     {
-      int ID = read<int>();
+      int32_t ID = read<int32_t>();
       t = getEntity<T>(ID);
     }
 
@@ -185,6 +201,8 @@ namespace pbrt {
         return std::make_shared<PtexFileTexture>();
       case TYPE_CONSTANT_TEXTURE:
         return std::make_shared<ConstantTexture>();
+      case TYPE_CHECKER_TEXTURE:
+        return std::make_shared<CheckerTexture>();
       case TYPE_WINDY_TEXTURE:
         return std::make_shared<WindyTexture>();
       case TYPE_FBM_TEXTURE:
@@ -243,6 +261,10 @@ namespace pbrt {
         return std::make_shared<DiffuseAreaLightBB>();
       case TYPE_DIFFUSE_AREALIGHT_RGB:
         return std::make_shared<DiffuseAreaLightRGB>();
+      case TYPE_INFINITE_LIGHT_SOURCE:
+        return std::make_shared<InfiniteLightSource>();
+      case TYPE_DISTANT_LIGHT_SOURCE:
+        return std::make_shared<DistantLightSource>();
       case TYPE_SPECTRUM:
         return std::make_shared<Spectrum>();
       default:
@@ -297,17 +319,20 @@ namespace pbrt {
   template<>
   std::string BinaryReader::read()
   {
-    int length = read<int>();
-    std::vector<char> cv(length);
-    copyBytes(&cv[0],length);
-    std::string s = std::string(cv.begin(),cv.end());
+    std::string s;
+    int32_t length = read<int32_t>();
+    if (length) {
+      std::vector<int8_t> cv(length);
+      copyBytes(&cv[0],length);
+      s = std::string(cv.begin(),cv.end());
+    }
     return s;
   }
 
   template<typename T>
   std::vector<T> BinaryReader::readVector()
   {
-    size_t length = read<size_t>();
+    uint64_t length = read<uint64_t>();
     std::vector<T> vt(length);
     for (size_t i=0;i<length;i++) {
       read(vt[i]);
@@ -322,9 +347,9 @@ namespace pbrt {
   struct BinaryWriter {
 
     BinaryWriter(const std::string &fileName)
-      : binFile(fileName)
+      : binFile(fileName, std::ios_base::binary)
     {
-      int formatTag = ourFormatTag;
+      int32_t formatTag = ourFormatTag;
       binFile.write((char*)&formatTag,sizeof(formatTag));
     }
 
@@ -363,13 +388,19 @@ namespace pbrt {
       write((int32_t)t.size());
       writeRaw(&t[0],t.size());
     }
+
+    void write(Spectrum &t)
+    {
+      ((Entity*)&t)->writeTo(*this);
+    }
+
     
     template<typename T>
     void write(const std::vector<T> &t)
     {
       const void *ptr = (const void *)t.data();
       size_t size = t.size();
-      write(size);
+      write((uint64_t)size);
       if (!t.empty())
         writeRaw(ptr,t.size()*sizeof(T));
     }
@@ -378,7 +409,7 @@ namespace pbrt {
     void write(const std::vector<std::shared_ptr<T>> &t)
     {
       size_t size = t.size();
-      write(size);
+      write((uint64_t)size);
       for (size_t i=0;i<size;i++)
         write(t[i]);
     }
@@ -388,7 +419,7 @@ namespace pbrt {
     template<typename T1, typename T2>
     void write(const std::map<T1,std::shared_ptr<T2>> &values)
     {
-      int size = values.size();
+      int32_t size = values.size();
       write(size);
       for (auto it : values) {
         write(it.first);
@@ -419,9 +450,9 @@ namespace pbrt {
     { serializedEntity.push(std::make_shared<SerializedEntity>()); }
     
     /*! write the topmost write buffer to disk, and free its memory */
-    void executeWrite(int tag)
+    void executeWrite(int32_t tag)
     {
-      size_t size = serializedEntity.top()->size();
+      uint64_t size = (uint64_t)serializedEntity.top()->size();
       // std::cout << "writing block of size " << size << std::endl;
       binFile.write((const char *)&size,sizeof(size));
       binFile.write((const char *)&tag,sizeof(tag));
@@ -432,7 +463,7 @@ namespace pbrt {
 
     std::map<Entity::SP,int> emittedEntity;
 
-    int serialize(Entity::SP entity)
+    int32_t serialize(Entity::SP entity)
     {
       if (!entity) {
         // std::cout << "warning: null entity" << std::endl;
@@ -443,7 +474,7 @@ namespace pbrt {
         return emittedEntity[entity];
 
       startNewEntity();
-      int tag = entity->writeTo(*this);
+      int32_t tag = (int32_t)entity->writeTo(*this);
       executeWrite(tag);
       return (emittedEntity[entity] = emittedEntity.size());
     }
@@ -512,6 +543,7 @@ namespace pbrt {
     binary.write(binary.serialize(material));
     binary.write(textures);
     binary.write(areaLight);
+    binary.write((int8_t)reverseOrientation);
     return TYPE_SHAPE;
   }
   
@@ -521,6 +553,7 @@ namespace pbrt {
     binary.read(material);
     binary.read(textures);
     binary.read(areaLight);
+    reverseOrientation = binary.read<int8_t>();
   }
 
 
@@ -650,6 +683,52 @@ namespace pbrt {
   }
 
 
+  // ==================================================================
+  // LightSources
+  // ==================================================================
+
+  /*! serialize out to given binary writer */
+  int InfiniteLightSource::writeTo(BinaryWriter &binary) 
+  {
+    binary.write(mapName);
+    binary.write(transform);
+    binary.write(L);
+    binary.write(scale);
+    binary.write(nSamples);
+    return TYPE_INFINITE_LIGHT_SOURCE;
+  }
+
+  /*! serialize out to given binary reader */
+  void InfiniteLightSource::readFrom(BinaryReader &binary) 
+  {
+    binary.read(mapName);
+    binary.read(transform);
+    binary.read(L);
+    binary.read(scale);
+    binary.read(nSamples);
+  }
+  
+  /*! serialize out to given binary writer */
+  int DistantLightSource::writeTo(BinaryWriter &binary) 
+  {
+    binary.write(from);
+    binary.write(to);
+    binary.write(L);
+    binary.write(scale);
+    return TYPE_DISTANT_LIGHT_SOURCE;
+  }
+
+  /*! serialize out to given binary reader */
+  void DistantLightSource::readFrom(BinaryReader &binary) 
+  {
+    binary.read(from);
+    binary.read(to);
+    binary.read(L);
+    binary.read(scale);
+  }
+  
+  
+  
 
 
   // ==================================================================
@@ -657,7 +736,7 @@ namespace pbrt {
   // ==================================================================
 
   /*! serialize out to given binary writer */
-  int AreaLight::writeTo(BinaryWriter &binary) 
+  int AreaLight::writeTo(BinaryWriter &/*unused: binary*/) 
   {
     /* should never be stored as a final entity */ return -1;
   }
@@ -681,7 +760,7 @@ namespace pbrt {
   
 
   /*! serialize out to given binary reader */
-  void AreaLight::readFrom(BinaryReader &binary) 
+  void AreaLight::readFrom(BinaryReader &/*unused: binary*/) 
   {
     /* no fields */
   }
@@ -725,13 +804,13 @@ namespace pbrt {
   // ==================================================================
   
   /*! serialize out to given binary writer */
-  int Texture::writeTo(BinaryWriter &binary) 
+  int Texture::writeTo(BinaryWriter &/*unused: binary*/) 
   {
     return TYPE_TEXTURE;
   }
   
   /*! serialize _in_ from given binary file reader */
-  void Texture::readFrom(BinaryReader &binary) 
+  void Texture::readFrom(BinaryReader &/*unused: binary*/) 
   {
   }
 
@@ -753,6 +832,29 @@ namespace pbrt {
   {
     Texture::readFrom(binary);
     binary.read(value);
+  }
+
+
+
+  /*! serialize out to given binary writer */
+  int CheckerTexture::writeTo(BinaryWriter &binary) 
+  {
+    Texture::writeTo(binary);
+    binary.write(uScale);
+    binary.write(vScale);
+    binary.write(tex1);
+    binary.write(tex2);
+    return TYPE_CHECKER_TEXTURE;
+  }
+  
+  /*! serialize _in_ from given binary file reader */
+  void CheckerTexture::readFrom(BinaryReader &binary) 
+  {
+    Texture::readFrom(binary);
+    binary.read(uScale);
+    binary.read(vScale);
+    binary.read(tex1);
+    binary.read(tex2);
   }
 
 
@@ -1328,11 +1430,15 @@ namespace pbrt {
   int Object::writeTo(BinaryWriter &binary) 
   {
     binary.write(name);
-    binary.write((int)shapes.size());
+    binary.write((int32_t)shapes.size());
     for (auto geom : shapes) {
       binary.write(binary.serialize(geom));
     }
-    binary.write((int)instances.size());
+    binary.write((int32_t)lightSources.size());
+    for (auto ls : lightSources) {
+      binary.write(binary.serialize(ls));
+    }
+    binary.write((int32_t)instances.size());
     for (auto inst : instances) {
       binary.write(binary.serialize(inst));
     }
@@ -1343,16 +1449,24 @@ namespace pbrt {
   void Object::readFrom(BinaryReader &binary) 
   {
     name = binary.read<std::string>();
+
     // read shapes
-    int numShapes = binary.read<int>();
+    int32_t numShapes = binary.read<int32_t>();
     assert(shapes.empty());
-    for (int i=0;i<numShapes;i++)
-      shapes.push_back(binary.getEntity<Shape>(binary.read<int>()));
+    for (int32_t i=0;i<numShapes;i++)
+      shapes.push_back(binary.getEntity<Shape>(binary.read<int32_t>()));
+
+    // read lightSources
+    int numLightSources = binary.read<int32_t>();
+    assert(lightSources.empty());
+    for (int i=0;i<numLightSources;i++)
+      lightSources.push_back(binary.getEntity<LightSource>(binary.read<int32_t>()));
+
     // read instances
-    int numInstances = binary.read<int>();
+    int32_t numInstances = binary.read<int32_t>();
     assert(instances.empty());
-    for (int i=0;i<numInstances;i++)
-      instances.push_back(binary.getEntity<Instance>(binary.read<int>()));
+    for (int32_t i=0;i<numInstances;i++)
+      instances.push_back(binary.getEntity<Instance>(binary.read<int32_t>()));
   }
 
 

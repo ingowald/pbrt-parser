@@ -20,6 +20,11 @@
 #include <string.h>
 #include <algorithm>
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   
@@ -28,6 +33,10 @@ namespace pbrt {
     return getPrimBounds(primID,affine3f::identity());
   }
 
+  std::string TriangleMesh::toString() const 
+  {
+    return "TriangleMesh";
+  }
 
   box3f TriangleMesh::getPrimBounds(const size_t primID, const affine3f &xfm) 
   {
@@ -63,7 +72,7 @@ namespace pbrt {
 
 
 
-  box3f Sphere::getPrimBounds(const size_t primID, const affine3f &xfm) 
+  box3f Sphere::getPrimBounds(const size_t /*unused: primID*/, const affine3f &xfm) 
   {
     box3f ob(vec3f(-radius),vec3f(+radius));
     affine3f _xfm = xfm * transform;
@@ -95,7 +104,7 @@ namespace pbrt {
 
 
 
-  box3f Disk::getPrimBounds(const size_t primID, const affine3f &xfm) 
+  box3f Disk::getPrimBounds(const size_t /*unused: primID*/, const affine3f &xfm) 
   {
     box3f ob(vec3f(-radius,-radius,0),vec3f(+radius,+radius,height));
     affine3f _xfm = xfm * transform;
@@ -170,7 +179,7 @@ namespace pbrt {
   // Curve
   // ==================================================================
 
-  box3f Curve::getPrimBounds(const size_t primID, const affine3f &xfm) 
+  box3f Curve::getPrimBounds(const size_t /*unused: primID*/, const affine3f &xfm) 
   {
     box3f primBounds = box3f::empty_box();
     for (auto p : P)
@@ -181,7 +190,7 @@ namespace pbrt {
     return primBounds;
   }
 
-  box3f Curve::getPrimBounds(const size_t primID) 
+  box3f Curve::getPrimBounds(const size_t /*unused: primID */) 
   {
     box3f primBounds = box3f::empty_box();
     for (auto p : P)
@@ -220,7 +229,7 @@ namespace pbrt {
       }
     }
     return bounds;
-  };
+  }
 
 
   /*! compute (conservative but possibly approximate) bbox of this
@@ -242,7 +251,7 @@ namespace pbrt {
     bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.lower.z)));
     bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
     return bounds;
-  };
+  }
     
   /* compute some _rough_ storage cost esimate for a scene. this will
      allow bricking builders to greedily split only the most egregious
@@ -371,6 +380,8 @@ namespace pbrt {
       Object::SP ours = std::make_shared<Object>("ShapeFrom:"+object->name);
       for (auto geom : object->shapes)
         ours->shapes.push_back(geom);
+      for (auto lightSource : object->lightSources)
+        ours->lightSources.push_back(lightSource);
       return alreadyEmitted[object] = ours;
     }
     

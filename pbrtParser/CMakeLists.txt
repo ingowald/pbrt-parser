@@ -33,6 +33,7 @@ set(SOURCES
   impl/semantic/Camera.cpp
   impl/semantic/Textures.cpp
   impl/semantic/Materials.cpp
+  impl/semantic/Lights.cpp
   impl/semantic/Scene.cpp
   impl/semantic/BinaryFileFormat.cpp
   impl/semantic/importPBRT.cpp

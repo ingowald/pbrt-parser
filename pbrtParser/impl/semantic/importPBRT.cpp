@@ -20,8 +20,6 @@
 // std
 #include <map>
 #include <sstream>
-// // ply parser:
-// #include "../3rdParty/happly.h"
 
 namespace pbrt {
 

@@ -36,7 +36,7 @@ namespace pbrt {
           std::vector<float> y = elem.getProperty<float>("y");
           std::vector<float> z = elem.getProperty<float>("z");
           pos.resize(x.size());
-          for(int i = 0; i < x.size(); i ++) {
+          for(int i = 0; i < (int)x.size(); i ++) {
             pos[i] = vec3f(x[i], y[i], z[i]);
           }
         } else {
@@ -47,7 +47,7 @@ namespace pbrt {
           std::vector<float> y = elem.getProperty<float>("ny");
           std::vector<float> z = elem.getProperty<float>("nz");
           nor.resize(x.size());
-          for(int i = 0; i < x.size(); i ++) {
+          for(int i = 0; i < (int)x.size(); i ++) {
             nor[i] = vec3f(x[i], y[i], z[i]);
           }
         }
@@ -55,7 +55,7 @@ namespace pbrt {
           std::vector<float> u = elem.getProperty<float>("u");
           std::vector<float> v = elem.getProperty<float>("v");
           tex.resize(u.size());
-          for(int i = 0; i < u.size(); i ++) {
+          for(int i = 0; i < (int)u.size(); i ++) {
             tex[i] = vec2f(u[i], v[i]);
           }
         }
@@ -65,10 +65,10 @@ namespace pbrt {
       if (ply.hasElement("face")) {
         happly::Element& elem = ply.getElement("face");
         if(elem.hasProperty("vertex_indices")) {
-          std::vector<std::vector<int>> fasces = elem.getListPropertyAnySign<int>("vertex_indices");
-          for(int j = 0; j < fasces.size(); j ++) {
-            std::vector<int>& face = fasces[j];
-            for (int i=2;i<face.size();i++) {
+          std::vector<std::vector<int>> faces = elem.getListPropertyAnySign<int>("vertex_indices");
+          for(int j = 0; j < (int)faces.size(); j ++) {
+            std::vector<int>& face = faces[j];
+            for (int i=2;i<(int)face.size();i++) {
               idx.push_back(vec3i(face[0], face[i-1], face[i]));
             }
           }
@@ -294,6 +294,8 @@ namespace pbrt {
       return emittedShapes[pbrtShape];
 
     emittedShapes[pbrtShape] = emitShape(pbrtShape);
+    if (emittedShapes[pbrtShape])
+      emittedShapes[pbrtShape]->reverseOrientation = pbrtShape->attributes->reverseOrientation;
     /* now, add area light sources */
     if (!pbrtShape->attributes->areaLightSources.empty()) {
       std::cout << "Shape has " << pbrtShape->attributes->areaLightSources.size()
@@ -303,6 +305,7 @@ namespace pbrt {
       if (!areaLights.empty()) {
         if (areaLights.size() > 1)
           std::cout << "Warning: Shape has more than one area light!?" << std::endl;
+        assert(emittedShapes[pbrtShape]);
         emittedShapes[pbrtShape]->areaLight = parseAreaLight(areaLights[0]);
       }
     }
@@ -321,11 +324,19 @@ namespace pbrt {
       
     Object::SP ourObject = std::make_shared<Object>();
     ourObject->name = pbrtObject->name;
+    
+    for (auto lightSource : pbrtObject->lightSources) {
+      LightSource::SP ourLightSource = findOrCreateLightSource(lightSource);
+      if (ourLightSource)
+        ourObject->lightSources.push_back(ourLightSource);
+    }
+    
     for (auto shape : pbrtObject->shapes) {
       Shape::SP ourShape = findOrCreateShape(shape);
       if (ourShape)
         ourObject->shapes.push_back(ourShape);
     }
+    
     for (auto instance : pbrtObject->objectInstances)
       ourObject->instances.push_back(emitInstance(instance));
 

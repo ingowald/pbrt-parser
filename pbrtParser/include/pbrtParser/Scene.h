@@ -39,6 +39,7 @@ namespace pbrt {
   using vec2i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2i;
   using vec3i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3i;
   using vec4i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4i;
+  using mat3f    = PBRT_PARSER_VECTYPE_NAMESPACE::mat3f;
   using affine3f = PBRT_PARSER_VECTYPE_NAMESPACE::affine3f;
   using box3f    = PBRT_PARSER_VECTYPE_NAMESPACE::box3f;
   using pairNf   = PBRT_PARSER_VECTYPE_NAMESPACE::pairNf;
@@ -49,6 +50,7 @@ namespace pbrt {
   using vec2i    = pbrt::math::vec2i;
   using vec3i    = pbrt::math::vec3i;
   using vec4i    = pbrt::math::vec4i;
+  using mat3f    = pbrt::math::mat3f;
   using affine3f = pbrt::math::affine3f;
   using box3f    = pbrt::math::box3f;
   using pairNf   = pbrt::math::pairNf;
@@ -105,6 +107,64 @@ namespace pbrt {
     std::string name;
   };
 
+
+
+  // ==================================================================
+  // Singular Light Sources
+  // ==================================================================
+  struct PBRT_PARSER_INTERFACE LightSource : public Entity {
+    typedef std::shared_ptr<LightSource> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "LightSource"; }
+    // /*! serialize out to given binary writer */
+    // virtual int writeTo(BinaryWriter &) override;
+    // /*! serialize _in_ from given binary file reader */
+    // virtual void readFrom(BinaryReader &) override;
+  };
+
+  struct PBRT_PARSER_INTERFACE InfiniteLightSource : public LightSource {
+    typedef std::shared_ptr<InfiniteLightSource> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "InfiniteLightSource"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    std::string mapName;
+    affine3f    transform;
+    vec3f       L { 1.f,1.f,1.f };
+    vec3f       scale { 1.f,1.f,1.f };
+    int         nSamples { 1 };
+  };
+
+  // LightSource "distant" 
+  //         "point from" [ 0 0 0 ] 
+  //         "point to" [ 0 0 1 ] 
+  //         "rgb L" [ 3.1359820366 2.4853198528 1.4146273136 ] 
+  //         "rgb scale" [ 3.2500000000 3.2500000000 3.2500000000 ] 
+  struct PBRT_PARSER_INTERFACE DistantLightSource : public LightSource {
+    typedef std::shared_ptr<DistantLightSource> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "DistantLightSource"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    vec3f from  { 0.f,0.f,0.f };
+    vec3f to    { 0.f,0.f,1.f };
+    vec3f L     { 1.f,1.f,1.f };
+    vec3f scale { 1.f,1.f,1.f };
+  };
+  
+  // ==================================================================
+  // Area Lights
+  // ==================================================================
+  
   struct PBRT_PARSER_INTERFACE AreaLight : public Entity {
     typedef std::shared_ptr<AreaLight> SP;
     
@@ -140,6 +200,9 @@ namespace pbrt {
     virtual int writeTo(BinaryWriter &) override;
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
+
+    /*! rgb from temperature */
+    vec3f LinRGB() const;
 
     float temperature, scale;
   };
@@ -294,6 +357,22 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
 
     vec3f value;
+  };
+  
+  struct PBRT_PARSER_INTERFACE CheckerTexture : public Texture {
+    typedef std::shared_ptr<CheckerTexture> SP;
+
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "CheckerTexture"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    float uScale { 1.f};
+    float vScale { 1.f};
+    vec3f tex1 { 0.f, 0.f, 0.f };
+    vec3f tex2 { 1.f, 1.f, 1.f };
   };
   
   /*! disney 'principled' material, as used in moana model */
@@ -613,6 +692,10 @@ namespace pbrt {
       
     /*! the pbrt material assigned to the underlying shape */
     Material::SP material;
+
+    /*! if enabled, the geometry normal of this shape should get
+        flipped during rendering */
+    bool reverseOrientation { false };
     
     /*! textures directl assigned to the shape (ie, not to the
       material) */
@@ -637,7 +720,7 @@ namespace pbrt {
     TriangleMesh(Material::SP material=Material::SP()) : Shape(material) {}
     
     /*! pretty-printer, for debugging */
-    virtual std::string toString() const override { return "TriangleMesh"; }
+    virtual std::string toString() const override;
 
     /*! serialize out to given binary writer */
     virtual int writeTo(BinaryWriter &) override;
@@ -869,8 +952,12 @@ namespace pbrt {
 
     virtual box3f getBounds() const;
     
-    std::vector<Shape::SP>     shapes;
-    std::vector<Instance::SP>  instances;
+    std::vector<Shape::SP>       shapes;
+    /*! all _non_-area light sources; in the pbrt spec area light
+        sources get attached to shapes; only non-area light source
+        directly live in an object */
+    std::vector<LightSource::SP> lightSources;
+    std::vector<Instance::SP>    instances;
     std::string name = "";
   };
 
