@@ -135,6 +135,7 @@ namespace pbrt {
   Shape::SP SemanticParser::emitCurve(pbrt::syntactic::Shape::SP shape)
   {
     Curve::SP ours = std::make_shared<Curve>(findOrCreateMaterial(shape->material));
+    ours->transform = shape->transform.atStart;
 
     // -------------------------------------------------------
     // check 'type'

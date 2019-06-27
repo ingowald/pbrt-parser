@@ -29,7 +29,7 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 4
+#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 5
 
   /* 
      4: InfiniteLight::L,nsamples,scale
@@ -619,6 +619,7 @@ namespace pbrt {
     binary.write(type);
     binary.write(degree);
     binary.write(P);
+    binary.write(transform);
     return TYPE_CURVE;
   }
   
@@ -632,6 +633,7 @@ namespace pbrt {
     binary.read(type);
     binary.read(degree);
     binary.read(P);
+    binary.read(transform);
   }
 
 
