@@ -19,8 +19,12 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <memory>
 #include <stack>
 #include <string.h>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #ifndef PRINT
 # define PRINT(var) std::cout << #var << "=" << var << std::endl;
@@ -141,18 +145,70 @@ namespace pbrt {
       memcpy((void *)t,(void *)((char*)currentEntityData.data()+currentEntityOffset),numBytes);
       currentEntityOffset += numBytes;
     }
-                                        
-    template<typename T> T read();
-    template<typename T> std::vector<T> readVector();
-    template<typename T> void read(std::vector<T> &vt)
+
+    template<
+        typename T,
+        typename = typename std::enable_if<std::is_trivially_copyable<T>::value>::type
+        >
+    inline void read(T &t)
     {
-      vt = readVector<T>();
+      copyBytes(&t, sizeof(t));
     }
-    template<typename T> void read(std::vector<std::shared_ptr<T>> &vt)
+
+    template<typename T1, typename T2>
+    inline void read(std::pair<T1,T2> &t)
     {
-      vt = readVector<std::shared_ptr<T>>(); 
+      copyBytes(&t.first, sizeof(T1));
+      copyBytes(&t.second, sizeof(T2));
     }
-    template<typename T> void read(T &t) { t = read<T>(); }
+
+    template<typename T>
+    inline void read(std::shared_ptr<T> &t)
+    {
+      int32_t ID;
+      read(ID);
+      t = getEntity<T>(ID);
+    }
+
+    template<
+        typename T,
+        typename A = std::allocator<T>,
+        typename = typename std::enable_if<std::is_trivially_copyable<T>::value>::type
+        >
+    inline void read(std::vector<T, A> &vt)
+    {
+      uint64_t length;
+      read(length);
+      vt.resize(length);
+      copyBytes(vt.data(), length*sizeof(T));
+    }
+
+    template<
+        typename T,
+        typename A = std::allocator<T>,
+        typename = typename std::enable_if<!std::is_trivially_copyable<T>::value>::type,
+        typename = void // overload!
+        >
+    inline void read(std::vector<T, A> &vt)
+    {
+      uint64_t length;
+      read(length);
+      vt.resize(length);
+      for (size_t i=0; i<length; ++i)
+        read(vt[i]);
+    }
+
+    template<typename A = std::allocator<bool>>
+    inline void read(std::vector<bool, A> &vt)
+    {
+      uint64_t length;
+      read(length);
+      std::vector<unsigned char> asChar(length);
+      read(asChar);
+      vt.resize(length);
+      for (size_t i=0; i<length; ++i)
+        vt[i] = (bool)asChar[i];
+    }
 
     void read(std::string &t)
     {
@@ -170,7 +226,8 @@ namespace pbrt {
     template<typename T1, typename T2>
     void read(std::map<T1,T2> &result)
     {
-      int32_t size = read<int32_t>();
+      int32_t size;
+      read(size);
       result.clear();
       for (int i=0;i<size;i++) {
         T1 t1; T2 t2;
@@ -179,13 +236,16 @@ namespace pbrt {
         result[t1] = t2;
       }
     }
-      
-    template<typename T> inline void read(std::shared_ptr<T> &t)
-    {
-      int32_t ID = read<int32_t>();
-      t = getEntity<T>(ID);
-    }
 
+    // Convenience overload so we can just write read<XXX>()
+    template <typename T>
+    inline T read()
+    {
+      T result;
+      read(result);
+      return result;
+    }
+      
     Entity::SP createEntity(int typeTag)
     {
       switch (typeTag) {
@@ -308,39 +368,7 @@ namespace pbrt {
     std::ifstream binFile;
   };
 
-  template<typename T>
-  T BinaryReader::read()
-  {
-    T t;
-    copyBytes(&t,sizeof(t));
-    return t;
-  }
 
-  template<>
-  std::string BinaryReader::read()
-  {
-    std::string s;
-    int32_t length = read<int32_t>();
-    if (length) {
-      std::vector<int8_t> cv(length);
-      copyBytes(&cv[0],length);
-      s = std::string(cv.begin(),cv.end());
-    }
-    return s;
-  }
-
-  template<typename T>
-  std::vector<T> BinaryReader::readVector()
-  {
-    uint64_t length = read<uint64_t>();
-    std::vector<T> vt(length);
-    for (size_t i=0;i<length;i++) {
-      read(vt[i]);
-    }
-    return vt;
-  }
-  
-    
 
   /*! helper class that writes out a PBRT scene graph in a binary form
     that is much faster to parse */
@@ -395,23 +423,40 @@ namespace pbrt {
     }
 
     
-    template<typename T>
-    void write(const std::vector<T> &t)
+    template<
+        typename T,
+        typename A = std::allocator<T>,
+        typename = typename std::enable_if<std::is_trivially_copyable<T>::value>::type
+        >
+    void write(const std::vector<T, A> &t)
     {
-      const void *ptr = (const void *)t.data();
       size_t size = t.size();
       write((uint64_t)size);
       if (!t.empty())
-        writeRaw(ptr,t.size()*sizeof(T));
+        writeRaw(t.data(),t.size()*sizeof(T));
     }
 
-    template<typename T>
-    void write(const std::vector<std::shared_ptr<T>> &t)
+    template<
+        typename T,
+        typename A = std::allocator<T>,
+        typename = typename std::enable_if<!std::is_trivially_copyable<T>::value>::type,
+        typename = void // overload!
+        >
+    void write(const std::vector<T, A> &t)
     {
       size_t size = t.size();
       write((uint64_t)size);
       for (size_t i=0;i<size;i++)
         write(t[i]);
+    }
+
+    template <typename A = std::allocator<bool>>
+    void write(const std::vector<bool, A> &t)
+    {
+      std::vector<unsigned char> asChar(t.size());
+      for (size_t i=0;i<t.size();i++)
+        asChar[i] = t[i]?1:0;
+      write(asChar);
     }
 
 
@@ -429,22 +474,6 @@ namespace pbrt {
     }
 
 
-    void write(const std::vector<bool> &t)
-    {
-      std::vector<unsigned char> asChar(t.size());
-      for (size_t i=0;i<t.size();i++)
-        asChar[i] = t[i]?1:0;
-      write(asChar);
-    }
-
-    void write(const std::vector<std::string> &t)
-    {
-      write(t.size());
-      for (auto &s : t) {
-        write(s);
-      }
-    }
-    
     /*! start a new write buffer on the stack - all future writes will go into this buffer */
     void startNewEntity()
     { serializedEntity.push(std::make_shared<SerializedEntity>()); }
