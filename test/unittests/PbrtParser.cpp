@@ -740,3 +740,90 @@ TEST(PbrtParser, AttributeStack)
     EXPECT_EQ(typeid(asciiSphere->material), typeid(binarySphere->material));
   }
 }
+
+
+// =======================================================
+// Animated transformations
+// =======================================================
+
+TEST(PbrtParser, AnimatedTransformations)
+{
+  typename Stream::SP pbrt = std::make_shared<Stream>();
+
+  (*pbrt) << R"(
+        WorldBegin
+            Translate 1 0 0
+
+            ActiveTransform StartTime
+            Translate 4 0 0
+
+            ActiveTransform EndTime
+            Translate 0 1 0
+
+            ActiveTransform All
+            Translate 0 0 2
+
+            Shape "sphere" "float radius" 1
+
+            TransformBegin
+                ActiveTransform StartTime
+                Translate -4 0 0
+
+                ActiveTransform EndTime
+                Translate 0 -1 0
+
+                Shape "sphere" "float radius" 1
+            TransformEnd
+
+            Shape "sphere" "float radius" 1
+        WorldEnd
+    )";
+
+  // Transforms with linear motion are currently only
+  // parsed by the _syntactic_ parser
+  IParser parser;
+  parser.parse<std::stringstream>(pbrt);
+
+  syntactic::Scene::SP sc = parser.getScene();
+
+  ASSERT_NE(sc, nullptr);
+  ASSERT_NE(sc->world, nullptr);
+  ASSERT_EQ(sc->world->shapes.size(), 3);
+
+  using pbrt::syntactic::affine3f;
+
+  affine3f atStart, atEnd;
+
+  // Before Transform{Begin|End}
+  atStart = sc->world->shapes[0]->transform.atStart;
+  EXPECT_FLOAT_EQ(atStart.p.x, 5.f);
+  EXPECT_FLOAT_EQ(atStart.p.y, 0.f);
+  EXPECT_FLOAT_EQ(atStart.p.z, 2.f);
+
+  atEnd = sc->world->shapes[0]->transform.atEnd;
+  EXPECT_FLOAT_EQ(atEnd.p.x, 1.f);
+  EXPECT_FLOAT_EQ(atEnd.p.y, 1.f);
+  EXPECT_FLOAT_EQ(atEnd.p.z, 2.f);
+
+  // Inside Transform{Begin|End}
+  atStart = sc->world->shapes[1]->transform.atStart;
+  EXPECT_FLOAT_EQ(atStart.p.x, 1.f);
+  EXPECT_FLOAT_EQ(atStart.p.y, 0.f);
+  EXPECT_FLOAT_EQ(atStart.p.z, 2.f);
+
+  atEnd = sc->world->shapes[1]->transform.atEnd;
+  EXPECT_FLOAT_EQ(atEnd.p.x, 1.f);
+  EXPECT_FLOAT_EQ(atEnd.p.y, 0.f);
+  EXPECT_FLOAT_EQ(atEnd.p.z, 2.f);
+
+  // After Transform{Begin|End}
+  atStart = sc->world->shapes[2]->transform.atStart;
+  EXPECT_FLOAT_EQ(atStart.p.x, 5.f);
+  EXPECT_FLOAT_EQ(atStart.p.y, 0.f);
+  EXPECT_FLOAT_EQ(atStart.p.z, 2.f);
+
+  atEnd = sc->world->shapes[2]->transform.atEnd;
+  EXPECT_FLOAT_EQ(atEnd.p.x, 1.f);
+  EXPECT_FLOAT_EQ(atEnd.p.y, 1.f);
+  EXPECT_FLOAT_EQ(atEnd.p.z, 2.f);
+}
