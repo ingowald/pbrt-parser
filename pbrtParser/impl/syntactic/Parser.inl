@@ -298,14 +298,14 @@ namespace pbrt {
     template <typename DS>
     void BasicParser<DS>::pushTransform() 
     {
-      ctm.stack.push(ctm);
+      transformStack.push(ctm);
     }
 
     template <typename DS>
     void BasicParser<DS>::popTransform() 
     {
-      (Transform&)ctm = ctm.stack.top();
-      ctm.stack.pop();
+      ctm = transformStack.top();
+      transformStack.pop();
     }
     
     template <typename DS>
@@ -325,7 +325,6 @@ namespace pbrt {
         } else
           throw std::runtime_error("unknown argument '"+which+"' to 'ActiveTransform' command");
           
-        pushTransform();
         return true;
       }
       if (token == "TransformBegin") {

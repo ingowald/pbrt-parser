@@ -46,9 +46,6 @@ namespace pbrt {
       }
       bool startActive { true };
       bool endActive   { true };
-    
-      /*! pbrt's "CTM" (current transformation matrix) handling */
-      std::stack<Transform> stack;
     };
 
   
@@ -141,6 +138,7 @@ namespace pbrt {
 
       std::stack<std::shared_ptr<Material> >   materialStack;
       std::stack<std::shared_ptr<Attributes> > attributesStack;
+      std::stack<CTM>                          transformStack;
       std::stack<std::shared_ptr<Object> >     objectStack;
 
       CTM ctm;
