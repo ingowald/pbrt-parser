@@ -101,6 +101,11 @@ namespace pbrt {
     class PBRT_PARSER_INTERFACE Attributes {
     public:
 
+      // NOT copyable!
+      Attributes() = default;
+      Attributes(Attributes&) = delete;
+      Attributes& operator=(Attributes&) = delete;
+
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
       typedef std::shared_ptr<Attributes> SP;
