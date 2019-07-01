@@ -98,25 +98,117 @@ namespace pbrt {
       affine3f atEnd;
     };
 
-    struct PBRT_PARSER_INTERFACE Attributes {
+    class PBRT_PARSER_INTERFACE Attributes {
+    public:
 
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
       typedef std::shared_ptr<Attributes> SP;
-    
-      Attributes() = default;
-      Attributes(Attributes &&other) = default;
-      Attributes(const Attributes &other) = default;
 
-      virtual std::shared_ptr<Attributes> clone() const
-      { return std::make_shared<Attributes>(*this); }
+      /*! Save the current graphics state and initialize a new one */
+      static void push(Attributes::SP& graphicsState) {
+        Attributes::SP newGraphicsState = std::make_shared<Attributes>();
+        newGraphicsState->areaLightSources = graphicsState->areaLightSources;
+        newGraphicsState->mediumInterface = graphicsState->mediumInterface;
+        newGraphicsState->reverseOrientation = graphicsState->reverseOrientation;
+        newGraphicsState->parent = graphicsState;
+        graphicsState = newGraphicsState;
+      }
+
+      /*! Restore the parent graphics state */
+      static void pop(Attributes::SP& graphicsState) {
+        if (!graphicsState)
+          throw std::runtime_error("Invalid graphics state");
+        graphicsState = graphicsState->parent;
+      }
+
+      /*! Freeze the current graphics state so that it won't be affected
+        by subsequent changes. Returns the frozen graphics state */
+      static Attributes::SP freeze(Attributes::SP& graphicsState) {
+        Attributes::SP newGraphicsState = std::make_shared<Attributes>();
+        newGraphicsState->areaLightSources = graphicsState->areaLightSources;
+        newGraphicsState->mediumInterface = graphicsState->mediumInterface;
+        newGraphicsState->reverseOrientation = graphicsState->reverseOrientation;
+        newGraphicsState->parent = graphicsState->parent;
+        newGraphicsState->prev = graphicsState;
+
+        Attributes::SP oldGraphicsState = graphicsState;
+        graphicsState = newGraphicsState;
+
+        return oldGraphicsState;
+      }
+
+      /*! Insert named material */
+      void insertNamedMaterial(std::string name, const std::shared_ptr<Material>& material) {
+        namedMaterial[name] = material;
+      }
+
+      /*! Insert named medium */
+      void insertNamedMedium(std::string name, const std::shared_ptr<Medium>& medium) {
+        namedMedium[name] = medium;
+      }
+
+      /*! Insert named texture */
+      void insertNamedTexture(std::string name, const std::shared_ptr<Texture>& texture) {
+        namedTexture[name] = texture;
+      }
+
+      /*! Find named material either in this or in a parent scope */
+      std::shared_ptr<Material> findNamedMaterial(std::string name) {
+        return findNamedItem(std::shared_ptr<Material>{}, name);
+      }
+
+      /*! Find named medium either in this or in a parent scope */
+      std::shared_ptr<Medium> findNamedMedium(std::string name) {
+        return findNamedItem(std::shared_ptr<Medium>{}, name);
+      }
+
+      /*! Find named texture either in this or in a parent scope */
+      std::shared_ptr<Texture> findNamedTexture(std::string name) {
+        return findNamedItem(std::shared_ptr<Texture>{}, name);
+      }
 
       std::vector<std::shared_ptr<AreaLightSource>>    areaLightSources;
       std::pair<std::string,std::string>               mediumInterface;
+      bool reverseOrientation { false };
+
+    private:
+      /*! Parent graphics state */
+      Attributes::SP parent = nullptr;
+
+      /*! Previous graphics state, for "versioning"
+        (call freeze() to make a new version) */
+      Attributes::SP prev = nullptr;
+
       std::map<std::string,std::shared_ptr<Material> > namedMaterial;
       std::map<std::string,std::shared_ptr<Medium> >   namedMedium;
       std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
-      bool reverseOrientation { false };
+
+      /*! get reference to namedMedium */
+      decltype(namedMedium)& get(std::shared_ptr<Medium>) { return namedMedium; }
+
+      /*! get reference to namedMaterial */
+      decltype(namedMaterial)& get(std::shared_ptr<Material>) { return namedMaterial; }
+
+      /*! get reference to namedTexture */
+      decltype(namedTexture)& get(std::shared_ptr<Texture>) { return namedTexture; }
+
+      /*! search this scope for the named item, descend into
+        parent scopes if not found. Also search prior versions */
+      template <typename Item>
+      Item findNamedItem(Item, std::string name) {
+        Attributes* curr = this;
+        while (curr != nullptr) {
+          if (curr->get(Item{}).find(name) != curr->get(Item{}).end())
+            return curr->get(Item{})[name];
+          if (curr->prev != nullptr)
+            curr = curr->prev.get();
+          else
+            curr = curr->parent.get();
+        }
+        return nullptr;
+      }
+
     };
 
     /*! forward definition of a typed parameter */

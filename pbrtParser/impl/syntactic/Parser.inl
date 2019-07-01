@@ -236,21 +236,23 @@ namespace pbrt {
     template <typename DS>
     std::shared_ptr<Texture> BasicParser<DS>::getTexture(const std::string &name) 
     {
-      if (attributesStack.top()->namedTexture.find(name) == attributesStack.top()->namedTexture.end())
+      if (currentGraphicsState->findNamedTexture(name) == nullptr)
         // throw std::runtime_error(lastLoc.toString()+": no texture named '"+name+"'");
         {
           std::cerr << "warning: could not find texture named '" << name << "'" << std::endl;
           return std::shared_ptr<Texture> ();
         }
-      return attributesStack.top()->namedTexture[name]; 
+      return currentGraphicsState->findNamedTexture(name);
     }
 
     template <typename DS>
     BasicParser<DS>::BasicParser(const std::string &basePath) 
-      : basePath(basePath), scene(std::make_shared<Scene>()), dbg(false)
+      : basePath(basePath)
+      , scene(std::make_shared<Scene>())
+      , currentGraphicsState(std::make_shared<Attributes>())
+      , dbg(false)
     {
       ctm.reset();
-      attributesStack.push(std::make_shared<Attributes>());
       objectStack.push(scene->world);//scene.cast<Object>());
     }
 
@@ -281,7 +283,7 @@ namespace pbrt {
     template <typename DS>
     void BasicParser<DS>::pushAttributes() 
     {
-      attributesStack.push(std::make_shared<Attributes>(*attributesStack.top()));
+      Attributes::push(currentGraphicsState);
       materialStack.push(currentMaterial);
       pushTransform();
     }
@@ -290,7 +292,7 @@ namespace pbrt {
     void BasicParser<DS>::popAttributes() 
     {
       popTransform();
-      attributesStack.pop();
+      Attributes::pop(currentGraphicsState);
       currentMaterial = materialStack.top();
       materialStack.pop();
     }
@@ -378,7 +380,7 @@ namespace pbrt {
       if (token == "ReverseOrientation") {
         /* according to the docs, 'ReverseOrientation' only flips the
            normals, not the actual transform */
-        attributesStack.top()->reverseOrientation = !attributesStack.top()->reverseOrientation;
+        currentGraphicsState->reverseOrientation = !currentGraphicsState->reverseOrientation;
         return true;
       }
       if (token == "CoordSysTransform") {
@@ -426,7 +428,7 @@ namespace pbrt {
             = std::make_shared<AreaLightSource>(next().text);
           parseParams(lightSource->param);
           // getCurrentObject()->lightSources.push_back(lightSource);
-          attributesStack.top()->areaLightSources.push_back(lightSource);
+          currentGraphicsState->areaLightSources.push_back(lightSource);
           continue;
         }
 
@@ -439,7 +441,7 @@ namespace pbrt {
             = std::make_shared<Material>(type);
           parseParams(material->param);
           currentMaterial = material;
-          material->attributes = attributesStack.top();
+          material->attributes = Attributes::freeze(currentGraphicsState);
           continue;
         }
 
@@ -452,8 +454,8 @@ namespace pbrt {
           std::string mapType = next().text;
           std::shared_ptr<Texture> texture
             = std::make_shared<Texture>(name,texelType,mapType);
-          attributesStack.top()->namedTexture[name] = texture;
-          texture->attributes = attributesStack.top();
+          currentGraphicsState->insertNamedTexture(name, texture);
+          texture->attributes = Attributes::freeze(currentGraphicsState);
           parseParams(texture->param);
           continue;
         }
@@ -465,9 +467,9 @@ namespace pbrt {
           std::string name = next().text;
           std::shared_ptr<Material> material
             = std::make_shared<Material>("<implicit>");
-          attributesStack.top()->namedMaterial[name] = material;
+          currentGraphicsState->insertNamedMaterial(name, material);
           parseParams(material->param);
-          material->attributes = attributesStack.top();
+          material->attributes = Attributes::freeze(currentGraphicsState);
           
           /* named material have the parameter type implicitly as a
              parameter rather than explicitly on the
@@ -491,7 +493,7 @@ namespace pbrt {
           std::string name = next().text;
           std::shared_ptr<Medium> medium
             = std::make_shared<Medium>("<implicit>");
-          attributesStack.top()->namedMedium[name] = medium;
+          currentGraphicsState->insertNamedMedium(name, medium);
           parseParams(medium->param);
 
           /* named medium have the parameter type implicitly as a
@@ -514,7 +516,7 @@ namespace pbrt {
         if (token == "NamedMaterial") {
           std::string name = next().text;
         
-          currentMaterial = attributesStack.top()->namedMaterial[name];
+          currentMaterial = currentGraphicsState->findNamedMaterial(name);
 
           continue;
         }
@@ -526,7 +528,7 @@ namespace pbrt {
           std::string name = next().text;
           std::shared_ptr<Medium> medium
             = std::make_shared<Medium>("<implicit>");
-          attributesStack.top()->namedMedium[name] = medium;
+          currentGraphicsState->insertNamedMedium(name, medium);
           parseParams(medium->param);
 
           /* named medium have the parameter type implicitly as a
@@ -546,8 +548,8 @@ namespace pbrt {
         // MediumInterface
         // ------------------------------------------------------------------
         if (token == "MediumInterface") {
-          attributesStack.top()->mediumInterface.first = next().text;
-          attributesStack.top()->mediumInterface.second = next().text;
+          currentGraphicsState->mediumInterface.first = next().text;
+          currentGraphicsState->mediumInterface.second = next().text;
           continue;
         }
 
@@ -577,7 +579,7 @@ namespace pbrt {
           std::shared_ptr<Shape> shape
             = std::make_shared<Shape>(next().text,
                                       currentMaterial,
-                                      attributesStack.top()->clone(),
+                                      Attributes::freeze(currentGraphicsState),
                                       ctm);
           parseParams(shape->param);
           getCurrentObject()->shapes.push_back(shape);
@@ -823,8 +825,8 @@ namespace pbrt {
         // MediumInterface
         // ------------------------------------------------------------------
         if (token == "MediumInterface") {
-          attributesStack.top()->mediumInterface.first = next().text;
-          attributesStack.top()->mediumInterface.second = next().text;
+          currentGraphicsState->mediumInterface.first = next().text;
+          currentGraphicsState->mediumInterface.second = next().text;
           continue;
         }
 
@@ -835,7 +837,7 @@ namespace pbrt {
           std::string name = next().text;
           std::shared_ptr<Medium> medium
             = std::make_shared<Medium>("<implicit>");
-          attributesStack.top()->namedMedium[name] = medium;
+          currentGraphicsState->insertNamedMedium(name, medium);
           parseParams(medium->param);
 
           /* named medium have the parameter type implicitly as a

@@ -137,7 +137,6 @@ namespace pbrt {
       }
 
       std::stack<std::shared_ptr<Material> >   materialStack;
-      std::stack<std::shared_ptr<Attributes> > attributesStack;
       std::stack<CTM>                          transformStack;
       std::stack<std::shared_ptr<Object> >     objectStack;
 
@@ -149,9 +148,10 @@ namespace pbrt {
       // emit debug status messages...
       const std::string basePath;
       std::string rootNamePath;
-      std::shared_ptr<Scene>    scene;
-      std::shared_ptr<Object>   currentObject;
-      std::shared_ptr<Material> currentMaterial;
+      std::shared_ptr<Scene>      scene;
+      std::shared_ptr<Attributes> currentGraphicsState;
+      std::shared_ptr<Object>     currentObject;
+      std::shared_ptr<Material>   currentMaterial;
     
       bool dbg;
       /*! tracks the location of the last token gotten through next() (for debugging) */
