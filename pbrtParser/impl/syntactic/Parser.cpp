@@ -849,16 +849,14 @@ namespace pbrt {
       }
     }
 
-
-#ifdef _WIN32
-    const char path_sep = '\\';
-#else
-    const char path_sep = '/';
-#endif
-
     std::string pathOf(const std::string &fn)
     {
-      size_t pos = fn.find_last_of(path_sep);
+      size_t pos = fn.find_last_of('/');
+      const size_t altPos = fn.find_last_of('\\');
+      if (pos == std::string::npos)
+       pos = altPos;
+      else if (altPos != std::string::npos)
+       pos = std::max(pos, altPos);
       if (pos == std::string::npos) return std::string();
       return fn.substr(0,pos+1);
     }
