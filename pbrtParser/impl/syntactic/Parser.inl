@@ -206,8 +206,8 @@ namespace pbrt {
           }
           // if (dbg)
           std::cout << "... including spd file '" << includedFileName << " ..." << std::endl;
-          File::SP file = std::make_shared<File>(includedFileName);
-          auto tokens = std::make_shared<BasicLexer<File>>(file);
+          FileType::SP file = std::make_shared<FileType>(includedFileName);
+          auto tokens = std::make_shared<BasicLexer<FileType>>(file);
           Token t = tokens->next();
           while (t)
           {
@@ -671,8 +671,8 @@ namespace pbrt {
           std::cout << "... including file '" << includedFileName << " ..." << std::endl;
         
           tokenizerStack.push(tokens);
-          File::SP file = std::make_shared<File>(includedFileName);
-          if (!replace_tokens(std::make_shared<BasicLexer<File>>(file)))
+          FileType::SP file = std::make_shared<FileType>(includedFileName);
+          if (!replace_tokens(std::make_shared<BasicLexer<FileType>>(file)))
             throw std::runtime_error("incompatible lexers ...");
           continue;
         }
@@ -889,8 +889,8 @@ namespace pbrt {
         = basePath==""
         ? (std::string)pathOf(fn)
         : (std::string)basePath;
-      File::SP file = std::make_shared<File>(fn);
-      this->tokens = std::make_shared<BasicLexer<File>>(file);
+      FileType::SP file = std::make_shared<FileType>(fn);
+      this->tokens = std::make_shared<BasicLexer<FileType>>(file);
       parseScene();
       scene->basePath = rootNamePath;
     }

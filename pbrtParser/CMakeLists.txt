@@ -22,6 +22,8 @@ set(SOURCES
   # our actual implemenatation files
   impl/syntactic/Buffer.h
   impl/syntactic/Buffer.inl
+  impl/syntactic/FileMapping.h
+  impl/syntactic/FileMapping.cpp
   impl/syntactic/Lexer.h
   impl/syntactic/Lexer.inl
   impl/syntactic/Parser.h

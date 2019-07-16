@@ -159,8 +159,11 @@ namespace pbrt {
     
     };
 
-    //! Default parser, uses ANSI-C file as data source
-    typedef BasicParser<File> Parser;
+    typedef MappedFile FileType;
+    //typedef File FileType;
+
+    //! Default parser
+    typedef BasicParser<FileType> Parser;
 
     PBRT_PARSER_INTERFACE void parsePLY(const std::string &fileName,
                                         std::vector<vec3f> &v,

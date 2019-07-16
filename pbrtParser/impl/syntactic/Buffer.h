@@ -17,6 +17,7 @@
 #pragma once
 
 #include "pbrtParser/math.h" // export
+#include "FileMapping.h"
 // stl
 #include <ios>
 #include <memory>
@@ -52,6 +53,45 @@ namespace pbrt {
     private:
       std::string name;
       FILE *file;
+    };
+
+    /*! Wrapper for memory mapped files, provides get() and eof() */
+    struct PBRT_PARSER_INTERFACE MappedFile {
+      typedef std::shared_ptr<MappedFile> SP;
+
+      MappedFile(const std::string &fn)
+        : name_(fn)
+        , file_(fn)
+        , data_(reinterpret_cast<const char*>(file_.data()), file_.nbytes())
+        , pos_(data_.cbegin())
+      {
+      }
+
+      /* check if current position is end of file */
+      bool eof() const {
+        return pos_ == data_.cend();
+      }
+
+      /*! get character according to current file position */
+      int get() {
+        if (eof())
+          return EOF;
+        else
+          return static_cast<int>(static_cast<unsigned char>(*pos_++));
+      }
+
+      /*! get name of the file */
+      std::string getFileName() const {
+        return name_;
+      }
+
+    private:
+      std::string name_;
+
+      FileMapping file_;
+
+      StringView data_;
+      const char* pos_;
     };
 
     /*! wrapper for istream, provides eof() */
