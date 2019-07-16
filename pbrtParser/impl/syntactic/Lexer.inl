@@ -14,8 +14,6 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include <sstream>
-
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for syntactic-only parser - this allows to distringuish
@@ -71,9 +69,8 @@ namespace pbrt {
         break;
       }
 
-      std::string s; s.reserve(100);
-      std::stringstream ss(s);
 
+      ss.clear();
     
       Loc startLoc = buffer.get_loc();
       // startLoc = loc;

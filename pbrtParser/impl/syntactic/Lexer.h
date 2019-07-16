@@ -19,7 +19,7 @@
 #include "Buffer.h"
 #include "Scene.h"
 // stl
-#include <queue>
+#include <vector>
 #include <memory>
 #include <string.h>
 
@@ -68,6 +68,23 @@ namespace pbrt {
       Token next();
       
     private:
+      /*! utility class to assemble tokens. Provides a stream interface
+        but is generally faster than e.g. std::stringstream */
+      struct CharBuffer {
+        CharBuffer(std::size_t reserved = 0)
+          : data_(reserved)
+        {
+        }
+
+        void operator<<(char c) { data_.push_back(c); }
+        void clear() { data_.clear(); }
+        std::string str() { return std::string(data_.data(), data_.size()); }
+      private:
+        std::vector<char> data_;
+      };
+
+      CharBuffer(ss);
+
       ReadBuffer<typename DataSource::SP> buffer;
     };
 
