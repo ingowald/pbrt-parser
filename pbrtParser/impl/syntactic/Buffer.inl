@@ -14,8 +14,6 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Buffer.h"
-
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for syntactic-only parser - this allows to distringuish
