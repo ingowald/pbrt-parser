@@ -43,20 +43,46 @@ set(SOURCES
 add_library(pbrtParser SHARED
   ${SOURCES}
   )
-set_target_properties(pbrtParser PROPERTIES VERSION ${pbrtParser_VERSION})
-set_target_properties(pbrtParser PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
+set_target_properties(pbrtParser PROPERTIES
+  VERSION ${pbrtParser_VERSION}
+  CXX_VISIBILITY_PRESET hidden
+  CXX_STANDARD 11
+  CXX_STANDARD_REQUIRED ON
+  )
+
 target_compile_definitions(pbrtParser PUBLIC PBRT_PARSER_DLL_INTERFACE)
+
+target_include_directories(pbrtParser PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
 
 # ------------------------------------------------------------------
 add_library(pbrtParser_static STATIC
   ${SOURCES}
   )
+
 set_target_properties(pbrtParser_static PROPERTIES VERSION ${pbrtParser_VERSION})
 
-# ------------------------------------------------------------------
-install(TARGETS pbrtParser DESTINATION lib)
-install(TARGETS pbrtParser_static DESTINATION lib)
+set_target_properties(pbrtParser_static PROPERTIES
+  VERSION ${pbrtParser_VERSION}
+  CXX_STANDARD 11
+  CXX_STANDARD_REQUIRED ON
+  )
 
-install(FILES include/pbrtParser/math.h DESTINATION include/pbrtParser)
-install(FILES include/pbrtParser/Scene.h DESTINATION include/pbrtParser)
+target_include_directories(pbrtParser_static PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
+
+# ------------------------------------------------------------------
+install(TARGETS pbrtParser pbrtParser_static EXPORT pbrtParserConfig
+  DESTINATION lib)
+
+install(FILES include/pbrtParser/math.h include/pbrtParser/Scene.h
+  DESTINATION include/pbrtParser)
+
+install(EXPORT pbrtParserConfig
+  DESTINATION lib/cmake/pbrtParser)
 
