@@ -67,6 +67,7 @@ namespace pbrt {
     TYPE_METAL_MATERIAL,
     TYPE_PLASTIC_MATERIAL,
     TYPE_TRANSLUCENT_MATERIAL,
+    TYPE_HAIR_MATERIAL,
     
     TYPE_TEXTURE=30,
     TYPE_IMAGE_TEXTURE,
@@ -299,6 +300,8 @@ namespace pbrt {
         return std::make_shared<FourierMaterial>();
       case TYPE_METAL_MATERIAL:
         return std::make_shared<MetalMaterial>();
+      case TYPE_HAIR_MATERIAL:
+        return std::make_shared<HairMaterial>();
       case TYPE_FILM:
         return std::make_shared<Film>(vec2i(0));
       case TYPE_CAMERA:
@@ -1376,6 +1379,26 @@ namespace pbrt {
     binary.read(map_roughness);
     binary.read(map_uRoughness);
     binary.read(map_vRoughness);
+  }
+
+
+  /*! serialize out to given binary writer */
+  int HairMaterial::writeTo(BinaryWriter &binary) 
+  {
+    Material::writeTo(binary);
+    binary.write(eumelanin);
+    binary.write(alpha);
+    binary.write(beta_m);
+    return TYPE_HAIR_MATERIAL;
+  }
+  
+  /*! serialize _in_ from given binary file reader */
+  void HairMaterial::readFrom(BinaryReader &binary) 
+  {
+    Material::readFrom(binary);
+    binary.read(eumelanin);
+    binary.read(alpha);
+    binary.read(beta_m);
   }
 
 

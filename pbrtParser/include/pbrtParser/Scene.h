@@ -454,6 +454,25 @@ namespace pbrt {
     Texture::SP map_bump;
   };
     
+  struct HairMaterial : public Material
+  {
+    typedef std::shared_ptr<HairMaterial> SP;
+    
+    /*! constructor */
+    HairMaterial(const std::string &name = "") : Material(name) {}
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "HairMaterial"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    float eumelanin  { 1.f };
+    float beta_m     { .25f };
+    float alpha      { 2.f };
+  };
+    
   struct TranslucentMaterial : public Material
   {
     typedef std::shared_ptr<TranslucentMaterial> SP;

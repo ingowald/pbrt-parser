@@ -114,6 +114,7 @@ namespace pbrt {
     /*! @{ type-specific extraction routines (ie, we already know the
         type, and only have to extract the potential/expected
         parameters) */
+    Material::SP createMaterial_hair(pbrt::syntactic::Material::SP in);
     Material::SP createMaterial_uber(pbrt::syntactic::Material::SP in);
     Material::SP createMaterial_metal(pbrt::syntactic::Material::SP in);
     Material::SP createMaterial_matte(pbrt::syntactic::Material::SP in);

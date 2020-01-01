@@ -23,6 +23,25 @@
 
 namespace pbrt {
 
+  Material::SP SemanticParser::createMaterial_hair(pbrt::syntactic::Material::SP in)
+  {
+    HairMaterial::SP mat = std::make_shared<HairMaterial>(in->name);
+    for (auto it : in->param) {
+      std::string name = it.first;
+      if (name == "eumelanin") {
+        mat->eumelanin = in->getParam1f(name);
+      } else if (name == "alpha") {
+        mat->alpha = in->getParam1f(name);
+      } else if (name == "beta_m") {
+        mat->beta_m = in->getParam1f(name);
+      } else if (name == "type") {
+        /* ignore */
+      } else
+        throw std::runtime_error("as-yet-unhandled hair-material parameter '"+it.first+"'");
+    };
+    return mat;
+  }
+
   Material::SP SemanticParser::createMaterial_uber(pbrt::syntactic::Material::SP in)
   {
     UberMaterial::SP mat = std::make_shared<UberMaterial>(in->name);
@@ -459,6 +478,10 @@ namespace pbrt {
     // ==================================================================
     if (type == "glass") 
       return createMaterial_glass(in);
+
+    // ==================================================================
+    if (type == "hair") 
+      return createMaterial_hair(in);
 
     // ==================================================================
 #ifndef NDEBUG

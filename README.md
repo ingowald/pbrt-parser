@@ -35,10 +35,18 @@ A few screenshots:
 - Ingo Wald
 - Fabio Pellacini (University of Rome)
 - Stefan Zellman (University of Cologne)
+- Will Usher
+- Nate Morrical
 - lots of other people, through suggestions, bug reports, etc ...
 
 
 # Release Notes
+
+V 2.3:
+
+- added 'hair' material (can now parse pbrt v3 hair files)
+- removed all DLL build for windows; now using only static libraries on windows
+  (this avoids windows issues with passing std::string etc through dll boundaries)
 
 V 2.2:
 
