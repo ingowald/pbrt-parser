@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2009-2019 Ingo Wald                                            ##
+## Copyright 2009-2020 Ingo Wald                                            ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -38,8 +38,19 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+option(pbrtParser_ENABLE_UNITTESTS "Build unit tests" OFF)
+
+# include out local 'include/' dir, we can include our two public
+# headers via pbrtParser/Scene.h and pbrtParser/math.h just the way an
+# app would include them through /usr/local/
+# should be target include dirs
+#include_directories(${PROJECT_SOURCE_DIR}/pbrtParser/include)
+
 set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
 
 add_subdirectory(pbrtParser)
 add_subdirectory(apps)
+if(pbrtParser_ENABLE_UNITTESTS)
+    add_subdirectory(test/unittests)
+endif()
 

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald                                            //
+// Copyright 2015-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -22,6 +22,8 @@
 
 #include "pbrtParser/math.h"
 // std
+#include <istream>
+#include <ostream>
 #include <map>
 #include <vector>
 #include <string>
@@ -1043,8 +1045,13 @@ namespace pbrt {
     typedef std::shared_ptr<Scene> SP;
 
 
-    /*! save scene to given file name, and reutrn number of bytes written */
+    /*! save scene to given stream, and return number of bytes written */
+    size_t saveTo(std::ostream &outStream);
+    /*! save scene to given file name, and return number of bytes written */
     size_t saveTo(const std::string &outFileName);
+    /*! load scene from given stream */
+    static Scene::SP loadFrom(std::istream &inStream);
+    /*! load scene from given file name */
     static Scene::SP loadFrom(const std::string &inFileName);
 
     /*! pretty-printer, for debugging */
@@ -1086,6 +1093,6 @@ namespace pbrt {
 
   /*! parse a pbrt file (using the pbrt_parser project, and convert
     the result over to a naivescenelayout */
-  PBRT_PARSER_INTERFACE Scene::SP importPBRT(const std::string &fileName);
+  PBRT_PARSER_INTERFACE Scene::SP importPBRT(const std::string &fileName, const std::string &basePath = "");
   
 } // ::pbrt

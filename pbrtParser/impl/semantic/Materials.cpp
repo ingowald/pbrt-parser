@@ -325,9 +325,9 @@ namespace pbrt {
       throw std::runtime_error("mix material w/o 'namedmaterial2' parameter");
 
     assert(in->attributes);
-    pbrt::syntactic::Material::SP mat0 = in->attributes->namedMaterial[name0];
+    pbrt::syntactic::Material::SP mat0 = in->attributes->findNamedMaterial(name0);
     assert(mat0);
-    pbrt::syntactic::Material::SP mat1 = in->attributes->namedMaterial[name1];
+    pbrt::syntactic::Material::SP mat1 = in->attributes->findNamedMaterial(name1);
     assert(mat1);
 
     mat->material0    = findOrCreateMaterial(mat0);

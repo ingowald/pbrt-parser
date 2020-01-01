@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2015-2019 Ingo Wald                                            ##
+## Copyright 2015-2020 Ingo Wald                                            ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -20,10 +20,14 @@ set(SOURCES
   include/pbrtParser/Scene.h
 
   # our actual implemenatation files
+  impl/syntactic/Buffer.h
+  impl/syntactic/Buffer.inl
+  impl/syntactic/FileMapping.h
+  impl/syntactic/FileMapping.cpp
   impl/syntactic/Lexer.h
-  impl/syntactic/Lexer.cpp
+  impl/syntactic/Lexer.inl
   impl/syntactic/Parser.h
-  impl/syntactic/Parser.cpp
+  impl/syntactic/Parser.inl
   impl/syntactic/Scene.h
   impl/syntactic/Scene.cpp
 

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald                                            //
+// Copyright 2015-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -31,9 +31,9 @@ namespace pbrt {
   namespace syntactic {
   
     /*! parse the given file name, return parsed scene */
-    std::shared_ptr<Scene> Scene::parse(const std::string &fileName)
+    std::shared_ptr<Scene> Scene::parse(const std::string &fileName, const std::string &basePath)
     {
-      std::shared_ptr<Parser> parser = std::make_shared<Parser>();
+      std::shared_ptr<Parser> parser = std::make_shared<Parser>(basePath);
       parser->parse(fileName);
       return parser->getScene();
     }
@@ -64,7 +64,7 @@ namespace pbrt {
     // Param
     // ==================================================================
     template<> void ParamArray<float>::add(const std::string &text)
-    { this->push_back(atof(text.c_str())); }
+    { this->push_back(std::stof(text.c_str())); }
 
     template<> void ParamArray<int>::add(const std::string &text)
     { this->push_back(atoi(text.c_str())); }

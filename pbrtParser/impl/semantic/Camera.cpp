@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -77,7 +77,7 @@ namespace pbrt {
       ours->simplified.lens_du = lensRadius * frame.l.vx;
       ours->simplified.lens_dv = lensRadius * frame.l.vy;
 
-      const float fovDistanceToUnitPlane = 0.5f / tanf(fov/2 * M_PI/180.f);
+      const float fovDistanceToUnitPlane = 0.5f / tanf(fov/2 * float(M_PI/180.f));
       ours->simplified.screen_center = frame.p + focalDistance * frame.l.vz;
       ours->simplified.screen_du = - focalDistance/fovDistanceToUnitPlane * frame.l.vx;
       ours->simplified.screen_dv = focalDistance/fovDistanceToUnitPlane * frame.l.vy;
@@ -108,7 +108,7 @@ namespace pbrt {
     ours->simplified.lens_dv
       = ours->lensRadius * ours->frame.l.vy;
       
-    const float fovDistanceToUnitPlane = 0.5f / tanf(ours->fov/2 * M_PI/180.f);
+    const float fovDistanceToUnitPlane = 0.5f / tanf(ours->fov/2 * (float)M_PI/180.f);
     ours->simplified.screen_center
       = ours->frame.p + ours->focalDistance * ours->frame.l.vz;
     ours->simplified.screen_du

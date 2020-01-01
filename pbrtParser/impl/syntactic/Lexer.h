@@ -16,9 +16,10 @@
 
 #pragma once
 
+#include "Buffer.h"
 #include "Scene.h"
 // stl
-#include <queue>
+#include <vector>
 #include <memory>
 #include <string.h>
 
@@ -32,51 +33,6 @@ namespace pbrt {
     with a given name, and parameters of given names and types */
   namespace syntactic {
   
-    /*! file name and handle, to be used by tokenizer and loc */
-    struct PBRT_PARSER_INTERFACE File {
-      File(const std::string &fn): name(fn) {
-        file = fopen(fn.c_str(),"r");
-        if (!file)
-          throw std::runtime_error("could not open file '"+fn+"'");
-      }
-      void close() { fclose(file); file = NULL; }
-      virtual ~File() { 
-        if (file) fclose(file);
-      }
-      /*! get name of the file */
-      std::string getFileName() const { return name; }
-
-      friend struct Lexer;
-
-    private:
-      std::string name;
-      FILE *file;
-    };
-
-    /*! struct referring to a 'loc'ation in the input stream, given by file name 
-      and line number */
-    struct PBRT_PARSER_INTERFACE Loc {
-      //! constructor
-      Loc(const std::shared_ptr<File> &file=std::shared_ptr<File>()) : file(file), line(1), col(0) { }
-      //! copy-constructor
-      Loc(const Loc &loc) = default;
-      Loc(Loc &&loc) = default;
-      //! assignment
-      Loc& operator=(const Loc &other) = default;
-      Loc& operator=(Loc &&) = default;
-
-      //! pretty-print
-      std::string toString() const {
-        return "@" + (file?file->getFileName():"<invalid>") + ":" + std::to_string(line) + "." + std::to_string(col);
-      }
-
-      friend struct Lexer;
-    private:
-      std::shared_ptr<File> file;
-      int line { -1 };
-      int col  { -1 };
-    };
-
     struct PBRT_PARSER_INTERFACE Token {
       typedef enum { TOKEN_TYPE_STRING, TOKEN_TYPE_LITERAL, TOKEN_TYPE_SPECIAL, TOKEN_TYPE_NONE } Type;
 
@@ -103,25 +59,37 @@ namespace pbrt {
 
     /*! class that does the lexing - ie, the breaking up of an input
       stream of chars into an input stream of tokens.  */
-    struct PBRT_PARSER_INTERFACE Lexer {
+    template <typename DataSource>
+    struct PBRT_PARSER_INTERFACE BasicLexer {
 
       //! constructor
-      Lexer(const std::string &fn) : file(new File(fn)), loc(file), peekedChar(-1) { }
+      BasicLexer(typename DataSource::SP ds) : buffer(ds) {}
 
       Token next();
       
     private:
-      Loc getLastLoc() { return loc; }
+      /*! utility class to assemble tokens. Provides a stream interface
+        but is generally faster than e.g. std::stringstream */
+      struct CharBuffer {
+        CharBuffer(std::size_t reserved = 0)
+          : data_(reserved)
+        {
+        }
 
-      inline void unget_char(int c);
-      inline int get_char();
-      inline bool isWhite(const char c);
-      inline bool isSpecial(const char c);
+        void operator<<(char c) { data_.push_back(c); }
+        void clear() { data_.clear(); }
+        std::string str() { return std::string(data_.data(), data_.size()); }
+      private:
+        std::vector<char> data_;
+      };
 
-      std::shared_ptr<File> file;
-      Loc loc;
-      int peekedChar;
+      CharBuffer(ss);
+
+      ReadBuffer<typename DataSource::SP> buffer;
     };
 
   } // ::pbrt::syntactic
 } // ::pbrt
+
+// Implementation
+#include "Lexer.inl"

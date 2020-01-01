@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald                                            //
+// Copyright 2015-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -19,8 +19,12 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <memory>
 #include <stack>
 #include <string.h>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #ifndef PRINT
 # define PRINT(var) std::cout << #var << "=" << var << std::endl;
@@ -97,12 +101,12 @@ namespace pbrt {
 
   struct BinaryReader {
 
-    BinaryReader(const std::string &fileName)
-      : binFile(fileName, std::ios_base::binary)
+    BinaryReader(std::istream &str)
+      : binStream(str)
     {
       int32_t formatTag;
       
-      binFile.read((char*)&formatTag,sizeof(formatTag));
+      binStream.read((char*)&formatTag,sizeof(formatTag));
       if (formatTag != ourFormatTag) {
         std::cout << "Warning: pbf file uses a different format tag ("
                   << ((int*)(size_t)formatTag) << ") than what this library is expeting ("
@@ -116,13 +120,13 @@ namespace pbrt {
       }
       while (1) {
         uint64_t size;
-        binFile.read((char*)&size,sizeof(size));
-        if (!binFile.good())
+        binStream.read((char*)&size,sizeof(size));
+        if (!binStream.good())
           break;
         int32_t tag;
-        binFile.read((char*)&tag,sizeof(tag));
+        binStream.read((char*)&tag,sizeof(tag));
         currentEntityData.resize(size);
-        binFile.read((char *)currentEntityData.data(),size);
+        binStream.read((char *)currentEntityData.data(),size);
         currentEntityOffset = 0;
 
         Entity::SP newEntity = createEntity(tag);
@@ -141,18 +145,70 @@ namespace pbrt {
       memcpy((void *)t,(void *)((char*)currentEntityData.data()+currentEntityOffset),numBytes);
       currentEntityOffset += numBytes;
     }
-                                        
-    template<typename T> T read();
-    template<typename T> std::vector<T> readVector();
-    template<typename T> void read(std::vector<T> &vt)
+
+    template<
+        typename T,
+        typename = typename std::enable_if<std::is_trivially_copyable<T>::value>::type
+        >
+    inline void read(T &t)
     {
-      vt = readVector<T>();
+      copyBytes(&t, sizeof(t));
     }
-    template<typename T> void read(std::vector<std::shared_ptr<T>> &vt)
+
+    template<typename T1, typename T2>
+    inline void read(std::pair<T1,T2> &t)
     {
-      vt = readVector<std::shared_ptr<T>>(); 
+      copyBytes(&t.first, sizeof(T1));
+      copyBytes(&t.second, sizeof(T2));
     }
-    template<typename T> void read(T &t) { t = read<T>(); }
+
+    template<typename T>
+    inline void read(std::shared_ptr<T> &t)
+    {
+      int32_t ID;
+      read(ID);
+      t = getEntity<T>(ID);
+    }
+
+    template<
+        typename T,
+        typename A = std::allocator<T>,
+        typename = typename std::enable_if<std::is_trivially_copyable<T>::value>::type
+        >
+    inline void read(std::vector<T, A> &vt)
+    {
+      uint64_t length;
+      read(length);
+      vt.resize(length);
+      copyBytes(vt.data(), length*sizeof(T));
+    }
+
+    template<
+        typename T,
+        typename A = std::allocator<T>,
+        typename = typename std::enable_if<!std::is_trivially_copyable<T>::value>::type,
+        typename = void // overload!
+        >
+    inline void read(std::vector<T, A> &vt)
+    {
+      uint64_t length;
+      read(length);
+      vt.resize(length);
+      for (size_t i=0; i<length; ++i)
+        read(vt[i]);
+    }
+
+    template<typename A = std::allocator<bool>>
+    inline void read(std::vector<bool, A> &vt)
+    {
+      uint64_t length;
+      read(length);
+      std::vector<unsigned char> asChar(length);
+      read(asChar);
+      vt.resize(length);
+      for (size_t i=0; i<length; ++i)
+        vt[i] = (bool)asChar[i];
+    }
 
     void read(std::string &t)
     {
@@ -170,7 +226,8 @@ namespace pbrt {
     template<typename T1, typename T2>
     void read(std::map<T1,T2> &result)
     {
-      int32_t size = read<int32_t>();
+      int32_t size;
+      read(size);
       result.clear();
       for (int i=0;i<size;i++) {
         T1 t1; T2 t2;
@@ -179,13 +236,16 @@ namespace pbrt {
         result[t1] = t2;
       }
     }
-      
-    template<typename T> inline void read(std::shared_ptr<T> &t)
-    {
-      int32_t ID = read<int32_t>();
-      t = getEntity<T>(ID);
-    }
 
+    // Convenience overload so we can just write read<XXX>()
+    template <typename T>
+    inline T read()
+    {
+      T result;
+      read(result);
+      return result;
+    }
+      
     Entity::SP createEntity(int typeTag)
     {
       switch (typeTag) {
@@ -305,52 +365,20 @@ namespace pbrt {
     std::vector<uint8_t> currentEntityData;
     size_t currentEntityOffset;
     std::vector<Entity::SP> readEntities;
-    std::ifstream binFile;
+    std::istream& binStream;
   };
 
-  template<typename T>
-  T BinaryReader::read()
-  {
-    T t;
-    copyBytes(&t,sizeof(t));
-    return t;
-  }
 
-  template<>
-  std::string BinaryReader::read()
-  {
-    std::string s;
-    int32_t length = read<int32_t>();
-    if (length) {
-      std::vector<int8_t> cv(length);
-      copyBytes(&cv[0],length);
-      s = std::string(cv.begin(),cv.end());
-    }
-    return s;
-  }
-
-  template<typename T>
-  std::vector<T> BinaryReader::readVector()
-  {
-    uint64_t length = read<uint64_t>();
-    std::vector<T> vt(length);
-    for (size_t i=0;i<length;i++) {
-      read(vt[i]);
-    }
-    return vt;
-  }
-  
-    
 
   /*! helper class that writes out a PBRT scene graph in a binary form
     that is much faster to parse */
   struct BinaryWriter {
 
-    BinaryWriter(const std::string &fileName)
-      : binFile(fileName, std::ios_base::binary)
+    BinaryWriter(std::ostream& str)
+      : binStream(str)
     {
       int32_t formatTag = ourFormatTag;
-      binFile.write((char*)&formatTag,sizeof(formatTag));
+      binStream.write((char*)&formatTag,sizeof(formatTag));
     }
 
     /*! our stack of output buffers - each object we're writing might
@@ -362,8 +390,8 @@ namespace pbrt {
       own writes. */
     std::stack<SerializedEntity::SP> serializedEntity;
 
-    /*! the file we'll be writing the buffers to */
-    std::ofstream binFile;
+    /*! the stream we'll be writing the buffers to */
+    std::ostream& binStream;
 
     void writeRaw(const void *ptr, size_t size)
     {
@@ -395,18 +423,26 @@ namespace pbrt {
     }
 
     
-    template<typename T>
-    void write(const std::vector<T> &t)
+    template<
+        typename T,
+        typename A = std::allocator<T>,
+        typename = typename std::enable_if<std::is_trivially_copyable<T>::value>::type
+        >
+    void write(const std::vector<T, A> &t)
     {
-      const void *ptr = (const void *)t.data();
       size_t size = t.size();
       write((uint64_t)size);
       if (!t.empty())
-        writeRaw(ptr,t.size()*sizeof(T));
+        writeRaw(t.data(),t.size()*sizeof(T));
     }
 
-    template<typename T>
-    void write(const std::vector<std::shared_ptr<T>> &t)
+    template<
+        typename T,
+        typename A = std::allocator<T>,
+        typename = typename std::enable_if<!std::is_trivially_copyable<T>::value>::type,
+        typename = void // overload!
+        >
+    void write(const std::vector<T, A> &t)
     {
       size_t size = t.size();
       write((uint64_t)size);
@@ -414,12 +450,21 @@ namespace pbrt {
         write(t[i]);
     }
 
+    template <typename A = std::allocator<bool>>
+    void write(const std::vector<bool, A> &t)
+    {
+      std::vector<unsigned char> asChar(t.size());
+      for (size_t i=0;i<t.size();i++)
+        asChar[i] = t[i]?1:0;
+      write(asChar);
+    }
+
 
       
     template<typename T1, typename T2>
     void write(const std::map<T1,std::shared_ptr<T2>> &values)
     {
-      int32_t size = values.size();
+      int32_t size = (int32_t)values.size();
       write(size);
       for (auto it : values) {
         write(it.first);
@@ -429,22 +474,6 @@ namespace pbrt {
     }
 
 
-    void write(const std::vector<bool> &t)
-    {
-      std::vector<unsigned char> asChar(t.size());
-      for (size_t i=0;i<t.size();i++)
-        asChar[i] = t[i]?1:0;
-      write(asChar);
-    }
-
-    void write(const std::vector<std::string> &t)
-    {
-      write(t.size());
-      for (auto &s : t) {
-        write(s);
-      }
-    }
-    
     /*! start a new write buffer on the stack - all future writes will go into this buffer */
     void startNewEntity()
     { serializedEntity.push(std::make_shared<SerializedEntity>()); }
@@ -454,9 +483,9 @@ namespace pbrt {
     {
       uint64_t size = (uint64_t)serializedEntity.top()->size();
       // std::cout << "writing block of size " << size << std::endl;
-      binFile.write((const char *)&size,sizeof(size));
-      binFile.write((const char *)&tag,sizeof(tag));
-      binFile.write((const char *)serializedEntity.top()->data(),size);
+      binStream.write((const char *)&size,sizeof(size));
+      binStream.write((const char *)&tag,sizeof(tag));
+      binStream.write((const char *)serializedEntity.top()->data(),size);
       serializedEntity.pop();
       
     }
@@ -568,6 +597,7 @@ namespace pbrt {
     Shape::writeTo(binary);
     binary.write(vertex);
     binary.write(normal);
+    binary.write(texcoord);
     binary.write(index);
     return TYPE_TRIANGLE_MESH;
   }
@@ -578,6 +608,7 @@ namespace pbrt {
     Shape::readFrom(binary);
     binary.read(vertex);
     binary.read(normal);
+    binary.read(texcoord);
     binary.read(index);
   }
 
@@ -1476,23 +1507,38 @@ namespace pbrt {
   
 
 
-  /*! save scene to given file name, and reutrn number of bytes written */
-  size_t Scene::saveTo(const std::string &outFileName)
+  /*! save scene to given stream, and return number of bytes written */
+  size_t Scene::saveTo(std::ostream &outStream)
   {
-    BinaryWriter binary(outFileName);
+    BinaryWriter binary(outStream);
     Entity::SP sp = shared_from_this();
     binary.serialize(sp);
-    return binary.binFile.tellp();
+    return binary.binStream.tellp();
   }
 
-  Scene::SP Scene::loadFrom(const std::string &inFileName)
+  /*! save scene to given file name, and return number of bytes written */
+  size_t Scene::saveTo(const std::string &outFileName)
   {
-    BinaryReader binary(inFileName);
+    std::ofstream outFile(outFileName, std::ios_base::binary);
+    return saveTo(outFile);
+  }
+
+  /*! load scene from given stream */
+  Scene::SP Scene::loadFrom(std::istream &inStream)
+  {
+    BinaryReader binary(inStream);
     if (binary.readEntities.empty())
       throw std::runtime_error("error in Scene::load - no entities");
     Scene::SP scene = std::dynamic_pointer_cast<Scene>(binary.readEntities.back());
     assert(scene);
     return scene;
+  }
+
+  /*! load scene from given file name */
+  Scene::SP Scene::loadFrom(const std::string &inFileName)
+  {
+    std::ifstream inFile(inFileName, std::ios_base::binary);
+    return loadFrom(inFile);
   }
   
 } // ::pbrt

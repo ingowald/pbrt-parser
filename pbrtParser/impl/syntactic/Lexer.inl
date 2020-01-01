@@ -14,9 +14,6 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Lexer.h"
-#include <sstream>
-
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for syntactic-only parser - this allows to distringuish
@@ -31,47 +28,19 @@ namespace pbrt {
     // Lexer
     // =======================================================
 
-    inline void Lexer::unget_char(int c)
-    {
-      if (peekedChar >= 0) 
-        throw std::runtime_error("can't push back more than one char ...");
-      peekedChar = c;
-    }
-
-    inline int Lexer::get_char() 
-    {
-      if (peekedChar >= 0) {
-        int c = peekedChar;
-        peekedChar = -1;
-        return c;
-      }
-        
-      if (!file->file || feof(file->file)) {
-        return -1;
-      }
-        
-      int c = fgetc(file->file);
-      if (c == '\n') {
-        loc.line++;
-        loc.col = 0;
-      } else {
-        loc.col++;
-      }
-      return c;
-    }
-      
-    inline bool Lexer::isWhite(const char c)
+    inline bool isWhite(const char c)
     {
       return (c==' ' || c=='\n' || c=='\t' || c=='\r');
       // return strchr(" \t\n\r",c)!=nullptr;
     }
-    inline bool Lexer::isSpecial(const char c)
+    inline bool isSpecial(const char c)
     {
       return (c=='[' || c==',' || c==']');
       // return strchr("[,]",c)!=nullptr;
     }
 
-    Token Lexer::next() 
+    template <typename Buffer>
+    Token BasicLexer<Buffer>::next() 
     {
       // skip all white space and comments
       int c;
@@ -79,9 +48,9 @@ namespace pbrt {
       // Loc startLoc = loc;
       // skip all whitespaces and comments
       while (1) {
-        c = get_char();
+        c = buffer.get_char();
 
-        if (c < 0) { file->close(); return Token(); }
+        if (c < 0) return Token();
           
         if (isWhite(c)) {
           continue;
@@ -92,7 +61,7 @@ namespace pbrt {
           // Loc lastLoc = loc;
           while (c != '\n') {
             // lastLoc = loc;
-            c = get_char();
+            c = buffer.get_char();
             if (c < 0) return Token();
           }
           continue;
@@ -100,17 +69,16 @@ namespace pbrt {
         break;
       }
 
-      std::string s; s.reserve(100);
-      std::stringstream ss(s);
 
+      ss.clear();
     
-      Loc startLoc = loc;
+      Loc startLoc = buffer.get_loc();
       // startLoc = loc;
       // Loc lastLoc = loc;
       if (c == '"') {
         while (1) {
           // lastLoc = loc;
-          c = get_char();
+          c = buffer.get_char();
           if (c < 0)
             throw std::runtime_error("could not find end of string literal (found eof instead)");
           if (c == '"') 
@@ -132,12 +100,12 @@ namespace pbrt {
       // cout << "START OF TOKEN at " << loc.toString() << endl;
       while (1) {
         // lastLoc = loc;
-        c = get_char();
+        c = buffer.get_char();
         if (c < 0)
           return Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
         if (c == '#' || isSpecial(c) || isWhite(c) || c=='"') {
           // cout << "END OF TOKEN AT " << lastLoc.toString() << endl;
-          unget_char(c);
+          buffer.unget_char(c);
           return Token(startLoc,Token::TOKEN_TYPE_LITERAL,ss.str());
         }
         ss << (char)c;
