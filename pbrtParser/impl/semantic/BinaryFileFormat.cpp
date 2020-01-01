@@ -29,7 +29,7 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 4
+#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 5
 
   /* 
      4: InfiniteLight::L,nsamples,scale
@@ -461,7 +461,7 @@ namespace pbrt {
       
     }
 
-    std::map<Entity::SP,int> emittedEntity;
+    std::map<Entity::SP,int32_t> emittedEntity;
 
     int32_t serialize(Entity::SP entity)
     {
@@ -476,7 +476,8 @@ namespace pbrt {
       startNewEntity();
       int32_t tag = (int32_t)entity->writeTo(*this);
       executeWrite(tag);
-      return (emittedEntity[entity] = emittedEntity.size());
+      int32_t num = (int32_t)emittedEntity.size();
+      return emittedEntity[entity] = num;
     }
   };
 
@@ -567,6 +568,7 @@ namespace pbrt {
     Shape::writeTo(binary);
     binary.write(vertex);
     binary.write(normal);
+    binary.write(texcoord);
     binary.write(index);
     return TYPE_TRIANGLE_MESH;
   }
@@ -577,6 +579,7 @@ namespace pbrt {
     Shape::readFrom(binary);
     binary.read(vertex);
     binary.read(normal);
+    binary.read(texcoord);
     binary.read(index);
   }
 
@@ -619,6 +622,7 @@ namespace pbrt {
     binary.write(type);
     binary.write(degree);
     binary.write(P);
+    binary.write(transform);
     return TYPE_CURVE;
   }
   
@@ -632,6 +636,7 @@ namespace pbrt {
     binary.read(type);
     binary.read(degree);
     binary.read(P);
+    binary.read(transform);
   }
 
 

@@ -704,8 +704,8 @@ namespace pbrt {
           // scene->lookAt = std::make_shared<LookAt>(v0,v1,v2);
           affine3f xfm;
           xfm.l.vz = normalize(v1-v0);
-          xfm.l.vx = normalize(cross(xfm.l.vz,v2));
-          xfm.l.vy = cross(xfm.l.vx,xfm.l.vz);
+          xfm.l.vx = normalize(cross(v2,xfm.l.vz));
+          xfm.l.vy = cross(xfm.l.vz,xfm.l.vx);
           xfm.p    = v0;
         
           addTransform(inverse(xfm));
@@ -850,6 +850,7 @@ namespace pbrt {
       }
     }
 
+
     std::string pathOf(std::string fn)
     {
       std::replace(fn.begin(), fn.end(), '\\', '/');
@@ -857,6 +858,7 @@ namespace pbrt {
       if (pos == std::string::npos) {
         return std::string();
       }
+
       return fn.substr(0,pos+1);
     }
 
