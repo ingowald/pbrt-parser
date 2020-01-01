@@ -204,8 +204,8 @@ namespace pbrt {
     auto bb = [this](float lambda) {
       lambda *= 1E-3f; // nm to microns
 
-      return float(( ( 2.0f * 1E24f * h * c * c ) / std::powf(lambda, 5.0f) )
-           * ( 1.0f / (std::expf((1E6f * h * c) / (lambda * k * temperature)) - 1.0f) ));
+      return float(( ( 2.0f * 1E24f * h * c * c ) / powf(lambda, 5.0f) )
+           * ( 1.0f / (expf((1E6f * h * c) / (lambda * k * temperature)) - 1.0f) ));
     };
 
     // lambda where radiance is max
