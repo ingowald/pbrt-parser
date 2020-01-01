@@ -40,12 +40,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 option(pbrtParser_ENABLE_UNITTESTS "Build unit tests" OFF)
 
-# include out local 'include/' dir, we can include our two public
-# headers via pbrtParser/Scene.h and pbrtParser/math.h just the way an
-# app would include them through /usr/local/
-# should be target include dirs
-#include_directories(${PROJECT_SOURCE_DIR}/pbrtParser/include)
-
 set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
 
 add_subdirectory(pbrtParser)
