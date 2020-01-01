@@ -568,6 +568,7 @@ namespace pbrt {
     Shape::writeTo(binary);
     binary.write(vertex);
     binary.write(normal);
+    binary.write(texcoord);
     binary.write(index);
     return TYPE_TRIANGLE_MESH;
   }
@@ -578,6 +579,7 @@ namespace pbrt {
     Shape::readFrom(binary);
     binary.read(vertex);
     binary.read(normal);
+    binary.read(texcoord);
     binary.read(index);
   }
 
