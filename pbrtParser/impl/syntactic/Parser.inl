@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald                                            //
+// Copyright 2015-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -19,6 +19,7 @@
 #include <fstream>
 #include <sstream>
 #include <stack>
+#include <algorithm>
 // std
 #include <stdio.h>
 #include <string.h>
@@ -353,7 +354,7 @@ namespace pbrt {
       if (token == "Rotate") {
         const float angle = parseFloat();
         const vec3f axis  = parseVec3f();
-        addTransform(affine3f::rotate(axis,angle*M_PI/180.f));
+        addTransform(affine3f::rotate(axis,angle*(float)M_PI/180.f));
         return true;
       }
       if (token == "Transform") {
@@ -720,8 +721,8 @@ namespace pbrt {
           // scene->lookAt = std::make_shared<LookAt>(v0,v1,v2);
           affine3f xfm;
           xfm.l.vz = normalize(v1-v0);
-          xfm.l.vx = normalize(cross(xfm.l.vz,v2));
-          xfm.l.vy = cross(xfm.l.vx,xfm.l.vz);
+          xfm.l.vx = normalize(cross(v2,xfm.l.vz));
+          xfm.l.vy = cross(xfm.l.vz,xfm.l.vx);
           xfm.p    = v0;
         
           addTransform(inverse(xfm));
@@ -732,7 +733,7 @@ namespace pbrt {
           next(); // '['
           float mat[16];
           for (int i=0;i<16;i++)
-            mat[i] = std::stod(next().text);
+            mat[i] = std::stof(next().text);
 
           affine3f xfm;
           xfm.l.vx = vec3f(mat[0],mat[1],mat[2]);
@@ -867,16 +868,21 @@ namespace pbrt {
     }
 
 
+
 #ifdef _WIN32
     const char path_sep = '\\';
 #else
     const char path_sep = '/';
 #endif
 
-    inline std::string pathOf(const std::string &fn)
+    inline std::string pathOf(std::string fn)
     {
-      size_t pos = fn.find_last_of(path_sep);
-      if (pos == std::string::npos) return std::string();
+      std::replace(fn.begin(), fn.end(), '\\', '/');
+      size_t pos = fn.find_last_of('/');
+      if (pos == std::string::npos) {
+        return std::string();
+      }
+
       return fn.substr(0,pos+1);
     }
 

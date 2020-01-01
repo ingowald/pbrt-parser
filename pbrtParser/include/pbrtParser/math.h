@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald & Fabio Pellacini                          //
+// Copyright 2015-2020 Ingo Wald & Fabio Pellacini                          //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -20,7 +20,9 @@
 #  define _USE_MATH_DEFINES
 #endif
 #ifdef _WIN32
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
@@ -67,25 +69,25 @@ namespace pbrt {
     with a given name, and parameters of given names and types */
   namespace math {
     struct vec2f {
-      float x, y;
-      vec2f() = default;
+        typedef float scalar_t;
+        vec2f() = default;
       explicit vec2f(float v) : x{v}, y{v} { }
       vec2f(float x, float y) : x{x}, y{y} { }
-      typedef float scalar_t;
+      float x, y;
     };
     struct vec3f {
-      float x, y, z;
-      vec3f() = default;
+        typedef float scalar_t;
+        vec3f() = default;
       explicit vec3f(float v) : x{v}, y{v}, z{v} { }
       vec3f(float x, float y, float z) : x{x}, y{y}, z{z} { }
-      typedef float scalar_t;
+      float x, y, z;
     };
     struct vec4f {
-      float x, y, z, w;
+        typedef float scalar_t;
       vec4f() = default;
       explicit vec4f(float v) : x{v}, y{v}, z{v}, w{v} { }
       vec4f(float x, float y, float z, float w) : x{x}, y{y}, z{z}, w{w} { }
-      typedef float scalar_t;
+      float x, y, z, w;
     };
     struct vec2i {
       int x, y;
@@ -217,7 +219,7 @@ namespace pbrt {
 
   /*! added pretty-print function for large numbers, printing 10000000 as "10M" instead */
   inline std::string prettyNumber(const size_t s) {
-    const double val = s;
+    const double val = (double)s;
     char result[1000];
 
     if      (val >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e18f,'E');

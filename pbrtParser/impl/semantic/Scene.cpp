@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald                                            //
+// Copyright 2015-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -266,9 +266,9 @@ namespace pbrt {
       some fitting of these parameters, and probably make it
       primtype- and material/shading-data dependent (textures ...),
       but for now any approximateion will do */
-    static const int primWeight = 100.f;
-    static const int instWeight = 4000.f;
-    static const int geomWeight = 4000.f;
+    static const float primWeight = 100.f;
+    static const float instWeight = 4000.f;
+    static const float geomWeight = 4000.f;
     
     std::set<Shape::SP> activeShapes;
     for (auto inst : scene->world->instances) 
@@ -303,7 +303,7 @@ namespace pbrt {
 
       auto it = vertexID.find(oldVertex);
       if (it == vertexID.end()) {
-        int newID = out->vertex.size();
+        int newID = (int)out->vertex.size();
         out->vertex.push_back(in->vertex[i]);
         if (!in->normal.empty())
           out->normal.push_back(in->normal[i]);

@@ -408,7 +408,7 @@ public:
     std::vector<T>& elemList = data[iElement];
   
     // Get the number of list elements as a uchar, and ensure the value fits
-    uint8_t count = elemList.size();
+    uint8_t count = (uint8_t)elemList.size();
     if(count != elemList.size()) {
       throw std::runtime_error("List property has an element with more entries than fit in a uchar. See note in README.");
     }
@@ -430,7 +430,7 @@ public:
     std::vector<T>& elemList = data[iElement];
 
     // Get the number of list elements as a uchar, and ensure the value fits
-    uint8_t count = elemList.size();
+    uint8_t count = (uint8_t)elemList.size();
     if(count != elemList.size()) {
       throw std::runtime_error("List property has an element with more entries than fit in a uchar. See note in README.");
     }

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald                                            //
+// Copyright 2015-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -464,7 +464,7 @@ namespace pbrt {
     template<typename T1, typename T2>
     void write(const std::map<T1,std::shared_ptr<T2>> &values)
     {
-      int32_t size = values.size();
+      int32_t size = (int32_t)values.size();
       write(size);
       for (auto it : values) {
         write(it.first);
@@ -597,6 +597,7 @@ namespace pbrt {
     Shape::writeTo(binary);
     binary.write(vertex);
     binary.write(normal);
+    binary.write(texcoord);
     binary.write(index);
     return TYPE_TRIANGLE_MESH;
   }
@@ -607,6 +608,7 @@ namespace pbrt {
     Shape::readFrom(binary);
     binary.read(vertex);
     binary.read(normal);
+    binary.read(texcoord);
     binary.read(index);
   }
 

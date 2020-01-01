@@ -18,6 +18,11 @@
 
 namespace pbrt {
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
   /*! extract 'texture' parameters from shape, and assign to shape */
   void SemanticParser::extractTextures(Shape::SP geom, pbrt::syntactic::Shape::SP shape)
   {

@@ -682,7 +682,7 @@ namespace pbrt {
         {}
 
       /*! parse the given file name, return parsed scene */
-      static std::shared_ptr<Scene> parse(const std::string &fileName);
+      static std::shared_ptr<Scene> parse(const std::string &fileName, const std::string &basePath = "");
     
       //! pretty-print scene info into a std::string 
       std::string toString(const int depth = 0) { return world->toString(depth); }
