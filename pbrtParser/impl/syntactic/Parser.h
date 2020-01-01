@@ -60,7 +60,7 @@ namespace pbrt {
       parser class, otherwise left-over state from previous passes may
       mess with the state of later pbrt file parse's */
     template <typename DataSource>
-    struct PBRT_PARSER_INTERFACE BasicParser {
+    struct BasicParser {
       /*! constructor */
       BasicParser(const std::string &basePath="");
 
@@ -165,7 +165,7 @@ namespace pbrt {
     //! Default parser
     typedef BasicParser<FileType> Parser;
 
-    PBRT_PARSER_INTERFACE void parsePLY(const std::string &fileName,
+    void parsePLY(const std::string &fileName,
                                         std::vector<vec3f> &v,
                                         std::vector<vec3f> &n,
                                         std::vector<vec3i> &idx);

@@ -57,7 +57,7 @@ namespace pbrt {
   using box3f    = pbrt::math::box3f;
   using pairNf   = pbrt::math::pairNf;
 #endif
-    
+
   /*! internal class used for serializing a scene graph to/from disk */
   struct BinaryWriter;
     
@@ -69,7 +69,7 @@ namespace pbrt {
   /*! base abstraction for any entity in the pbrt scene graph that's
     not a paramter type (eg, it's a shape/shape, a object, a
     instance, matierla, tetxture, etc */
-  struct PBRT_PARSER_INTERFACE Entity : public std::enable_shared_from_this<Entity> {
+  struct Entity : public std::enable_shared_from_this<Entity> {
     typedef std::shared_ptr<Entity> SP;
 
     template<typename T>
@@ -90,7 +90,7 @@ namespace pbrt {
     replace them with whatever that app wants to use as a default
     material. Note at least one pbrt-v3 model uses a un-named
     material type, which will return this (empty) base class */
-  struct PBRT_PARSER_INTERFACE Material : public Entity {
+  struct Material : public Entity {
     typedef std::shared_ptr<Material> SP;
 
     /*! constructor */
@@ -114,7 +114,7 @@ namespace pbrt {
   // ==================================================================
   // Singular Light Sources
   // ==================================================================
-  struct PBRT_PARSER_INTERFACE LightSource : public Entity {
+  struct LightSource : public Entity {
     typedef std::shared_ptr<LightSource> SP;
     
     /*! pretty-printer, for debugging */
@@ -125,7 +125,7 @@ namespace pbrt {
     // virtual void readFrom(BinaryReader &) override;
   };
 
-  struct PBRT_PARSER_INTERFACE InfiniteLightSource : public LightSource {
+  struct InfiniteLightSource : public LightSource {
     typedef std::shared_ptr<InfiniteLightSource> SP;
     
     /*! pretty-printer, for debugging */
@@ -147,7 +147,7 @@ namespace pbrt {
   //         "point to" [ 0 0 1 ] 
   //         "rgb L" [ 3.1359820366 2.4853198528 1.4146273136 ] 
   //         "rgb scale" [ 3.2500000000 3.2500000000 3.2500000000 ] 
-  struct PBRT_PARSER_INTERFACE DistantLightSource : public LightSource {
+  struct DistantLightSource : public LightSource {
     typedef std::shared_ptr<DistantLightSource> SP;
     
     /*! pretty-printer, for debugging */
@@ -167,7 +167,7 @@ namespace pbrt {
   // Area Lights
   // ==================================================================
   
-  struct PBRT_PARSER_INTERFACE AreaLight : public Entity {
+  struct AreaLight : public Entity {
     typedef std::shared_ptr<AreaLight> SP;
     
     /*! pretty-printer, for debugging */
@@ -179,7 +179,7 @@ namespace pbrt {
   };
   
   /*! a area light of type 'diffuse', with a 'color L' parameter */
-  struct PBRT_PARSER_INTERFACE DiffuseAreaLightRGB : public AreaLight {
+  struct DiffuseAreaLightRGB : public AreaLight {
     typedef std::shared_ptr<DiffuseAreaLightRGB> SP;
     
     /*! pretty-printer, for debugging */
@@ -193,7 +193,7 @@ namespace pbrt {
   };
 
   /*! a area light of type 'diffuse', with a 'blackbody L' parameter */
-  struct PBRT_PARSER_INTERFACE DiffuseAreaLightBB : public AreaLight {
+  struct DiffuseAreaLightBB : public AreaLight {
     typedef std::shared_ptr<DiffuseAreaLightBB> SP;
     
     /*! pretty-printer, for debugging */
@@ -211,7 +211,7 @@ namespace pbrt {
 
   /*! a spectrum is defined by a spectral power distribution,
     i.e. a list of (wavelength, value) pairs */
-  struct PBRT_PARSER_INTERFACE Spectrum : public Entity {
+  struct Spectrum : public Entity {
     typedef std::shared_ptr<Spectrum> SP;
 
     /*! pretty-printer, for debugging */
@@ -224,7 +224,7 @@ namespace pbrt {
     pairNf spd;
   };
 
-  struct PBRT_PARSER_INTERFACE Texture : public Entity {
+  struct Texture : public Entity {
     typedef std::shared_ptr<Texture> SP;
     
     /*! pretty-printer, for debugging */
@@ -237,7 +237,7 @@ namespace pbrt {
 
   /*! a texture defined by a 2D image. Note we hadnle ptex separately,
     as ptex is not a 2D image format */
-  struct PBRT_PARSER_INTERFACE ImageTexture : public Texture {
+  struct ImageTexture : public Texture {
     typedef std::shared_ptr<ImageTexture> SP;
 
     ImageTexture(const std::string &fileName="") : fileName(fileName) {}
@@ -255,7 +255,7 @@ namespace pbrt {
   /*! a texture defined by a disney ptex file. these are kind-of like
     image textures, but also kind-of not, so we handle them
     separately */
-  struct PBRT_PARSER_INTERFACE PtexFileTexture : public Texture {
+  struct PtexFileTexture : public Texture {
     typedef std::shared_ptr<PtexFileTexture> SP;
 
     PtexFileTexture(const std::string &fileName="") : fileName(fileName) {}
@@ -270,7 +270,7 @@ namespace pbrt {
     std::string fileName;
   };
   
-  struct PBRT_PARSER_INTERFACE FbmTexture : public Texture {
+  struct FbmTexture : public Texture {
     typedef std::shared_ptr<FbmTexture> SP;
 
     /*! pretty-printer, for debugging */
@@ -281,7 +281,7 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
   };
   
-  struct PBRT_PARSER_INTERFACE WindyTexture : public Texture {
+  struct WindyTexture : public Texture {
     typedef std::shared_ptr<WindyTexture> SP;
 
     /*! pretty-printer, for debugging */
@@ -292,7 +292,7 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
   };
   
-  struct PBRT_PARSER_INTERFACE MarbleTexture : public Texture {
+  struct MarbleTexture : public Texture {
     typedef std::shared_ptr<MarbleTexture> SP;
 
     /*! pretty-printer, for debugging */
@@ -305,7 +305,7 @@ namespace pbrt {
     float scale { 1.f };
   };
   
-  struct PBRT_PARSER_INTERFACE WrinkledTexture : public Texture {
+  struct WrinkledTexture : public Texture {
     typedef std::shared_ptr<WrinkledTexture> SP;
 
     /*! pretty-printer, for debugging */
@@ -316,7 +316,7 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
   };
   
-  struct PBRT_PARSER_INTERFACE ScaleTexture : public Texture {
+  struct ScaleTexture : public Texture {
     typedef std::shared_ptr<ScaleTexture> SP;
 
     /*! pretty-printer, for debugging */
@@ -331,7 +331,7 @@ namespace pbrt {
     vec3f scale2 { 1.f };
   };
   
-  struct PBRT_PARSER_INTERFACE MixTexture : public Texture {
+  struct MixTexture : public Texture {
     typedef std::shared_ptr<MixTexture> SP;
 
     /*! pretty-printer, for debugging */
@@ -348,7 +348,7 @@ namespace pbrt {
     vec3f scale2 { 1.f };
   };
   
-  struct PBRT_PARSER_INTERFACE ConstantTexture : public Texture {
+  struct ConstantTexture : public Texture {
     typedef std::shared_ptr<ConstantTexture> SP;
 
     /*! pretty-printer, for debugging */
@@ -361,7 +361,7 @@ namespace pbrt {
     vec3f value;
   };
   
-  struct PBRT_PARSER_INTERFACE CheckerTexture : public Texture {
+  struct CheckerTexture : public Texture {
     typedef std::shared_ptr<CheckerTexture> SP;
 
     /*! pretty-printer, for debugging */
@@ -378,7 +378,7 @@ namespace pbrt {
   };
   
   /*! disney 'principled' material, as used in moana model */
-  struct PBRT_PARSER_INTERFACE DisneyMaterial : public Material {
+  struct DisneyMaterial : public Material {
     typedef std::shared_ptr<DisneyMaterial> SP;
     
     /*! constructor */
@@ -407,7 +407,7 @@ namespace pbrt {
     bool  thin           { false };
   };
 
-  struct PBRT_PARSER_INTERFACE MixMaterial : public Material
+  struct MixMaterial : public Material
   {
     typedef std::shared_ptr<MixMaterial> SP;
     
@@ -426,7 +426,7 @@ namespace pbrt {
     Texture::SP map_amount;
   };
     
-  struct PBRT_PARSER_INTERFACE MetalMaterial : public Material
+  struct MetalMaterial : public Material
   {
     typedef std::shared_ptr<MetalMaterial> SP;
     
@@ -454,7 +454,7 @@ namespace pbrt {
     Texture::SP map_bump;
   };
     
-  struct PBRT_PARSER_INTERFACE TranslucentMaterial : public Material
+  struct TranslucentMaterial : public Material
   {
     typedef std::shared_ptr<TranslucentMaterial> SP;
     
@@ -474,7 +474,7 @@ namespace pbrt {
     Texture::SP map_kd;
   };
     
-  struct PBRT_PARSER_INTERFACE PlasticMaterial : public Material
+  struct PlasticMaterial : public Material
   {
     typedef std::shared_ptr<PlasticMaterial> SP;
     
@@ -498,7 +498,7 @@ namespace pbrt {
     bool remapRoughness { true };
   };
     
-  struct PBRT_PARSER_INTERFACE SubstrateMaterial : public Material
+  struct SubstrateMaterial : public Material
   {
     typedef std::shared_ptr<SubstrateMaterial> SP;
     
@@ -525,7 +525,7 @@ namespace pbrt {
     Texture::SP map_bump;
   };
     
-  struct PBRT_PARSER_INTERFACE SubSurfaceMaterial : public Material
+  struct SubSurfaceMaterial : public Material
   {
     typedef std::shared_ptr<SubSurfaceMaterial> SP;
     
@@ -548,7 +548,7 @@ namespace pbrt {
     std::string name;
   };
     
-  struct PBRT_PARSER_INTERFACE MirrorMaterial : public Material
+  struct MirrorMaterial : public Material
   {
     typedef std::shared_ptr<MirrorMaterial> SP;
     
@@ -567,7 +567,7 @@ namespace pbrt {
   };
     
     
-  struct PBRT_PARSER_INTERFACE FourierMaterial : public Material
+  struct FourierMaterial : public Material
   {
     typedef std::shared_ptr<FourierMaterial> SP;
     
@@ -584,7 +584,7 @@ namespace pbrt {
     std::string fileName;
   };
     
-  struct PBRT_PARSER_INTERFACE MatteMaterial : public Material
+  struct MatteMaterial : public Material
   {
     typedef std::shared_ptr<MatteMaterial> SP;
     
@@ -605,7 +605,7 @@ namespace pbrt {
     Texture::SP map_bump;
   };
     
-  struct PBRT_PARSER_INTERFACE GlassMaterial : public Material
+  struct GlassMaterial : public Material
   {
     typedef std::shared_ptr<GlassMaterial> SP;
     
@@ -624,7 +624,7 @@ namespace pbrt {
     float index { 1.5f };
   };
     
-  struct PBRT_PARSER_INTERFACE UberMaterial : public Material {
+  struct UberMaterial : public Material {
     typedef std::shared_ptr<UberMaterial> SP;
     
     /*! constructor */
@@ -674,7 +674,7 @@ namespace pbrt {
     should actually be called a 'Shape'; we call it shape for
     historic reasons (it's the term that embree and ospray - as
     well as a good many others - use) */
-  struct PBRT_PARSER_INTERFACE Shape : public Entity {
+  struct Shape : public Entity {
     typedef std::shared_ptr<Shape> SP;
     
     Shape(Material::SP material = Material::SP()) : material(material) {}
@@ -715,7 +715,7 @@ namespace pbrt {
     vec3i indices for triangle vertex indices. normal and texture
     arrays may be empty, but if they exist, will use the same vertex
     indices as vertex positions */
-  struct PBRT_PARSER_INTERFACE TriangleMesh : public Shape {
+  struct TriangleMesh : public Shape {
     typedef std::shared_ptr<TriangleMesh> SP;
 
     /*! constructor */
@@ -761,7 +761,7 @@ namespace pbrt {
     convenience - that renderers that _can_ optimie for quads can
     easily convert from pbrt's trianglemehs to a quadmesh using \see
     QuadMesh::createFrom(TriangleMesh::SP) */
-  struct PBRT_PARSER_INTERFACE QuadMesh : public Shape {
+  struct QuadMesh : public Shape {
     typedef std::shared_ptr<QuadMesh> SP;
 
     /*! constructor */
@@ -800,7 +800,7 @@ namespace pbrt {
   };
 
   /*! what we create for 'Shape "curve" type "cylinder"' */
-  struct PBRT_PARSER_INTERFACE Curve : public Shape {
+  struct Curve : public Shape {
     typedef std::shared_ptr<Curve> SP;
 
     typedef enum : uint8_t {
@@ -850,7 +850,7 @@ namespace pbrt {
     _not_ yet apply the transform to update ratius and center, and
     use the pbrt way of storing them individually (in thoery this
     allows ellipsoins, too!?) */
-  struct PBRT_PARSER_INTERFACE Sphere : public Shape {
+  struct Sphere : public Shape {
     typedef std::shared_ptr<Sphere> SP;
 
     /*! constructor */
@@ -883,7 +883,7 @@ namespace pbrt {
     _not_ yet apply the transform to update ratius and center, and
     use the pbrt way of storing them individually (in thoery this
     allows ellipsoins, too!?) */
-  struct PBRT_PARSER_INTERFACE Disk : public Shape {
+  struct Disk : public Shape {
     typedef std::shared_ptr<Disk> SP;
 
     /*! constructor */
@@ -913,7 +913,7 @@ namespace pbrt {
   };
 
 
-  struct PBRT_PARSER_INTERFACE Instance : public Entity {
+  struct Instance : public Entity {
     Instance() {}
     Instance(const std::shared_ptr<Object> &object,
              const affine3f                &xfm)
@@ -936,7 +936,7 @@ namespace pbrt {
   };
 
   /*! a logical "NamedObject" that can be instanced */
-  struct PBRT_PARSER_INTERFACE Object : public Entity {
+  struct Object : public Entity {
       
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
       more concise, and easier to read */
@@ -968,7 +968,7 @@ namespace pbrt {
     seminatically parsing the objects, and actually already
     transform to a easier camera model.... this should eventually be
     reverted, only storing the actual values in this place */
-  struct PBRT_PARSER_INTERFACE Camera : public Entity {
+  struct Camera : public Entity {
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
       more consise, and easier to read */
     typedef std::shared_ptr<Camera> SP;
@@ -1014,7 +1014,7 @@ namespace pbrt {
 
   /*! specification of 'film' / frame buffer. note this will only
     store the size specification, not the actual pixels itself */
-  struct PBRT_PARSER_INTERFACE Film : public Entity {
+  struct Film : public Entity {
     /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
       more consise, and easier to read */
     typedef std::shared_ptr<Film> SP;
@@ -1040,7 +1040,7 @@ namespace pbrt {
   /*! the complete scene - pretty much the 'root' object that
     contains the WorldBegin/WorldEnd entities, plus high-level
     stuff like camera, frame buffer specification, etc */
-  struct PBRT_PARSER_INTERFACE Scene : public Entity //, public std::enable_shared_from_this<Scene>
+  struct Scene : public Entity //, public std::enable_shared_from_this<Scene>
   {
     typedef std::shared_ptr<Scene> SP;
 
