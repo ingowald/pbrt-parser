@@ -20,7 +20,9 @@
 #  define _USE_MATH_DEFINES
 #endif
 #ifdef _WIN32
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
