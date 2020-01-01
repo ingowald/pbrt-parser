@@ -20,6 +20,7 @@
 #include <fstream>
 #include <sstream>
 #include <stack>
+#include <algorithm>
 // std
 #include <stdio.h>
 #include <string.h>
@@ -849,15 +850,15 @@ namespace pbrt {
       }
     }
 
-    std::string pathOf(const std::string &fn)
+
+    std::string pathOf(std::string fn)
     {
+      std::replace(fn.begin(), fn.end(), '\\', '/');
       size_t pos = fn.find_last_of('/');
-      const size_t altPos = fn.find_last_of('\\');
-      if (pos == std::string::npos)
-       pos = altPos;
-      else if (altPos != std::string::npos)
-       pos = std::max(pos, altPos);
-      if (pos == std::string::npos) return std::string();
+      if (pos == std::string::npos) {
+        return std::string();
+      }
+
       return fn.substr(0,pos+1);
     }
 

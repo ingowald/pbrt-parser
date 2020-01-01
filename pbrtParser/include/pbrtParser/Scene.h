@@ -1086,6 +1086,6 @@ namespace pbrt {
 
   /*! parse a pbrt file (using the pbrt_parser project, and convert
     the result over to a naivescenelayout */
-  PBRT_PARSER_INTERFACE Scene::SP importPBRT(const std::string &fileName);
+  PBRT_PARSER_INTERFACE Scene::SP importPBRT(const std::string &fileName, const std::string &basePath = "");
   
 } // ::pbrt

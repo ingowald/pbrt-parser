@@ -31,9 +31,9 @@ namespace pbrt {
   namespace syntactic {
   
     /*! parse the given file name, return parsed scene */
-    std::shared_ptr<Scene> Scene::parse(const std::string &fileName)
+    std::shared_ptr<Scene> Scene::parse(const std::string &fileName, const std::string &basePath)
     {
-      std::shared_ptr<Parser> parser = std::make_shared<Parser>();
+      std::shared_ptr<Parser> parser = std::make_shared<Parser>(basePath);
       parser->parse(fileName);
       return parser->getScene();
     }
