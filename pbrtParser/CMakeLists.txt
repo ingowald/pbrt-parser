@@ -53,6 +53,7 @@ set_target_properties(pbrtParser PROPERTIES
   CXX_VISIBILITY_PRESET hidden
   CXX_STANDARD 11
   CXX_STANDARD_REQUIRED ON
+  DEBUG_POSTFIX _debug
   )
 
 target_compile_definitions(pbrtParser PUBLIC PBRT_PARSER_DLL_INTERFACE)
