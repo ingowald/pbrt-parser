@@ -104,7 +104,7 @@ add_executable(unittests
     ${UNITTESTS_CUDA_SOURCES}
 )
 
-target_link_libraries(unittests libgtest libgtest_main pbrtParser_static ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(unittests libgtest libgtest_main pbrtParser ${CMAKE_THREAD_LIBS_INIT})
 
 # Set gtest include dirs as target properties
 # This way cmake does not complain about not (yet) existing include dirs
