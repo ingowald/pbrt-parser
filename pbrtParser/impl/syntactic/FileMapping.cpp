@@ -37,7 +37,7 @@ namespace pbrt {
 
     FileMapping::FileMapping(const std::string &fname) : mapping(nullptr), num_bytes(0) {
 #ifdef _WIN32
-	  file = CreateFile(fname.c_str(), GENERIC_READ,
+	  file = CreateFileA(fname.c_str(), GENERIC_READ,
 	  		FILE_SHARE_READ, nullptr, OPEN_EXISTING,
 	  		FILE_ATTRIBUTE_NORMAL, nullptr);
 	  if (file == INVALID_HANDLE_VALUE) {
