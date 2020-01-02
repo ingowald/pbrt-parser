@@ -124,13 +124,13 @@ namespace pbrt {
       static void pop(Attributes::SP& graphicsState) {
         if (!graphicsState)
           throw std::runtime_error("Invalid graphics state");
-        graphicsState = graphicsState->parent;
+        graphicsState = graphicsState->parent.lock();
       }
 
       /*! Freeze the current graphics state so that it won't be affected
         by subsequent changes. Returns the frozen graphics state */
       static Attributes::SP freeze(Attributes::SP& graphicsState) {
-#if 1
+#if 0
         // iw - this CLONES the state, else I get stack overflow in
         // destructor chain: for pbrt-v3-scenes/straight-hair.pbrt i
         // get 1M hair shapes, and the shapes::clear() then triggers
@@ -198,11 +198,11 @@ namespace pbrt {
 
     private:
       /*! Parent graphics state */
-      Attributes::SP parent = nullptr;
+      std::weak_ptr<Attributes> parent;
 
       /*! Previous graphics state, for "versioning"
         (call freeze() to make a new version) */
-      Attributes::SP prev = nullptr;
+      std::weak_ptr<Attributes> prev;
 
       std::map<std::string,std::shared_ptr<Material> > namedMaterial;
       std::map<std::string,std::shared_ptr<Medium> >   namedMedium;
@@ -225,10 +225,14 @@ namespace pbrt {
         while (curr != nullptr) {
           if (curr->get(Item{}).find(name) != curr->get(Item{}).end())
             return curr->get(Item{})[name];
-          if (curr->prev != nullptr)
-            curr = curr->prev.get();
-          else
-            curr = curr->parent.get();
+          if (curr->prev.use_count() > 0) {
+            Attributes::SP prev(curr->prev);
+            curr = prev.get();
+          } else {
+            assert(curr->parent.use_count() > 0);
+            Attributes::SP parent(curr->parent);
+            curr = parent.get();
+          }
         }
         return nullptr;
       }
