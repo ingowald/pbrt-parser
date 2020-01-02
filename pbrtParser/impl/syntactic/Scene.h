@@ -124,7 +124,7 @@ namespace pbrt {
       static void pop(Attributes::SP& graphicsState) {
         if (!graphicsState)
           throw std::runtime_error("Invalid graphics state");
-        graphicsState = graphicsState->parent.lock();
+        graphicsState = graphicsState->parent;
       }
 
       /*! Freeze the current graphics state so that it won't be affected
@@ -198,7 +198,7 @@ namespace pbrt {
 
     private:
       /*! Parent graphics state */
-      std::weak_ptr<Attributes> parent;
+      Attributes::SP parent = nullptr;
 
       /*! Previous graphics state, for "versioning"
         (call freeze() to make a new version) */
@@ -229,9 +229,7 @@ namespace pbrt {
             Attributes::SP prev(curr->prev);
             curr = prev.get();
           } else {
-            assert(curr->parent.use_count() > 0);
-            Attributes::SP parent(curr->parent);
-            curr = parent.get();
+            curr = curr->parent.get();
           }
         }
         return nullptr;
