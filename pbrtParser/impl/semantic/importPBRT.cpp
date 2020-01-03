@@ -507,6 +507,7 @@ namespace pbrt {
       result        = std::make_shared<Scene>();
       result->world  = findOrEmitObject(pbrtScene->world);
 
+      std::cout << "semantic - done with findoremit" << std::endl;
       if (!unhandledShapeTypeCounter.empty()) {
         std::cerr << "WARNING: scene contained some un-handled shapes!" << std::endl;
         for (auto type : unhandledShapeTypeCounter)

@@ -136,7 +136,6 @@ namespace pbrt {
   {
     Curve::SP ours = std::make_shared<Curve>(findOrCreateMaterial(shape->material));
     ours->transform = shape->transform.atStart;
-
     // -------------------------------------------------------
     // check 'type'
     // -------------------------------------------------------
@@ -294,24 +293,26 @@ namespace pbrt {
     if (emittedShapes.find(pbrtShape) != emittedShapes.end())
       return emittedShapes[pbrtShape];
 
-    emittedShapes[pbrtShape] = emitShape(pbrtShape);
-    if (emittedShapes[pbrtShape])
-      emittedShapes[pbrtShape]->reverseOrientation = pbrtShape->attributes->reverseOrientation;
-    /* now, add area light sources */
-    if (!pbrtShape->attributes->areaLightSources.empty()) {
-      std::cout << "Shape has " << pbrtShape->attributes->areaLightSources.size()
-                << " area light sources..." << std::endl;
-      assert(pbrtShape->attributes);
-      auto &areaLights = pbrtShape->attributes->areaLightSources;
-      if (!areaLights.empty()) {
-        if (areaLights.size() > 1)
-          std::cout << "Warning: Shape has more than one area light!?" << std::endl;
-        assert(emittedShapes[pbrtShape]);
-        emittedShapes[pbrtShape]->areaLight = parseAreaLight(areaLights[0]);
+    Shape::SP newShape = emitShape(pbrtShape);
+    emittedShapes[pbrtShape] = newShape;
+    if (pbrtShape->attributes) {
+      newShape->reverseOrientation
+        = pbrtShape->attributes->reverseOrientation;
+      /* now, add area light sources */
+      
+      if (!pbrtShape->attributes->areaLightSources.empty()) {
+        std::cout << "Shape has " << pbrtShape->attributes->areaLightSources.size()
+                  << " area light sources..." << std::endl;
+        auto &areaLights = pbrtShape->attributes->areaLightSources;
+        if (!areaLights.empty()) {
+          if (areaLights.size() > 1)
+            std::cout << "Warning: Shape has more than one area light!?" << std::endl;
+          newShape->areaLight = parseAreaLight(areaLights[0]);
+        }
       }
     }
-    
-    return emittedShapes[pbrtShape];
+
+    return newShape;
   }
 
   
@@ -324,6 +325,7 @@ namespace pbrt {
     }
       
     Object::SP ourObject = std::make_shared<Object>();
+    emittedObjects[pbrtObject] = ourObject;
     ourObject->name = pbrtObject->name;
     
     for (auto lightSource : pbrtObject->lightSources) {
@@ -331,7 +333,7 @@ namespace pbrt {
       if (ourLightSource)
         ourObject->lightSources.push_back(ourLightSource);
     }
-    
+
     for (auto shape : pbrtObject->shapes) {
       Shape::SP ourShape = findOrCreateShape(shape);
       if (ourShape)
@@ -341,7 +343,6 @@ namespace pbrt {
     for (auto instance : pbrtObject->objectInstances)
       ourObject->instances.push_back(emitInstance(instance));
 
-    emittedObjects[pbrtObject] = ourObject;
     return ourObject;
   }
 

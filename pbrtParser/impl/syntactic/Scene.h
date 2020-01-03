@@ -103,8 +103,8 @@ namespace pbrt {
 
       // NOT copyable!
       Attributes() = default;
-      Attributes(Attributes&) = delete;
-      Attributes& operator=(Attributes&) = delete;
+      Attributes(const Attributes&) = delete;
+      Attributes& operator=(const Attributes&) = delete;
 
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
@@ -130,6 +130,24 @@ namespace pbrt {
       /*! Freeze the current graphics state so that it won't be affected
         by subsequent changes. Returns the frozen graphics state */
       static Attributes::SP freeze(Attributes::SP& graphicsState) {
+#if 1
+        // iw - this CLONES the state, else I get stack overflow in
+        // destructor chain: for pbrt-v3-scenes/straight-hair.pbrt i
+        // get 1M hair shapes, and the shapes::clear() then triggers
+        // what looks like an infinite (or at least,
+        // too-deep-for-the-stack) chain of Attribute::~Attribute
+        // calls.
+        Attributes::SP newGraphicsState = std::make_shared<Attributes>();
+        newGraphicsState->areaLightSources = graphicsState->areaLightSources;
+        newGraphicsState->mediumInterface = graphicsState->mediumInterface;
+        newGraphicsState->reverseOrientation = graphicsState->reverseOrientation;
+        newGraphicsState->parent = graphicsState->parent;
+        newGraphicsState->prev = graphicsState;
+        return newGraphicsState;
+
+#else
+        // iw, 1/1/20 - this is the code szellman adde to avoid
+        // un-necessary clones
         Attributes::SP newGraphicsState = std::make_shared<Attributes>();
         newGraphicsState->areaLightSources = graphicsState->areaLightSources;
         newGraphicsState->mediumInterface = graphicsState->mediumInterface;
@@ -141,20 +159,21 @@ namespace pbrt {
         graphicsState = newGraphicsState;
 
         return oldGraphicsState;
+#endif
       }
 
       /*! Insert named material */
-      void insertNamedMaterial(std::string name, const std::shared_ptr<Material>& material) {
+      void insertNamedMaterial(std::string name, std::shared_ptr<Material> material) {
         namedMaterial[name] = material;
       }
 
       /*! Insert named medium */
-      void insertNamedMedium(std::string name, const std::shared_ptr<Medium>& medium) {
+      void insertNamedMedium(std::string name, std::shared_ptr<Medium> medium) {
         namedMedium[name] = medium;
       }
 
       /*! Insert named texture */
-      void insertNamedTexture(std::string name, const std::shared_ptr<Texture>& texture) {
+      void insertNamedTexture(std::string name, std::shared_ptr<Texture> texture) {
         namedTexture[name] = texture;
       }
 
@@ -197,7 +216,7 @@ namespace pbrt {
 
       /*! get reference to namedTexture */
       decltype(namedTexture)& get(std::shared_ptr<Texture>) { return namedTexture; }
-
+      
       /*! search this scope for the named item, descend into
         parent scopes if not found. Also search prior versions */
       template <typename Item>
@@ -632,14 +651,14 @@ namespace pbrt {
       typedef std::shared_ptr<Object> SP;
     
       Object(const std::string &name) : name(name) {}
-    
+
       struct PBRT_PARSER_INTERFACE Instance {
 
         /*! allows for writing pbrt::syntactic::Scene::SP, which is somewhat
           more concise than std::shared_ptr<pbrt::syntactic::Scene> */
         typedef std::shared_ptr<Instance> SP;
       
-        Instance(const std::shared_ptr<Object> &object,
+        Instance(std::shared_ptr<Object> object,
                  const Transform  &xfm)
           : object(object), xfm(xfm)
         {}
@@ -680,6 +699,12 @@ namespace pbrt {
       Scene()
         : world(std::make_shared<Object>("<root>"))
         {}
+      virtual ~Scene()
+      {
+        std::cout << "destructor in scene .." << std::endl;
+        world = nullptr;
+        std::cout << "deleted world" << std::endl;
+      }
 
       /*! parse the given file name, return parsed scene */
       static std::shared_ptr<Scene> parse(const std::string &fileName, const std::string &basePath = "");

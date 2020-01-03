@@ -44,19 +44,46 @@ set(SOURCES
   )
 
 # ------------------------------------------------------------------
-add_library(pbrtParser SHARED
-  ${SOURCES}
+if (!_WIN32)
+  # iw, 1/1/2020: On windows, passing any std::string, std::vector,
+  # std::shared_ptr etc through dll boundaries is just a plain bad
+  # idea, so we'll build the shared library only on linux
+  add_library(pbrtParser_shared SHARED
+    ${SOURCES}
   )
 
+  set_target_properties(pbrtParser_shared PROPERTIES
+    VERSION ${pbrtParser_VERSION}
+    CXX_VISIBILITY_PRESET hidden
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED ON
+  )
+
+  target_compile_definitions(pbrtParser_shared PUBLIC PBRT_PARSER_DLL_INTERFACE)
+  target_include_directories(pbrtParser_shared PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  )
+
+  install(TARGETS pbrtParser_shared EXPORT pbrtParserConfig
+    DESTINATION lib)
+endif()
+
+# ------------------------------------------------------------------
+# iw, 1/1/2020: TODO - on windows, probably want to build separate
+# debug and release versions of the library, and use some cmake magic
+# to set some PBRT_PARSER_LIBARAIES etc variables that automatically
+# select the right ones.
+add_library(pbrtParser STATIC
+  ${SOURCES}
+)
+
+set_target_properties(pbrtParser PROPERTIES VERSION ${pbrtParser_VERSION})
 set_target_properties(pbrtParser PROPERTIES
   VERSION ${pbrtParser_VERSION}
-  CXX_VISIBILITY_PRESET hidden
   CXX_STANDARD 11
   CXX_STANDARD_REQUIRED ON
-  DEBUG_POSTFIX _debug
-  )
-
-target_compile_definitions(pbrtParser PUBLIC PBRT_PARSER_DLL_INTERFACE)
+)
 
 target_include_directories(pbrtParser PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
@@ -64,25 +91,7 @@ target_include_directories(pbrtParser PUBLIC
   )
 
 # ------------------------------------------------------------------
-add_library(pbrtParser_static STATIC
-  ${SOURCES}
-  )
-
-set_target_properties(pbrtParser_static PROPERTIES VERSION ${pbrtParser_VERSION})
-
-set_target_properties(pbrtParser_static PROPERTIES
-  VERSION ${pbrtParser_VERSION}
-  CXX_STANDARD 11
-  CXX_STANDARD_REQUIRED ON
-  )
-
-target_include_directories(pbrtParser_static PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  )
-
-# ------------------------------------------------------------------
-install(TARGETS pbrtParser pbrtParser_static EXPORT pbrtParserConfig
+install(TARGETS pbrtParser EXPORT pbrtParserConfig
   DESTINATION lib)
 
 install(FILES include/pbrtParser/math.h include/pbrtParser/Scene.h
