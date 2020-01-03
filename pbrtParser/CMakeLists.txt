@@ -44,7 +44,7 @@ set(SOURCES
   )
 
 # ------------------------------------------------------------------
-if (!_WIN32)
+if (NOT WIN32)
   # iw, 1/1/2020: On windows, passing any std::string, std::vector,
   # std::shared_ptr etc through dll boundaries is just a plain bad
   # idea, so we'll build the shared library only on linux
