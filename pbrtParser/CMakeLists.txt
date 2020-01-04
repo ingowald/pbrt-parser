@@ -44,17 +44,29 @@ set(SOURCES
   )
 
 # ------------------------------------------------------------------
-if (!_WIN32)
+if (NOT WIN32)
   # iw, 1/1/2020: On windows, passing any std::string, std::vector,
   # std::shared_ptr etc through dll boundaries is just a plain bad
   # idea, so we'll build the shared library only on linux
   add_library(pbrtParser_shared SHARED
     ${SOURCES}
-    )
-  set_target_properties(pbrtParser_shared PROPERTIES VERSION ${pbrtParser_VERSION})
-  set_target_properties(pbrtParser_shared PROPERTIES CXX_VISIBILITY_PRESET hidden)
+  )
+
+  set_target_properties(pbrtParser_shared PROPERTIES
+    VERSION ${pbrtParser_VERSION}
+    CXX_VISIBILITY_PRESET hidden
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED ON
+  )
+
   target_compile_definitions(pbrtParser_shared PUBLIC PBRT_PARSER_DLL_INTERFACE)
-  install(TARGETS pbrtParser_shared DESTINATION lib)
+  target_include_directories(pbrtParser_shared PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  )
+
+  install(TARGETS pbrtParser_shared EXPORT pbrtParserConfig
+    DESTINATION lib)
 endif()
 
 # ------------------------------------------------------------------
@@ -64,12 +76,27 @@ endif()
 # select the right ones.
 add_library(pbrtParser STATIC
   ${SOURCES}
-  )
+)
+
 set_target_properties(pbrtParser PROPERTIES VERSION ${pbrtParser_VERSION})
-install(TARGETS pbrtParser DESTINATION lib)
+set_target_properties(pbrtParser PROPERTIES
+  VERSION ${pbrtParser_VERSION}
+  CXX_STANDARD 11
+  CXX_STANDARD_REQUIRED ON
+)
+
+target_include_directories(pbrtParser PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
 
 # ------------------------------------------------------------------
+install(TARGETS pbrtParser EXPORT pbrtParserConfig
+  DESTINATION lib)
 
-install(FILES include/pbrtParser/math.h DESTINATION include/pbrtParser)
-install(FILES include/pbrtParser/Scene.h DESTINATION include/pbrtParser)
+install(FILES include/pbrtParser/math.h include/pbrtParser/Scene.h
+  DESTINATION include/pbrtParser)
+
+install(EXPORT pbrtParserConfig
+  DESTINATION lib/cmake/pbrtParser)
 
