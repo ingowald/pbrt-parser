@@ -211,23 +211,29 @@ namespace pbrt {
   // Object
   // ==================================================================
 
-  box3f Object::getBounds() const
+  box3f Object::getBounds() 
   {
-    box3f bounds = box3f::empty_box();
-    for (auto inst : instances) {
+    if (haveComputedBounds) return bounds;
+
+    std::lock_guard<std::mutex> lock(mutex);
+    if (haveComputedBounds) return bounds;
+    
+    bounds = box3f::empty_box();
+    for (auto &inst : instances) {
       if (inst) {
         const box3f ib = inst->getBounds();
         if (!ib.empty())
           bounds.extend(ib);
       }
     }
-    for (auto geom : shapes) {
+    for (auto &geom : shapes) {
       if (geom) {
         const box3f gb = geom->getBounds();
         if (!gb.empty())
           bounds.extend(gb);
       }
     }
+    haveComputedBounds = true;
     return bounds;
   }
 
@@ -235,21 +241,30 @@ namespace pbrt {
   /*! compute (conservative but possibly approximate) bbox of this
     instance in world space. This box is not necessarily tight, as
     it getsc omputed by transforming the object's bbox */
-  box3f Instance::getBounds() const
+  box3f Instance::getBounds() 
   {
-    box3f ob = object->getBounds();
-    if (ob.empty()) 
-      return ob;
+    if (haveComputedBounds) return bounds;
 
-    box3f bounds = box3f::empty_box();
-    bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.upper.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.lower.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.upper.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.lower.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
+    std::lock_guard<std::mutex> lock(mutex);
+    if (haveComputedBounds) return bounds;
+    const box3f ob = object->getBounds();
+    if (bounds.empty()) {
+      this->bounds = ob;
+      haveComputedBounds = true;
+      return ob;
+    }
+
+    box3f _bounds = box3f::empty_box();
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.upper.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.lower.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.upper.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.lower.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
+    this->bounds = _bounds;
+    haveComputedBounds = true;
     return bounds;
   }
     

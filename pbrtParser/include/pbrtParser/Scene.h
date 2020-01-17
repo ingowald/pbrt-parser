@@ -946,12 +946,18 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    virtual box3f getBounds() const;
+    virtual box3f getBounds();
 
     typedef std::shared_ptr<Instance> SP;
       
     std::shared_ptr<Object> object;
     affine3f                xfm; // { PBRT_PARSER_VECTYPE_NAMESPACE::one };
+
+    /*! mutex to lock anything within this object that might get
+      changed by multiple threads (eg, computing bbox */
+    std::mutex         mutex;
+    bool  haveComputedBounds { false };
+    box3f bounds;
   };
 
   /*! a logical "NamedObject" that can be instanced */
@@ -971,7 +977,7 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    virtual box3f getBounds() const;
+    virtual box3f getBounds();
     
     std::vector<Shape::SP>       shapes;
     /*! all _non_-area light sources; in the pbrt spec area light
@@ -980,6 +986,12 @@ namespace pbrt {
     std::vector<LightSource::SP> lightSources;
     std::vector<Instance::SP>    instances;
     std::string name = "";
+
+    /*! mutex to lock anything within this object that might get
+      changed by multiple threads (eg, computing bbox */
+    std::mutex         mutex;
+    bool  haveComputedBounds { false };
+    box3f bounds;
   };
 
   /*! a camera as specified in the root .pbrt file. Note that unlike
