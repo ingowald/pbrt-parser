@@ -968,7 +968,8 @@ namespace pbrt {
     typedef std::shared_ptr<Object> SP;
 
     /*! constructor */
-    Object(const std::string &name="") : name(name) {}
+    Object(const std::string &name="") : name(name) {
+    }
 
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "Object"; }
