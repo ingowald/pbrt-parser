@@ -46,9 +46,6 @@ namespace pbrt {
       }
       bool startActive { true };
       bool endActive   { true };
-    
-      /*! pbrt's "CTM" (current transformation matrix) handling */
-      std::stack<Transform> stack;
     };
 
   
@@ -62,12 +59,17 @@ namespace pbrt {
       \warning Each scene should be parsed with its own instanc of this
       parser class, otherwise left-over state from previous passes may
       mess with the state of later pbrt file parse's */
-    struct PBRT_PARSER_INTERFACE Parser {
+    template <typename DataSource>
+    struct BasicParser {
       /*! constructor */
-      Parser(const std::string &basePath="");
+      BasicParser(const std::string &basePath="");
 
       /*! parse given file, and add it to the scene we hold */
       void parse(const std::string &fn);
+
+      /*! parse from input stream, add to scene we hold */
+      template <typename Stream>
+      void parse(typename IStream<Stream>::SP is);
 
       /*! parse everything in WorldBegin/WorldEnd */
       void parseWorld();
@@ -98,13 +100,22 @@ namespace pbrt {
       std::shared_ptr<Scene> getScene() { return scene; }
       std::shared_ptr<Texture> getTexture(const std::string &name);
     private:
+      typedef BasicLexer<DataSource> Lexer;
+
       //! stack of parent files' token streams
       std::stack<std::shared_ptr<Lexer>> tokenizerStack;
       std::deque<Token> peekQueue;
     
       //! token stream of currently open file
       std::shared_ptr<Lexer> tokens;
+
+      //! Do _NOT_ replace tokens!
+      template <typename OtherSource>
+      bool replace_tokens(std::shared_ptr<BasicLexer<OtherSource>>) { return false; }
     
+      //! Replace tokens if lexer type is same
+      bool replace_tokens(std::shared_ptr<Lexer> other) { tokens = other; return true; }
+
       /*! get the next token to process (either from current file, or
         parent file(s) if current file is EOL!); return NULL if
         complete end of input */
@@ -126,7 +137,7 @@ namespace pbrt {
       }
 
       std::stack<std::shared_ptr<Material> >   materialStack;
-      std::stack<std::shared_ptr<Attributes> > attributesStack;
+      std::stack<CTM>                          transformStack;
       std::stack<std::shared_ptr<Object> >     objectStack;
 
       CTM ctm;
@@ -137,9 +148,10 @@ namespace pbrt {
       // emit debug status messages...
       const std::string basePath;
       std::string rootNamePath;
-      std::shared_ptr<Scene>    scene;
-      std::shared_ptr<Object>   currentObject;
-      std::shared_ptr<Material> currentMaterial;
+      std::shared_ptr<Scene>      scene;
+      std::shared_ptr<Attributes> currentGraphicsState;
+      std::shared_ptr<Object>     currentObject;
+      std::shared_ptr<Material>   currentMaterial;
     
       bool dbg;
       /*! tracks the location of the last token gotten through next() (for debugging) */
@@ -147,10 +159,19 @@ namespace pbrt {
     
     };
 
-    PBRT_PARSER_INTERFACE void parsePLY(const std::string &fileName,
+    typedef MappedFile FileType;
+    //typedef File FileType;
+
+    //! Default parser
+    typedef BasicParser<FileType> Parser;
+
+    void parsePLY(const std::string &fileName,
                                         std::vector<vec3f> &v,
                                         std::vector<vec3f> &n,
                                         std::vector<vec3i> &idx);
     
   } // ::pbrt::syntx
 } // ::pbrt
+
+// Implementation
+#include "Parser.inl"

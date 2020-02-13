@@ -24,6 +24,7 @@ namespace pbrt {
     void parse(const std::string &fileName,
                std::vector<vec3f> &pos,
                std::vector<vec3f> &nor,
+               std::vector<vec2f> &tex,
                std::vector<vec3i> &idx)
     {
       happly::PLYData ply(fileName);
@@ -35,7 +36,7 @@ namespace pbrt {
           std::vector<float> y = elem.getProperty<float>("y");
           std::vector<float> z = elem.getProperty<float>("z");
           pos.resize(x.size());
-          for(int i = 0; i < x.size(); i ++) {
+          for(int i = 0; i < (int)x.size(); i ++) {
             pos[i] = vec3f(x[i], y[i], z[i]);
           }
         } else {
@@ -46,8 +47,16 @@ namespace pbrt {
           std::vector<float> y = elem.getProperty<float>("ny");
           std::vector<float> z = elem.getProperty<float>("nz");
           nor.resize(x.size());
-          for(int i = 0; i < x.size(); i ++) {
+          for(int i = 0; i < (int)x.size(); i ++) {
             nor[i] = vec3f(x[i], y[i], z[i]);
+          }
+        }
+        if(elem.hasProperty("u") && elem.hasProperty("v")) {
+          std::vector<float> u = elem.getProperty<float>("u");
+          std::vector<float> v = elem.getProperty<float>("v");
+          tex.resize(u.size());
+          for(int i = 0; i < (int)u.size(); i ++) {
+            tex[i] = vec2f(u[i], v[i]);
           }
         }
       } else {
@@ -56,10 +65,10 @@ namespace pbrt {
       if (ply.hasElement("face")) {
         happly::Element& elem = ply.getElement("face");
         if(elem.hasProperty("vertex_indices")) {
-          std::vector<std::vector<int>> fasces = elem.getListProperty<int>("vertex_indices");
-          for(int j = 0; j < fasces.size(); j ++) {
-            std::vector<int>& face = fasces[j];
-            for (int i=2;i<face.size();i++) {
+          std::vector<std::vector<int>> faces = elem.getListPropertyAnySign<int>("vertex_indices");
+          for(int j = 0; j < (int)faces.size(); j ++) {
+            std::vector<int>& face = faces[j];
+            for (int i=2;i<(int)face.size();i++) {
               idx.push_back(vec3i(face[0], face[i-1], face[i]));
             }
           }
@@ -88,13 +97,13 @@ namespace pbrt {
     const std::string fileName
       = pbrtScene->makeGlobalFileName(shape->getParamString("filename"));
     TriangleMesh::SP ours = std::make_shared<TriangleMesh>(findOrCreateMaterial(shape->material));
-    ply::parse(fileName,ours->vertex,ours->normal,ours->index);
+    ply::parse(fileName,ours->vertex,ours->normal,ours->texcoord,ours->index);
 
     affine3f xfm = shape->transform.atStart;
     for (vec3f &v : ours->vertex)
       v = xfmPoint(xfm,v);
     for (vec3f &v : ours->normal)
-      v = xfmVector(xfm,v);
+      v = xfmNormal(xfm,v);
 
     extractTextures(ours,shape);
     return ours;
@@ -108,7 +117,9 @@ namespace pbrt {
     ours->vertex = extractVector<vec3f>(shape,"P");
     // vertex normals - param "N", 3x float each
     ours->normal = extractVector<vec3f>(shape,"N");
-    // triangle vertex indices - param "P", 3x int each
+    // per-vertex texture coordinates - param "uv", 2x float each
+    ours->texcoord = extractVector<vec2f>(shape,"uv");
+    // triangle vertex indices - param "indices", 3x int each
     ours->index = extractVector<vec3i>(shape,"indices");
 
     affine3f xfm = shape->transform.atStart;
@@ -124,7 +135,7 @@ namespace pbrt {
   Shape::SP SemanticParser::emitCurve(pbrt::syntactic::Shape::SP shape)
   {
     Curve::SP ours = std::make_shared<Curve>(findOrCreateMaterial(shape->material));
-
+    ours->transform = shape->transform.atStart;
     // -------------------------------------------------------
     // check 'type'
     // -------------------------------------------------------
@@ -282,21 +293,26 @@ namespace pbrt {
     if (emittedShapes.find(pbrtShape) != emittedShapes.end())
       return emittedShapes[pbrtShape];
 
-    emittedShapes[pbrtShape] = emitShape(pbrtShape);
-    /* now, add area light sources */
-    if (!pbrtShape->attributes->areaLightSources.empty()) {
-      std::cout << "Shape has " << pbrtShape->attributes->areaLightSources.size()
-                << " area light sources..." << std::endl;
-      assert(pbrtShape->attributes);
-      auto &areaLights = pbrtShape->attributes->areaLightSources;
-      if (!areaLights.empty()) {
-        if (areaLights.size() > 1)
-          std::cout << "Warning: Shape has more than one area light!?" << std::endl;
-        emittedShapes[pbrtShape]->areaLight = parseAreaLight(areaLights[0]);
+    Shape::SP newShape = emitShape(pbrtShape);
+    emittedShapes[pbrtShape] = newShape;
+    if (pbrtShape->attributes) {
+      newShape->reverseOrientation
+        = pbrtShape->attributes->reverseOrientation;
+      /* now, add area light sources */
+      
+      if (!pbrtShape->attributes->areaLightSources.empty()) {
+        std::cout << "Shape has " << pbrtShape->attributes->areaLightSources.size()
+                  << " area light sources..." << std::endl;
+        auto &areaLights = pbrtShape->attributes->areaLightSources;
+        if (!areaLights.empty()) {
+          if (areaLights.size() > 1)
+            std::cout << "Warning: Shape has more than one area light!?" << std::endl;
+          newShape->areaLight = parseAreaLight(areaLights[0]);
+        }
       }
     }
-    
-    return emittedShapes[pbrtShape];
+
+    return newShape;
   }
 
   
@@ -309,16 +325,24 @@ namespace pbrt {
     }
       
     Object::SP ourObject = std::make_shared<Object>();
+    emittedObjects[pbrtObject] = ourObject;
     ourObject->name = pbrtObject->name;
+    
+    for (auto lightSource : pbrtObject->lightSources) {
+      LightSource::SP ourLightSource = findOrCreateLightSource(lightSource);
+      if (ourLightSource)
+        ourObject->lightSources.push_back(ourLightSource);
+    }
+
     for (auto shape : pbrtObject->shapes) {
       Shape::SP ourShape = findOrCreateShape(shape);
       if (ourShape)
         ourObject->shapes.push_back(ourShape);
     }
+    
     for (auto instance : pbrtObject->objectInstances)
       ourObject->instances.push_back(emitInstance(instance));
 
-    emittedObjects[pbrtObject] = ourObject;
     return ourObject;
   }
 

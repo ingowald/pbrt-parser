@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald                                            //
+// Copyright 2015-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -20,6 +20,11 @@
 #include <string.h>
 #include <algorithm>
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   
@@ -28,6 +33,10 @@ namespace pbrt {
     return getPrimBounds(primID,affine3f::identity());
   }
 
+  std::string TriangleMesh::toString() const 
+  {
+    return "TriangleMesh";
+  }
 
   box3f TriangleMesh::getPrimBounds(const size_t primID, const affine3f &xfm) 
   {
@@ -63,7 +72,7 @@ namespace pbrt {
 
 
 
-  box3f Sphere::getPrimBounds(const size_t primID, const affine3f &xfm) 
+  box3f Sphere::getPrimBounds(const size_t /*unused: primID*/, const affine3f &xfm) 
   {
     box3f ob(vec3f(-radius),vec3f(+radius));
     affine3f _xfm = xfm * transform;
@@ -95,7 +104,7 @@ namespace pbrt {
 
 
 
-  box3f Disk::getPrimBounds(const size_t primID, const affine3f &xfm) 
+  box3f Disk::getPrimBounds(const size_t /*unused: primID*/, const affine3f &xfm) 
   {
     box3f ob(vec3f(-radius,-radius,0),vec3f(+radius,+radius,height));
     affine3f _xfm = xfm * transform;
@@ -170,7 +179,7 @@ namespace pbrt {
   // Curve
   // ==================================================================
 
-  box3f Curve::getPrimBounds(const size_t primID, const affine3f &xfm) 
+  box3f Curve::getPrimBounds(const size_t /*unused: primID*/, const affine3f &xfm) 
   {
     box3f primBounds = box3f::empty_box();
     for (auto p : P)
@@ -181,7 +190,7 @@ namespace pbrt {
     return primBounds;
   }
 
-  box3f Curve::getPrimBounds(const size_t primID) 
+  box3f Curve::getPrimBounds(const size_t /*unused: primID */) 
   {
     box3f primBounds = box3f::empty_box();
     for (auto p : P)
@@ -202,47 +211,62 @@ namespace pbrt {
   // Object
   // ==================================================================
 
-  box3f Object::getBounds() const
+  box3f Object::getBounds() 
   {
-    box3f bounds = box3f::empty_box();
-    for (auto inst : instances) {
+    if (haveComputedBounds) return bounds;
+
+    std::lock_guard<std::mutex> lock(mutex);
+    if (haveComputedBounds) return bounds;
+    
+    bounds = box3f::empty_box();
+    for (auto &inst : instances) {
       if (inst) {
         const box3f ib = inst->getBounds();
         if (!ib.empty())
           bounds.extend(ib);
       }
     }
-    for (auto geom : shapes) {
+    for (auto &geom : shapes) {
       if (geom) {
         const box3f gb = geom->getBounds();
         if (!gb.empty())
           bounds.extend(gb);
       }
     }
+    haveComputedBounds = true;
     return bounds;
-  };
+  }
 
 
   /*! compute (conservative but possibly approximate) bbox of this
     instance in world space. This box is not necessarily tight, as
     it getsc omputed by transforming the object's bbox */
-  box3f Instance::getBounds() const
+  box3f Instance::getBounds() 
   {
-    box3f ob = object->getBounds();
-    if (ob.empty()) 
-      return ob;
+    if (haveComputedBounds) return bounds;
 
-    box3f bounds = box3f::empty_box();
-    bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.upper.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.lower.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.upper.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.lower.z)));
-    bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
+    std::lock_guard<std::mutex> lock(mutex);
+    if (haveComputedBounds) return bounds;
+    const box3f ob = object->getBounds();
+    if (bounds.empty()) {
+      this->bounds = ob;
+      haveComputedBounds = true;
+      return ob;
+    }
+
+    box3f _bounds = box3f::empty_box();
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.lower.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.lower.y,ob.upper.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.lower.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.lower.x,ob.upper.y,ob.upper.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.lower.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.lower.y,ob.upper.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.lower.z)));
+    _bounds.extend(xfmPoint(xfm,vec3f(ob.upper.x,ob.upper.y,ob.upper.z)));
+    this->bounds = _bounds;
+    haveComputedBounds = true;
     return bounds;
-  };
+  }
     
   /* compute some _rough_ storage cost esimate for a scene. this will
      allow bricking builders to greedily split only the most egregious
@@ -257,9 +281,9 @@ namespace pbrt {
       some fitting of these parameters, and probably make it
       primtype- and material/shading-data dependent (textures ...),
       but for now any approximateion will do */
-    static const int primWeight = 100.f;
-    static const int instWeight = 4000.f;
-    static const int geomWeight = 4000.f;
+    static const float primWeight = 100.f;
+    static const float instWeight = 4000.f;
+    static const float geomWeight = 4000.f;
     
     std::set<Shape::SP> activeShapes;
     for (auto inst : scene->world->instances) 
@@ -294,7 +318,7 @@ namespace pbrt {
 
       auto it = vertexID.find(oldVertex);
       if (it == vertexID.end()) {
-        int newID = out->vertex.size();
+        int newID = (int)out->vertex.size();
         out->vertex.push_back(in->vertex[i]);
         if (!in->normal.empty())
           out->normal.push_back(in->normal[i]);
@@ -371,6 +395,8 @@ namespace pbrt {
       Object::SP ours = std::make_shared<Object>("ShapeFrom:"+object->name);
       for (auto geom : object->shapes)
         ours->shapes.push_back(geom);
+      for (auto lightSource : object->lightSources)
+        ours->lightSources.push_back(lightSource);
       return alreadyEmitted[object] = ours;
     }
     

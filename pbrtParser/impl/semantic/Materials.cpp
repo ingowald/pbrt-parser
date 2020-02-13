@@ -16,11 +16,35 @@
 
 #include "SemanticParser.h"
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
 namespace pbrt {
+
+  Material::SP SemanticParser::createMaterial_hair(pbrt::syntactic::Material::SP in)
+  {
+    HairMaterial::SP mat = std::make_shared<HairMaterial>(in->name);
+    for (auto it : in->param) {
+      std::string name = it.first;
+      if (name == "eumelanin") {
+        mat->eumelanin = in->getParam1f(name);
+      } else if (name == "alpha") {
+        mat->alpha = in->getParam1f(name);
+      } else if (name == "beta_m") {
+        mat->beta_m = in->getParam1f(name);
+      } else if (name == "type") {
+        /* ignore */
+      } else
+        throw std::runtime_error("as-yet-unhandled hair-material parameter '"+it.first+"'");
+    };
+    return mat;
+  }
 
   Material::SP SemanticParser::createMaterial_uber(pbrt::syntactic::Material::SP in)
   {
-    UberMaterial::SP mat = std::make_shared<UberMaterial>();
+    UberMaterial::SP mat = std::make_shared<UberMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kd") {
@@ -78,6 +102,21 @@ namespace pbrt {
         // else
         //   in->getParam3f(&mat->roughness.x,name);
       }
+      else if (name == "uroughness") {
+        // if (in->hasParamTexture(name))
+        //   mat->map_uRoughness = findOrCreateTexture(in->getParamTexture(name));
+        // else
+          mat->uRoughness = in->getParam1f(name);
+      }
+      else if (name == "vroughness") {
+        // if (in->hasParamTexture(name))
+        //   mat->map_vRoughness = findOrCreateTexture(in->getParamTexture(name));
+        // else
+          mat->vRoughness = in->getParam1f(name);
+      }
+      // else if (name == "remaproughness") {
+      //   mat->remapRoughness = in->getParamBool(name);
+      // }
       else if (name == "shadowalpha") {
         if (in->hasParamTexture(name)) {
           mat->shadowAlpha = 1.f;
@@ -98,7 +137,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_metal(pbrt::syntactic::Material::SP in)
   {
-    MetalMaterial::SP mat = std::make_shared<MetalMaterial>();
+    MetalMaterial::SP mat = std::make_shared<MetalMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "roughness") {
@@ -119,17 +158,28 @@ namespace pbrt {
         else
           mat->vRoughness = in->getParam1f(name);
       }
+      else if (name == "remaproughness") {
+        mat->remapRoughness = in->getParamBool(name);
+      }
       else if (name == "eta") {
         if (in->hasParam3f(name))
           in->getParam3f(&mat->eta.x,name);
-        else
-          mat->spectrum_eta = in->getParamString(name);
+        else {
+          std::size_t N=0;
+          in->getParamPairNf(nullptr,&N,name);
+          mat->spectrum_eta.spd.resize(N);
+          in->getParamPairNf(mat->spectrum_eta.spd.data(),&N,name);
+        }
       }
       else if (name == "k") {
         if (in->hasParam3f(name))
           in->getParam3f(&mat->k.x,name);
-        else
-          mat->spectrum_k = in->getParamString(name);
+        else {
+          std::size_t N=0;
+          in->getParamPairNf(nullptr,&N,name);
+          mat->spectrum_k.spd.resize(N);
+          in->getParamPairNf(mat->spectrum_k.spd.data(),&N,name);
+        }
       }
       else if (name == "bumpmap") {
         mat->map_bump = findOrCreateTexture(in->getParamTexture(name));
@@ -144,7 +194,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_matte(pbrt::syntactic::Material::SP in)
   {
-    MatteMaterial::SP mat = std::make_shared<MatteMaterial>();
+    MatteMaterial::SP mat = std::make_shared<MatteMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kd") {
@@ -173,7 +223,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_fourier(pbrt::syntactic::Material::SP in)
   {
-    FourierMaterial::SP mat = std::make_shared<FourierMaterial>();
+    FourierMaterial::SP mat = std::make_shared<FourierMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "bsdffile") {
@@ -189,7 +239,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_mirror(pbrt::syntactic::Material::SP in)
   {
-    MirrorMaterial::SP mat = std::make_shared<MirrorMaterial>();
+    MirrorMaterial::SP mat = std::make_shared<MirrorMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kr") {
@@ -211,7 +261,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_substrate(pbrt::syntactic::Material::SP in)
   {
-    SubstrateMaterial::SP mat = std::make_shared<SubstrateMaterial>();
+    SubstrateMaterial::SP mat = std::make_shared<SubstrateMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kd") {
@@ -258,7 +308,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_disney(pbrt::syntactic::Material::SP in)
   {
-    DisneyMaterial::SP mat = std::make_shared<DisneyMaterial>();
+    DisneyMaterial::SP mat = std::make_shared<DisneyMaterial>(in->name);
 
     in->getParam3f(&mat->color.x,"color");
     mat->anisotropic    = in->getParam1f("anisotropic",    0.f );
@@ -279,7 +329,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_mix(pbrt::syntactic::Material::SP in)
   {
-    MixMaterial::SP mat = std::make_shared<MixMaterial>();
+    MixMaterial::SP mat = std::make_shared<MixMaterial>(in->name);
           
     if (in->hasParamTexture("amount"))
       mat->map_amount = findOrCreateTexture(in->getParamTexture("amount"));
@@ -294,9 +344,9 @@ namespace pbrt {
       throw std::runtime_error("mix material w/o 'namedmaterial2' parameter");
 
     assert(in->attributes);
-    pbrt::syntactic::Material::SP mat0 = in->attributes->namedMaterial[name0];
+    pbrt::syntactic::Material::SP mat0 = in->attributes->findNamedMaterial(name0);
     assert(mat0);
-    pbrt::syntactic::Material::SP mat1 = in->attributes->namedMaterial[name1];
+    pbrt::syntactic::Material::SP mat1 = in->attributes->findNamedMaterial(name1);
     assert(mat1);
 
     mat->material0    = findOrCreateMaterial(mat0);
@@ -307,7 +357,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_plastic(pbrt::syntactic::Material::SP in)
   {
-    PlasticMaterial::SP mat = std::make_shared<PlasticMaterial>();
+    PlasticMaterial::SP mat = std::make_shared<PlasticMaterial>(in->name);
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "Kd") {
@@ -346,7 +396,7 @@ namespace pbrt {
   
   Material::SP SemanticParser::createMaterial_translucent(pbrt::syntactic::Material::SP in)
   {
-    TranslucentMaterial::SP mat = std::make_shared<TranslucentMaterial>();
+    TranslucentMaterial::SP mat = std::make_shared<TranslucentMaterial>(in->name);
 
     in->getParam3f(&mat->transmit.x,"transmit");
     in->getParam3f(&mat->reflect.x,"reflect");
@@ -360,7 +410,7 @@ namespace pbrt {
 
   Material::SP SemanticParser::createMaterial_glass(pbrt::syntactic::Material::SP in)
   {
-    GlassMaterial::SP mat = std::make_shared<GlassMaterial>();
+    GlassMaterial::SP mat = std::make_shared<GlassMaterial>(in->name);
 
     in->getParam3f(&mat->kr.x,"Kr");
     in->getParam3f(&mat->kt.x,"Kt");
@@ -430,6 +480,10 @@ namespace pbrt {
       return createMaterial_glass(in);
 
     // ==================================================================
+    if (type == "hair") 
+      return createMaterial_hair(in);
+
+    // ==================================================================
 #ifndef NDEBUG
     std::cout << "Warning: un-recognizd material type '"+type+"'" << std::endl;
 #endif
@@ -448,7 +502,7 @@ namespace pbrt {
     // null materials get passed through ...
     if (!in)
       return Material::SP();
-      
+
     if (!materialMapping[in]) {
       materialMapping[in] = createMaterialFrom(in);
     }

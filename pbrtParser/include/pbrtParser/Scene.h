@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald                                            //
+// Copyright 2015-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -22,6 +22,8 @@
 
 #include "pbrtParser/math.h"
 // std
+#include <istream>
+#include <ostream>
 #include <map>
 #include <vector>
 #include <string>
@@ -39,8 +41,10 @@ namespace pbrt {
   using vec2i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec2i;
   using vec3i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec3i;
   using vec4i    = PBRT_PARSER_VECTYPE_NAMESPACE::vec4i;
+  using mat3f    = PBRT_PARSER_VECTYPE_NAMESPACE::mat3f;
   using affine3f = PBRT_PARSER_VECTYPE_NAMESPACE::affine3f;
   using box3f    = PBRT_PARSER_VECTYPE_NAMESPACE::box3f;
+  using pairNf   = PBRT_PARSER_VECTYPE_NAMESPACE::pairNf;
 #else
   using vec2f    = pbrt::math::vec2f;
   using vec3f    = pbrt::math::vec3f;
@@ -48,10 +52,12 @@ namespace pbrt {
   using vec2i    = pbrt::math::vec2i;
   using vec3i    = pbrt::math::vec3i;
   using vec4i    = pbrt::math::vec4i;
+  using mat3f    = pbrt::math::mat3f;
   using affine3f = pbrt::math::affine3f;
   using box3f    = pbrt::math::box3f;
+  using pairNf   = pbrt::math::pairNf;
 #endif
-    
+
   /*! internal class used for serializing a scene graph to/from disk */
   struct BinaryWriter;
     
@@ -86,6 +92,9 @@ namespace pbrt {
     material type, which will return this (empty) base class */
   struct Material : public Entity {
     typedef std::shared_ptr<Material> SP;
+
+    /*! constructor */
+    Material(const std::string &name = "") : name(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "Material"; }
@@ -93,8 +102,71 @@ namespace pbrt {
     virtual int writeTo(BinaryWriter &) override;
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
+
+    /*! the logical name that this was defined under, such as
+        "BackWall". Note this may be an empty string for some scenes
+        (it is only defined for 'NamedMaterial's) */
+    std::string name;
   };
 
+
+
+  // ==================================================================
+  // Singular Light Sources
+  // ==================================================================
+  struct LightSource : public Entity {
+    typedef std::shared_ptr<LightSource> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "LightSource"; }
+    // /*! serialize out to given binary writer */
+    // virtual int writeTo(BinaryWriter &) override;
+    // /*! serialize _in_ from given binary file reader */
+    // virtual void readFrom(BinaryReader &) override;
+  };
+
+  struct InfiniteLightSource : public LightSource {
+    typedef std::shared_ptr<InfiniteLightSource> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "InfiniteLightSource"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    std::string mapName;
+    affine3f    transform;
+    vec3f       L { 1.f,1.f,1.f };
+    vec3f       scale { 1.f,1.f,1.f };
+    int         nSamples { 1 };
+  };
+
+  // LightSource "distant" 
+  //         "point from" [ 0 0 0 ] 
+  //         "point to" [ 0 0 1 ] 
+  //         "rgb L" [ 3.1359820366 2.4853198528 1.4146273136 ] 
+  //         "rgb scale" [ 3.2500000000 3.2500000000 3.2500000000 ] 
+  struct DistantLightSource : public LightSource {
+    typedef std::shared_ptr<DistantLightSource> SP;
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "DistantLightSource"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    vec3f from  { 0.f,0.f,0.f };
+    vec3f to    { 0.f,0.f,1.f };
+    vec3f L     { 1.f,1.f,1.f };
+    vec3f scale { 1.f,1.f,1.f };
+  };
+  
+  // ==================================================================
+  // Area Lights
+  // ==================================================================
+  
   struct AreaLight : public Entity {
     typedef std::shared_ptr<AreaLight> SP;
     
@@ -131,9 +203,27 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
+    /*! rgb from temperature */
+    vec3f LinRGB() const;
+
     float temperature, scale;
   };
-  
+
+  /*! a spectrum is defined by a spectral power distribution,
+    i.e. a list of (wavelength, value) pairs */
+  struct Spectrum : public Entity {
+    typedef std::shared_ptr<Spectrum> SP;
+
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "Spectrum"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    pairNf spd;
+  };
+
   struct Texture : public Entity {
     typedef std::shared_ptr<Texture> SP;
     
@@ -271,9 +361,28 @@ namespace pbrt {
     vec3f value;
   };
   
+  struct CheckerTexture : public Texture {
+    typedef std::shared_ptr<CheckerTexture> SP;
+
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "CheckerTexture"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    float uScale { 1.f};
+    float vScale { 1.f};
+    vec3f tex1 { 0.f, 0.f, 0.f };
+    vec3f tex2 { 1.f, 1.f, 1.f };
+  };
+  
   /*! disney 'principled' material, as used in moana model */
   struct DisneyMaterial : public Material {
     typedef std::shared_ptr<DisneyMaterial> SP;
+    
+    /*! constructor */
+    DisneyMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "DisneyMaterial"; }
@@ -285,22 +394,25 @@ namespace pbrt {
     float anisotropic    { 0.f };
     float clearCoat      { 0.f };
     float clearCoatGloss { 1.f };
-    vec3f color          { 1.f, 1.f, 1.f };
-    float diffTrans      { 1.35f };
-    float eta            { 1.2f };
-    float flatness       { 0.2f };
+    vec3f color          { 0.5f, 0.5f, 0.5f };
+    float diffTrans      { 1.f };
+    float eta            { 1.5f };
+    float flatness       { 0.f };
     float metallic       { 0.f };
-    float roughness      { .9f };
-    float sheen          { .3f };
-    float sheenTint      { 0.68f };
+    float roughness      { .5f };
+    float sheen          { 0.f };
+    float sheenTint      { 0.5f };
     float specTrans      { 0.f };
     float specularTint   { 0.f };
-    bool  thin           { true };
+    bool  thin           { false };
   };
 
   struct MixMaterial : public Material
   {
     typedef std::shared_ptr<MixMaterial> SP;
+    
+    /*! constructor */
+    MixMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "MixMaterial"; }
@@ -310,13 +422,16 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
 
     Material::SP material0, material1;
-    vec3f amount;
+    vec3f amount { 0.5f, 0.5f, 0.5f };
     Texture::SP map_amount;
   };
     
   struct MetalMaterial : public Material
   {
     typedef std::shared_ptr<MetalMaterial> SP;
+    
+    /*! constructor */
+    MetalMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "MetalMaterial"; }
@@ -325,22 +440,45 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    float roughness  { 0.f };
+    float roughness  { 0.01f };
     Texture::SP map_roughness;
     float uRoughness { 0.f };
     Texture::SP map_uRoughness;
     float vRoughness { 0.f };
     Texture::SP map_vRoughness;
+    bool remapRoughness { true };
     vec3f       eta  { 1.f, 1.f, 1.f };
-    std::string spectrum_eta;
+    Spectrum spectrum_eta;
     vec3f       k    { 1.f, 1.f, 1.f };
-    std::string spectrum_k;
+    Spectrum spectrum_k;
     Texture::SP map_bump;
+  };
+    
+  struct HairMaterial : public Material
+  {
+    typedef std::shared_ptr<HairMaterial> SP;
+    
+    /*! constructor */
+    HairMaterial(const std::string &name = "") : Material(name) {}
+    
+    /*! pretty-printer, for debugging */
+    virtual std::string toString() const override { return "HairMaterial"; }
+    /*! serialize out to given binary writer */
+    virtual int writeTo(BinaryWriter &) override;
+    /*! serialize _in_ from given binary file reader */
+    virtual void readFrom(BinaryReader &) override;
+
+    float eumelanin  { 1.f };
+    float beta_m     { .25f };
+    float alpha      { 2.f };
   };
     
   struct TranslucentMaterial : public Material
   {
     typedef std::shared_ptr<TranslucentMaterial> SP;
+    
+    /*! constructor */
+    TranslucentMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "TranslucentMaterial"; }
@@ -349,15 +487,18 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f transmit { 1.f, 1.f, 1.f };
-    vec3f reflect  { 0.f, 0.f, 0.f };
-    vec3f kd;
+    vec3f transmit { 0.5f, 0.5f, 0.5f };
+    vec3f reflect  { 0.5f, 0.5f, 0.5f };
+    vec3f kd { 0.25, 0.25, 0.25 };
     Texture::SP map_kd;
   };
     
   struct PlasticMaterial : public Material
   {
     typedef std::shared_ptr<PlasticMaterial> SP;
+    
+    /*! constructor */
+    PlasticMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "PlasticMaterial"; }
@@ -366,19 +507,22 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f kd { .65f };
+    vec3f kd { .25f };
     Texture::SP map_kd;
-    vec3f ks { .0f };
+    vec3f ks { .25f };
     Texture::SP map_ks;
     Texture::SP map_bump;
-    float roughness { 0.00030000001f };
+    float roughness { 0.1f };
     Texture::SP map_roughness;
-    bool remapRoughness { false };
+    bool remapRoughness { true };
   };
     
   struct SubstrateMaterial : public Material
   {
     typedef std::shared_ptr<SubstrateMaterial> SP;
+    
+    /*! constructor */
+    SubstrateMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "SubstrateMaterial"; }
@@ -387,15 +531,15 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    float uRoughness { .001f };
+    float uRoughness { .1f };
     Texture::SP map_uRoughness;
-    float vRoughness { .001f };
+    float vRoughness { .1f };
     Texture::SP map_vRoughness;
-    bool remapRoughness { false };
+    bool remapRoughness { true };
       
-    vec3f kd { .65f };
+    vec3f kd { .5f };
     Texture::SP map_kd;
-    vec3f ks { .0f };
+    vec3f ks { .5f };
     Texture::SP map_ks;
     Texture::SP map_bump;
   };
@@ -404,6 +548,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<SubSurfaceMaterial> SP;
     
+    /*! constructor */
+    SubSurfaceMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "SubSurfaceMaterial"; }
     /*! serialize out to given binary writer */
@@ -411,9 +558,9 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    float uRoughness { .001f };
-    float vRoughness { .001f };
-    bool  remapRoughness { false };
+    float uRoughness { 0.f };
+    float vRoughness { 0.f };
+    bool  remapRoughness { true };
     /*! in the one pbrt v3 model that uses that, these materials
       carry 'name' fields like "Apple" etc - not sure if that's
       supposed to specify some sub-surface medium properties!? */
@@ -424,6 +571,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<MirrorMaterial> SP;
     
+    /*! constructor */
+    MirrorMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "MirrorMaterial"; }
     /*! serialize out to given binary writer */
@@ -431,7 +581,7 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f kr { .7f };
+    vec3f kr { .9f };
     Texture::SP map_bump;
   };
     
@@ -439,6 +589,9 @@ namespace pbrt {
   struct FourierMaterial : public Material
   {
     typedef std::shared_ptr<FourierMaterial> SP;
+    
+    /*! constructor */
+    FourierMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "FourierMaterial"; }
@@ -454,6 +607,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<MatteMaterial> SP;
     
+    /*! constructor */
+    MatteMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "MatteMaterial"; }
     /*! serialize out to given binary writer */
@@ -461,9 +617,9 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f kd { .65f };
+    vec3f kd { .5f };
     Texture::SP map_kd;
-    float sigma { 10.0f };
+    float sigma { 0.f };
     Texture::SP map_sigma;
     Texture::SP map_bump;
   };
@@ -472,6 +628,9 @@ namespace pbrt {
   {
     typedef std::shared_ptr<GlassMaterial> SP;
     
+    /*! constructor */
+    GlassMaterial(const std::string &name = "") : Material(name) {}
+    
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "GlassMaterial"; }
     /*! serialize out to given binary writer */
@@ -479,13 +638,16 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
     
-    vec3f kr { 2.5371551514f, 2.5371551514f, 2.5371551514f };
-    vec3f kt { 0.8627451062f, 0.9411764741f, 1.f };
-    float index { 1.2999999523f };
+    vec3f kr { 1.f, 1.f, 1.f };
+    vec3f kt { 1.f, 1.f, 1.f };
+    float index { 1.5f };
   };
     
   struct UberMaterial : public Material {
     typedef std::shared_ptr<UberMaterial> SP;
+    
+    /*! constructor */
+    UberMaterial(const std::string &name = "") : Material(name) {}
     
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "UberMaterial"; }
@@ -494,10 +656,10 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    vec3f kd { .65f };
+    vec3f kd { .25f };
     Texture::SP map_kd;
     
-    vec3f ks { 0.f };
+    vec3f ks { .25f };
     Texture::SP map_ks;
     
     vec3f kr { 0.f };
@@ -506,7 +668,7 @@ namespace pbrt {
     vec3f kt { 0.f };
     Texture::SP map_kt;
       
-    vec3f opacity { 0.f };
+    vec3f opacity { 1.f };
     Texture::SP map_opacity;
       
     float alpha { 0.f };
@@ -515,8 +677,13 @@ namespace pbrt {
     float shadowAlpha { 0.f };
     Texture::SP map_shadowAlpha;
 
-    float index { 1.33333f };
-    float roughness { 0.5f };
+    float index { 1.5f };
+    float roughness { 0.1f };
+    float uRoughness { 0.f };
+    Texture::SP map_uRoughness;
+    float vRoughness { 0.f };
+    Texture::SP map_vRoughness;
+
     Texture::SP map_roughness;
     Texture::SP map_bump;
   };
@@ -546,6 +713,10 @@ namespace pbrt {
       
     /*! the pbrt material assigned to the underlying shape */
     Material::SP material;
+
+    /*! if enabled, the geometry normal of this shape should get
+        flipped during rendering */
+    bool reverseOrientation { false };
     
     /*! textures directl assigned to the shape (ie, not to the
       material) */
@@ -570,7 +741,7 @@ namespace pbrt {
     TriangleMesh(Material::SP material=Material::SP()) : Shape(material) {}
     
     /*! pretty-printer, for debugging */
-    virtual std::string toString() const override { return "TriangleMesh"; }
+    virtual std::string toString() const override;
 
     /*! serialize out to given binary writer */
     virtual int writeTo(BinaryWriter &) override;
@@ -589,6 +760,7 @@ namespace pbrt {
 
     std::vector<vec3f> vertex;
     std::vector<vec3f> normal;
+    std::vector<vec2f> texcoord;
     std::vector<vec3i> index;
     /*! mutex to lock anything within this object that might get
       changed by multiple threads (eg, computing bbox */
@@ -774,12 +946,18 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    virtual box3f getBounds() const;
+    virtual box3f getBounds();
 
     typedef std::shared_ptr<Instance> SP;
       
     std::shared_ptr<Object> object;
     affine3f                xfm; // { PBRT_PARSER_VECTYPE_NAMESPACE::one };
+
+    /*! mutex to lock anything within this object that might get
+      changed by multiple threads (eg, computing bbox */
+    std::mutex         mutex;
+    bool  haveComputedBounds { false };
+    box3f bounds;
   };
 
   /*! a logical "NamedObject" that can be instanced */
@@ -790,7 +968,8 @@ namespace pbrt {
     typedef std::shared_ptr<Object> SP;
 
     /*! constructor */
-    Object(const std::string &name="") : name(name) {}
+    Object(const std::string &name="") : name(name) {
+    }
 
     /*! pretty-printer, for debugging */
     virtual std::string toString() const override { return "Object"; }
@@ -799,11 +978,21 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
-    virtual box3f getBounds() const;
+    virtual box3f getBounds();
     
-    std::vector<Shape::SP>     shapes;
-    std::vector<Instance::SP>  instances;
+    std::vector<Shape::SP>       shapes;
+    /*! all _non_-area light sources; in the pbrt spec area light
+        sources get attached to shapes; only non-area light source
+        directly live in an object */
+    std::vector<LightSource::SP> lightSources;
+    std::vector<Instance::SP>    instances;
     std::string name = "";
+
+    /*! mutex to lock anything within this object that might get
+      changed by multiple threads (eg, computing bbox */
+    std::mutex         mutex;
+    bool  haveComputedBounds { false };
+    box3f bounds;
   };
 
   /*! a camera as specified in the root .pbrt file. Note that unlike
@@ -888,8 +1077,13 @@ namespace pbrt {
     typedef std::shared_ptr<Scene> SP;
 
 
-    /*! save scene to given file name, and reutrn number of bytes written */
+    /*! save scene to given stream, and return number of bytes written */
+    size_t saveTo(std::ostream &outStream);
+    /*! save scene to given file name, and return number of bytes written */
     size_t saveTo(const std::string &outFileName);
+    /*! load scene from given stream */
+    static Scene::SP loadFrom(std::istream &inStream);
+    /*! load scene from given file name */
     static Scene::SP loadFrom(const std::string &inFileName);
 
     /*! pretty-printer, for debugging */
@@ -931,6 +1125,6 @@ namespace pbrt {
 
   /*! parse a pbrt file (using the pbrt_parser project, and convert
     the result over to a naivescenelayout */
-  Scene::SP importPBRT(const std::string &fileName);
+  PBRT_PARSER_INTERFACE Scene::SP importPBRT(const std::string &fileName, const std::string &basePath = "");
   
 } // ::pbrt

@@ -20,8 +20,6 @@
 // std
 #include <map>
 #include <sstream>
-// // ply parser:
-// #include "../3rdParty/happly.h"
 
 namespace pbrt {
 
@@ -106,7 +104,8 @@ namespace pbrt {
       }
       
       const std::string type = in->type=="" ? in->getParamString("type") : in->type;
-
+      const std::string name = in->name;
+      
       // ==================================================================
       if (type == "") {
         return std::make_shared<Material>();
@@ -114,7 +113,7 @@ namespace pbrt {
         
       // ==================================================================
       if (type == "plastic") {
-        PlasticMaterial::SP mat = std::make_shared<PlasticMaterial>();
+        PlasticMaterial::SP mat = std::make_shared<PlasticMaterial>(name);
         for (auto it : in->param) {
           std::string name = it.first;
           if (name == "Kd") {
@@ -153,7 +152,7 @@ namespace pbrt {
       
       // ==================================================================
       if (type == "matte") {
-        MatteMaterial::SP mat = std::make_shared<MatteMaterial>();
+        MatteMaterial::SP mat = std::make_shared<MatteMaterial>(name);
         for (auto it : in->param) {
           std::string name = it.first;
           if (name == "Kd") {
@@ -182,7 +181,7 @@ namespace pbrt {
       
       // ==================================================================
       if (type == "metal") {
-        MetalMaterial::SP mat = std::make_shared<MetalMaterial>();
+        MetalMaterial::SP mat = std::make_shared<MetalMaterial>(name);
         for (auto it : in->param) {
           std::string name = it.first;
           if (name == "roughness") {
@@ -202,6 +201,9 @@ namespace pbrt {
               mat->map_vRoughness = findOrCreateTexture(in->getParamTexture(name));
             else
               mat->vRoughness = in->getParam1f(name);
+          }
+          else if (name == "remaproughness") {
+            mat->remapRoughness = in->getParamBool(name);
           }
           else if (name == "eta") {
             if (in->hasParam3f(name))
@@ -228,7 +230,7 @@ namespace pbrt {
       
       // ==================================================================
       if (type == "fourier") {
-        FourierMaterial::SP mat = std::make_shared<FourierMaterial>();
+        FourierMaterial::SP mat = std::make_shared<FourierMaterial>(name);
         for (auto it : in->param) {
           std::string name = it.first;
           if (name == "bsdffile") {
@@ -244,7 +246,7 @@ namespace pbrt {
       
       // ==================================================================
       if (type == "mirror") {
-        MirrorMaterial::SP mat = std::make_shared<MirrorMaterial>();
+        MirrorMaterial::SP mat = std::make_shared<MirrorMaterial>(name);
         for (auto it : in->param) {
           std::string name = it.first;
           if (name == "Kr") {
@@ -266,7 +268,7 @@ namespace pbrt {
       
       // ==================================================================
       if (type == "uber") {
-        UberMaterial::SP mat = std::make_shared<UberMaterial>();
+        UberMaterial::SP mat = std::make_shared<UberMaterial>(name);
         for (auto it : in->param) {
           std::string name = it.first;
           if (name == "Kd") {
@@ -344,7 +346,7 @@ namespace pbrt {
       
       // ==================================================================
       if (type == "substrate") {
-        SubstrateMaterial::SP mat = std::make_shared<SubstrateMaterial>();
+        SubstrateMaterial::SP mat = std::make_shared<SubstrateMaterial>(name);
         for (auto it : in->param) {
           std::string name = it.first;
           if (name == "Kd") {
@@ -391,7 +393,7 @@ namespace pbrt {
       
       // ==================================================================
       if (type == "disney") {
-        DisneyMaterial::SP mat = std::make_shared<DisneyMaterial>();
+        DisneyMaterial::SP mat = std::make_shared<DisneyMaterial>(name);
 
         in->getParam3f(&mat->color.x,"color");
         mat->anisotropic    = in->getParam1f("anisotropic",    0.f );
@@ -412,7 +414,7 @@ namespace pbrt {
 
       // ==================================================================
       if (type == "mix") {
-        MixMaterial::SP mat = std::make_shared<MixMaterial>();
+        MixMaterial::SP mat = std::make_shared<MixMaterial>(name);
           
         if (in->hasParamTexture("amount"))
           mat->map_amount = findOrCreateTexture(in->getParamTexture("amount"));
@@ -440,7 +442,7 @@ namespace pbrt {
 
       // ==================================================================
       if (type == "translucent") {
-        TranslucentMaterial::SP mat = std::make_shared<TranslucentMaterial>();
+        TranslucentMaterial::SP mat = std::make_shared<TranslucentMaterial>(name);
 
         in->getParam3f(&mat->transmit.x,"transmit");
         in->getParam3f(&mat->reflect.x,"reflect");
@@ -454,7 +456,7 @@ namespace pbrt {
 
       // ==================================================================
       if (type == "glass") {
-        GlassMaterial::SP mat = std::make_shared<GlassMaterial>();
+        GlassMaterial::SP mat = std::make_shared<GlassMaterial>(name);
 
         in->getParam3f(&mat->kr.x,"Kr");
         in->getParam3f(&mat->kt.x,"Kt");
@@ -505,6 +507,7 @@ namespace pbrt {
       result        = std::make_shared<Scene>();
       result->world  = findOrEmitObject(pbrtScene->world);
 
+      std::cout << "semantic - done with findoremit" << std::endl;
       if (!unhandledShapeTypeCounter.empty()) {
         std::cerr << "WARNING: scene contained some un-handled shapes!" << std::endl;
         for (auto type : unhandledShapeTypeCounter)
@@ -544,7 +547,7 @@ namespace pbrt {
       for (vec3f &v : ours->vertex)
         v = xfmPoint(xfm,v);
       for (vec3f &v : ours->normal)
-        v = xfmVector(xfm,v);
+        v = xfmNormal(xfm,v);
 
       extractTextures(ours,shape);
       return ours;
@@ -821,11 +824,11 @@ namespace pbrt {
     return ours;
   }
 #endif
-  Scene::SP importPBRT(const std::string &fileName)
+  Scene::SP importPBRT(const std::string &fileName, const std::string &basePath)
   {
     pbrt::syntactic::Scene::SP pbrt;
     if (endsWith(fileName,".pbrt"))
-      pbrt = pbrt::syntactic::Scene::parse(fileName);
+      pbrt = pbrt::syntactic::Scene::parse(fileName, basePath);
     else
       throw std::runtime_error("could not detect input file format!? (unknown extension in '"+fileName+"')");
       

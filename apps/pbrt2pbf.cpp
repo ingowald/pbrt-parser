@@ -38,6 +38,8 @@ namespace pbrt {
       std::cout << std::endl;
       std::cout << "  -o <out.pbf>   : where to write the output to" << std::endl;
       std::cout << "                   (tris to quads, removing reundant fields, etc)" << std::endl;
+      std::cout << std::endl;
+      exit(msg == "" ? 0 : 1);
     }
   
     inline bool endsWith(const std::string &s, const std::string &suffix)

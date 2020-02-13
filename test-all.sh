@@ -174,6 +174,6 @@ for scene in $PBRT_SCENES; do
     mkdir -p $OUTPUT_PATH/$dir
     base=`basename $scene .pbrt`
     ./build/pbrt2pbf $PBRT_SCENE_PATH/$scene -o $OUTPUT_PATH/$dir/$base.pbf
-    ./build/pbfInfo $OUTPUT_PATH/$dir/$base.pbf
+    ./build/pbrtInfo $OUTPUT_PATH/$dir/$base.pbf
 done
 

@@ -40,6 +40,7 @@ namespace pbrt {
 
     /*! @{ forward definitions so we can use those in shared_ptrs in the attribute class */
     struct AreaLightSource;
+    struct LightSource;
     struct Object;
     struct Material;
     struct Medium;
@@ -87,6 +88,7 @@ namespace pbrt {
     using vec4i    = math::vec4i;
     using affine3f = math::affine3f;
     using box3f    = math::box3f;
+    using pairNf   = math::pairNf;
 
     /*! start-time and end-time transform - PBRT allows for specifying
       transform at both 'start' and 'end' time, to allow for linear
@@ -96,24 +98,143 @@ namespace pbrt {
       affine3f atEnd;
     };
 
-    struct PBRT_PARSER_INTERFACE Attributes {
+    class PBRT_PARSER_INTERFACE Attributes {
+    public:
+
+      // NOT copyable!
+      Attributes() = default;
+      Attributes(const Attributes&) = delete;
+      Attributes& operator=(const Attributes&) = delete;
 
       /*! a "Type::SP" shorthand for std::shared_ptr<Type> - makes code
         more concise, and easier to read */
       typedef std::shared_ptr<Attributes> SP;
-    
-      Attributes();
-      Attributes(Attributes &&other) = default;
-      Attributes(const Attributes &other) = default;
 
-      virtual std::shared_ptr<Attributes> clone() const
-      { return std::make_shared<Attributes>(*this); }
+      /*! Save the current graphics state and initialize a new one */
+      static void push(Attributes::SP& graphicsState) {
+        Attributes::SP newGraphicsState = std::make_shared<Attributes>();
+        newGraphicsState->areaLightSources = graphicsState->areaLightSources;
+        newGraphicsState->mediumInterface = graphicsState->mediumInterface;
+        newGraphicsState->reverseOrientation = graphicsState->reverseOrientation;
+        newGraphicsState->parent = graphicsState;
+        graphicsState = newGraphicsState;
+      }
+
+      /*! Restore the parent graphics state */
+      static void pop(Attributes::SP& graphicsState) {
+        if (!graphicsState)
+          throw std::runtime_error("Invalid graphics state");
+        graphicsState = graphicsState->parent;
+      }
+
+      /*! Freeze the current graphics state so that it won't be affected
+        by subsequent changes. Returns the frozen graphics state */
+      static Attributes::SP freeze(Attributes::SP& graphicsState) {
+#if 0
+        // iw - this CLONES the state, else I get stack overflow in
+        // destructor chain: for pbrt-v3-scenes/straight-hair.pbrt i
+        // get 1M hair shapes, and the shapes::clear() then triggers
+        // what looks like an infinite (or at least,
+        // too-deep-for-the-stack) chain of Attribute::~Attribute
+        // calls.
+        Attributes::SP newGraphicsState = std::make_shared<Attributes>();
+        newGraphicsState->areaLightSources = graphicsState->areaLightSources;
+        newGraphicsState->mediumInterface = graphicsState->mediumInterface;
+        newGraphicsState->reverseOrientation = graphicsState->reverseOrientation;
+        newGraphicsState->parent = graphicsState->parent;
+        newGraphicsState->prev = graphicsState;
+        return newGraphicsState;
+
+#else
+        // iw, 1/1/20 - this is the code szellman adde to avoid
+        // un-necessary clones
+        Attributes::SP newGraphicsState = std::make_shared<Attributes>();
+        newGraphicsState->areaLightSources = graphicsState->areaLightSources;
+        newGraphicsState->mediumInterface = graphicsState->mediumInterface;
+        newGraphicsState->reverseOrientation = graphicsState->reverseOrientation;
+        newGraphicsState->parent = graphicsState->parent;
+        newGraphicsState->prev = graphicsState;
+
+        Attributes::SP oldGraphicsState = graphicsState;
+        graphicsState = newGraphicsState;
+
+        return oldGraphicsState;
+#endif
+      }
+
+      /*! Insert named material */
+      void insertNamedMaterial(std::string name, std::shared_ptr<Material> material) {
+        namedMaterial[name] = material;
+      }
+
+      /*! Insert named medium */
+      void insertNamedMedium(std::string name, std::shared_ptr<Medium> medium) {
+        namedMedium[name] = medium;
+      }
+
+      /*! Insert named texture */
+      void insertNamedTexture(std::string name, std::shared_ptr<Texture> texture) {
+        namedTexture[name] = texture;
+      }
+
+      /*! Find named material either in this or in a parent scope */
+      std::shared_ptr<Material> findNamedMaterial(std::string name) {
+        return findNamedItem(std::shared_ptr<Material>{}, name);
+      }
+
+      /*! Find named medium either in this or in a parent scope */
+      std::shared_ptr<Medium> findNamedMedium(std::string name) {
+        return findNamedItem(std::shared_ptr<Medium>{}, name);
+      }
+
+      /*! Find named texture either in this or in a parent scope */
+      std::shared_ptr<Texture> findNamedTexture(std::string name) {
+        return findNamedItem(std::shared_ptr<Texture>{}, name);
+      }
 
       std::vector<std::shared_ptr<AreaLightSource>>    areaLightSources;
       std::pair<std::string,std::string>               mediumInterface;
+      bool reverseOrientation { false };
+
+    private:
+      /*! Parent graphics state */
+      Attributes::SP parent = nullptr;
+
+      /*! Previous graphics state, for "versioning"
+        (call freeze() to make a new version) */
+      std::weak_ptr<Attributes> prev;
+
       std::map<std::string,std::shared_ptr<Material> > namedMaterial;
       std::map<std::string,std::shared_ptr<Medium> >   namedMedium;
       std::map<std::string,std::shared_ptr<Texture> >  namedTexture;
+
+      /*! get reference to namedMedium */
+      decltype(namedMedium)& get(std::shared_ptr<Medium>) { return namedMedium; }
+
+      /*! get reference to namedMaterial */
+      decltype(namedMaterial)& get(std::shared_ptr<Material>) { return namedMaterial; }
+
+      /*! get reference to namedTexture */
+      decltype(namedTexture)& get(std::shared_ptr<Texture>) { return namedTexture; }
+      
+      /*! search this scope for the named item, descend into
+        parent scopes if not found. Also search prior versions */
+      template <typename Item>
+      Item findNamedItem(Item, std::string name) {
+        Attributes* curr = this;
+        while (curr != nullptr) {
+          if (curr->get(Item{}).find(name) != curr->get(Item{}).end())
+            return curr->get(Item{})[name];
+          if (curr->prev.use_count() > 0) {
+            Attributes::SP prev(curr->prev);
+            curr = prev.get();
+          } else {
+            curr = curr->parent.get();
+          }
+        }
+        return nullptr;
+      }
+
     };
 
     /*! forward definition of a typed parameter */
@@ -182,7 +303,7 @@ namespace pbrt {
     
       /*! used during parsing, to add a newly parsed parameter value
         to the list */
-      virtual void add(const std::string &text) { throw std::runtime_error("should never get called.."); }
+      virtual void add(const std::string &) { throw std::runtime_error("should never get called.."); }
       //    private:
       std::string type;
       std::shared_ptr<Texture> texture;
@@ -195,10 +316,13 @@ namespace pbrt {
       ParamSet(ParamSet &&) = default;
       ParamSet(const ParamSet &) = default;
 
+      /*! query number of (float,float) pairs N. Store in result if the former != NULL */
+      bool getParamPairNf(pairNf::value_type *result, std::size_t* N, const std::string &name) const;
       /*! query parameter of 3f type, and if found, store in result and
         return true; else return false */
       bool getParam3f(float *result, const std::string &name) const;
       bool getParam2f(float *result, const std::string &name) const;
+      math::pairNf getParamPairNf(const std::string &name, const math::pairNf &fallBack) const;
       math::vec3f getParam3f(const std::string &name, const math::vec3f &fallBack) const;
       math::vec2f getParam2f(const std::string &name, const math::vec2f &fallBack) const;
 #if defined(PBRT_PARSER_VECTYPE_NAMESPACE)
@@ -212,7 +336,7 @@ namespace pbrt {
       }
 #endif
       float getParam1f(const std::string &name, const float fallBack=0) const;
-      int getParam1i(const std::string &name, const int fallBack=0) const;
+      int   getParam1i(const std::string &name, const int fallBack=0) const;
       bool getParamBool(const std::string &name, const bool fallBack=false) const;
       std::string getParamString(const std::string &name) const;
       std::shared_ptr<Texture> getParamTexture(const std::string &name) const;
@@ -265,6 +389,11 @@ namespace pbrt {
         command; for the 'makenamedmaterial' it uses an implicit
         'type' parameter */
       std::string type;
+
+    /*! the logical name that this was defined under, such as
+        "BackWall". Note this may be an empty string for some scenes
+        (it is only defined for 'NamedMaterial's) */
+      std::string name;
     };
 
     struct PBRT_PARSER_INTERFACE Medium : public ParamSet {
@@ -450,10 +579,16 @@ namespace pbrt {
         more concise, and easier to read */
       typedef std::shared_ptr<LightSource> SP;
     
-      LightSource(const std::string &type) : Node(type) {};
+      LightSource(const std::string &type, 
+                  const Transform &transform)
+        : Node(type),
+        transform(transform)
+      {}
 
       /*! pretty-printing, for debugging */
       virtual std::string toString() const override { return "LightSource<"+type+">"; }
+
+      const Transform transform;
     };
 
     /*! area light sources are different from regular light sources in
@@ -518,14 +653,14 @@ namespace pbrt {
       typedef std::shared_ptr<Object> SP;
     
       Object(const std::string &name) : name(name) {}
-    
+
       struct PBRT_PARSER_INTERFACE Instance {
 
         /*! allows for writing pbrt::syntactic::Scene::SP, which is somewhat
           more concise than std::shared_ptr<pbrt::syntactic::Scene> */
         typedef std::shared_ptr<Instance> SP;
       
-        Instance(const std::shared_ptr<Object> &object,
+        Instance(std::shared_ptr<Object> object,
                  const Transform  &xfm)
           : object(object), xfm(xfm)
         {}
@@ -566,9 +701,15 @@ namespace pbrt {
       Scene()
         : world(std::make_shared<Object>("<root>"))
         {}
+      virtual ~Scene()
+      {
+        std::cout << "destructor in scene .." << std::endl;
+        world = nullptr;
+        std::cout << "deleted world" << std::endl;
+      }
 
       /*! parse the given file name, return parsed scene */
-      static std::shared_ptr<Scene> parse(const std::string &fileName);
+      static std::shared_ptr<Scene> parse(const std::string &fileName, const std::string &basePath = "");
     
       //! pretty-print scene info into a std::string 
       std::string toString(const int depth = 0) { return world->toString(depth); }

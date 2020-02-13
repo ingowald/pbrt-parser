@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2019 Ingo Wald & Fabio Pellacini                          //
+// Copyright 2015-2020 Ingo Wald & Fabio Pellacini                          //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -20,24 +20,39 @@
 #  define _USE_MATH_DEFINES
 #endif
 #ifdef _WIN32
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-#if defined(_WIN32) && defined(PBRT_PARSER_DLL_INTERFACE)
-#  ifdef pbrtParser_semantic_EXPORTS
-#    define PBRT_PARSER_INTERFACE __declspec(dllexport)
+#if defined(_MSC_VER)
+#  define PBRT_PARSER_DLL_EXPORT __declspec(dllexport)
+#  define PBRT_PARSER_DLL_IMPORT __declspec(dllimport)
+#elif defined(__clang__) || defined(__GNUC__)
+#  define PBRT_PARSER_DLL_EXPORT __attribute__((visibility("default")))
+#  define PBRT_PARSER_DLL_IMPORT __attribute__((visibility("default")))
+#else
+#  define PBRT_PARSER_DLL_EXPORT
+#  define PBRT_PARSER_DLL_IMPORT
+#endif
+
+#if defined(PBRT_PARSER_DLL_INTERFACE)
+#  ifdef pbrtParser_EXPORTS
+#    define PBRT_PARSER_INTERFACE PBRT_PARSER_DLL_EXPORT
 #  else
-#    define PBRT_PARSER_INTERFACE __declspec(dllimport)
+#    define PBRT_PARSER_INTERFACE PBRT_PARSER_DLL_IMPORT
 #  endif
 #else
-#  define PBRT_PARSER_INTERFACE /* ignore on linux/osx */
+#  define PBRT_PARSER_INTERFACE /*static lib*/
 #endif
 
 #include <iostream>
 #include <math.h> // using cmath causes issues under Windows
 #include <cfloat>
 #include <limits>
+#include <utility>
+#include <vector>
 
 /*! \file pbrt/Parser.h *Internal* parser class used by \see
   pbrt_parser::Scene::parseFromFile() - as end user, you should
@@ -54,25 +69,25 @@ namespace pbrt {
     with a given name, and parameters of given names and types */
   namespace math {
     struct vec2f {
-      float x, y;
-      vec2f() = default;
+        typedef float scalar_t;
+        vec2f() = default;
       explicit vec2f(float v) : x{v}, y{v} { }
       vec2f(float x, float y) : x{x}, y{y} { }
-      typedef float scalar_t;
+      float x, y;
     };
     struct vec3f {
-      float x, y, z;
-      vec3f() = default;
+        typedef float scalar_t;
+        vec3f() = default;
       explicit vec3f(float v) : x{v}, y{v}, z{v} { }
       vec3f(float x, float y, float z) : x{x}, y{y}, z{z} { }
-      typedef float scalar_t;
+      float x, y, z;
     };
     struct vec4f {
-      float x, y, z, w;
+        typedef float scalar_t;
       vec4f() = default;
       explicit vec4f(float v) : x{v}, y{v}, z{v}, w{v} { }
       vec4f(float x, float y, float z, float w) : x{x}, y{y}, z{z}, w{w} { }
-      typedef float scalar_t;
+      float x, y, z, w;
     };
     struct vec2i {
       int x, y;
@@ -113,13 +128,14 @@ namespace pbrt {
     };
     struct box3f {
       vec3f lower, upper;
-      box3f() = default;
+      box3f() : lower(FLT_MAX), upper(FLT_MIN) {}//= default;
       box3f(const vec3f& lower, const vec3f& upper) : lower{lower}, upper{upper} { }
       inline bool  empty()  const { return upper.x < lower.x || upper.y < lower.y || upper.z < lower.z; }
       static box3f empty_box() { return box3f(vec3f(FLT_MAX), vec3f(FLT_MIN)); }
       void extend(const vec3f& a);
       void extend(const box3f& a);
     };
+    typedef std::vector<std::pair<float, float>> pairNf;
 
     inline vec3f operator-(const vec3f& a) { return vec3f(-a.x, -a.y, -a.z); }
     inline vec3f operator-(const vec3f& a, const vec3f& b) { return vec3f(a.x - b.x, a.y - b.y, a.z - b.z); }
@@ -203,7 +219,7 @@ namespace pbrt {
 
   /*! added pretty-print function for large numbers, printing 10000000 as "10M" instead */
   inline std::string prettyNumber(const size_t s) {
-    const double val = s;
+    const double val = (double)s;
     char result[1000];
 
     if      (val >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e18f,'E');

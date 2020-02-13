@@ -1,6 +1,9 @@
 stages:
   - build
 
+variables:
+  CMAKE_OPTIONS: "-DpbrtParser_ENABLE_UNITTESTS=ON"
+
 
 # -------------------------------------------------------
 # ubuntu 16
@@ -12,12 +15,13 @@ ubuntu16-gcc-release:
   image: ubuntu:16.04
   script:
     - apt -y update
-    - apt -y install cmake g++
+    - apt -y install git cmake g++
     - mkdir build
     - cd build
     - export CXX=g++
-    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - cmake ${CMAKE_OPTIONS} -DCMAKE_BUILD_TYPE=Release ..
     - make
+    - ./unittests
 
 ubuntu16-gcc-debug:
   stage: build
@@ -26,12 +30,13 @@ ubuntu16-gcc-debug:
   image: ubuntu:16.04
   script:
     - apt -y update
-    - apt -y install cmake g++
+    - apt -y install git cmake g++
     - mkdir build
     - cd build
     - export CXX=g++
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - cmake ${CMAKE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug ..
     - make
+    - ./unittests
 
 # -------------------------------------------------------
 # ubuntu 18
@@ -43,12 +48,13 @@ ubuntu18-gcc-release:
   image: ubuntu:18.04
   script:
     - apt -y update
-    - apt -y install cmake g++
+    - apt -y install git cmake g++
     - mkdir build
     - cd build
     - export CXX=g++
-    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - cmake ${CMAKE_OPTIONS} -DCMAKE_BUILD_TYPE=Release ..
     - make
+    - ./unittests
 
 ubuntu18-gcc-debug:
   stage: build
@@ -57,12 +63,13 @@ ubuntu18-gcc-debug:
   image: ubuntu:18.04
   script:
     - apt -y update
-    - apt -y install cmake g++
+    - apt -y install git cmake g++
     - mkdir build
     - cd build
     - export CXX=g++
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - cmake ${CMAKE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug ..
     - make
+    - ./unittests
 
 ubuntu18-clang-release:
   stage: build
@@ -71,12 +78,13 @@ ubuntu18-clang-release:
   image: ubuntu:18.04
   script:
     - apt -y update
-    - apt -y install cmake clang-6.0
+    - apt -y install git cmake clang-6.0
     - mkdir build
     - cd build
     - export CXX=clang++-6.0
-    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - cmake ${CMAKE_OPTIONS} -DCMAKE_BUILD_TYPE=Release ..
     - make
+    - ./unittests
 
 ubuntu18-clang-debug:
   stage: build
@@ -85,12 +93,13 @@ ubuntu18-clang-debug:
   image: ubuntu:18.04
   script:
     - apt -y update
-    - apt -y install cmake clang-6.0
+    - apt -y install git cmake clang-6.0
     - mkdir build
     - cd build
     - export CXX=clang++-6.0
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - cmake ${CMAKE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug ..
     - make
+    - ./unittests
 
 
 
