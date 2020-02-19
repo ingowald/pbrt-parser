@@ -243,12 +243,14 @@ namespace pbrt {
     it getsc omputed by transforming the object's bbox */
   box3f Instance::getBounds() 
   {
+    assert(object);
+    
     if (haveComputedBounds) return bounds;
 
     std::lock_guard<std::mutex> lock(mutex);
     if (haveComputedBounds) return bounds;
     const box3f ob = object->getBounds();
-    if (bounds.empty()) {
+    if (ob.empty()) {
       this->bounds = ob;
       haveComputedBounds = true;
       return ob;

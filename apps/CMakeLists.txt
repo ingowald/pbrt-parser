@@ -14,6 +14,8 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
+SET(CMAKE_CXX_STANDARD 11)
+
 ADD_EXECUTABLE(pbrt2obj pbrt2obj.cpp)
 TARGET_LINK_LIBRARIES(pbrt2obj pbrtParser)
 
