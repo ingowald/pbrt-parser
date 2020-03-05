@@ -62,7 +62,10 @@ namespace pbrt {
       std::lock_guard<std::mutex> lock(mutex);
       if (haveComputedBounds) return bounds;
       bounds = box3f::empty_box();
-      for (auto v : vertex) bounds.extend(v);
+      for (auto v : vertex) {
+        bounds.extend(v);
+      }
+      
       haveComputedBounds = true;
       return bounds;
     }
