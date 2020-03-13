@@ -23,7 +23,9 @@
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
-#define __PRETTY_FUNCTION__ __FUNCSIG__
+#ifndef __PRETTY_FUNCTION__
+#  define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
 #endif
 
 #if defined(_MSC_VER)
