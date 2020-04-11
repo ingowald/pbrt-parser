@@ -23,7 +23,9 @@
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
-#define __PRETTY_FUNCTION__ __FUNCSIG__
+#ifndef __PRETTY_FUNCTION__
+#  define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
 #endif
 
 #if defined(_MSC_VER)
@@ -104,17 +106,24 @@ namespace pbrt {
       typedef int scalar_t;
     };
     struct vec4i {
-      int x, y, z, w;
       vec4i() = default;
       explicit vec4i(int v) : x{v}, y{v}, z{v}, w{v} { }
       vec4i(int x, int y, int z, int w) : x{x}, y{y}, z{z}, w{w} { }
       typedef int scalar_t;
+      int x, y, z, w;
     };
     struct mat3f {
-      vec3f vx, vy, vz;
-      mat3f() = default;
-      explicit mat3f(const vec3f& v) : vx{v.x,0,0}, vy{0,v.y,0}, vz{0,0,v.z} { }
-      mat3f(const vec3f& x, const vec3f& y, const vec3f& z) : vx{x}, vy{y}, vz{z} { }
+      inline mat3f() = default;
+      inline explicit mat3f(const vec3f& v)
+        : vx{v.x,0,0}, vy{0,v.y,0}, vz{0,0,v.z}
+      {}
+      inline mat3f(const vec3f& x, const vec3f& y, const vec3f& z)
+        : vx{x}, vy{y}, vz{z}
+      {}
+      
+      vec3f vx{1.f,0.f,0.f};
+      vec3f vy{0.f,1.f,0.f};
+      vec3f vz{0.f,0.f,1.f};
     };
     struct affine3f {
       affine3f() = default;
@@ -123,18 +132,19 @@ namespace pbrt {
       static affine3f scale(const vec3f& u) { return affine3f(mat3f(u),vec3f(0)); }
       static affine3f translate(const vec3f& u) { return affine3f(mat3f(vec3f(1)), u); }
       static affine3f rotate(const vec3f& _u, float r);
-      mat3f l;
-      vec3f p;
+
+      mat3f l = mat3f();
+      vec3f p = vec3f(0.f,0.f,0.f);
     };
     struct box3f {
-      vec3f lower, upper;
-      box3f() : lower(FLT_MAX), upper(FLT_MIN) {}//= default;
+      box3f() : lower(FLT_MAX), upper(-FLT_MAX) {}//= default;
       box3f(const vec3f& lower, const vec3f& upper) : lower{lower}, upper{upper} { }
       inline bool  empty()  const
       { return (upper.x < lower.x) || (upper.y < lower.y) || (upper.z < lower.z); }
-      static box3f empty_box() { return box3f(vec3f(FLT_MAX), vec3f(FLT_MIN)); }
+      static box3f empty_box() { return box3f(vec3f(FLT_MAX), vec3f(-FLT_MAX)); }
       void extend(const vec3f& a);
       void extend(const box3f& a);
+      vec3f lower, upper;
     };
     typedef std::vector<std::pair<float, float>> pairNf;
 
