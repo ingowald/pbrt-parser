@@ -14,7 +14,6 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-SET(CMAKE_CXX_STANDARD 11)
 
 ADD_EXECUTABLE(pbrt2obj pbrt2obj.cpp)
 TARGET_LINK_LIBRARIES(pbrt2obj pbrtParser)
@@ -36,3 +35,16 @@ TARGET_LINK_LIBRARIES(pbrtInfo pbrtParser)
 
 install(TARGETS pbrtInfo DESTINATION bin)
 install(TARGETS pbrt2pbf DESTINATION bin)
+
+set_target_properties(pbrtInfo PROPERTIES
+  CXX_STANDARD 11
+  CXX_STANDARD_REQUIRED ON
+  )
+set_target_properties(pbrt2obj PROPERTIES
+  CXX_STANDARD 11
+  CXX_STANDARD_REQUIRED ON
+  )
+set_target_properties(pbrt2pbf PROPERTIES
+  CXX_STANDARD 11
+  CXX_STANDARD_REQUIRED ON
+  )
