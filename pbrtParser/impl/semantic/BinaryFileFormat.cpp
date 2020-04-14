@@ -33,7 +33,7 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 5
+#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 6
 
   /* 
      4: InfiniteLight::L,nsamples,scale
@@ -92,6 +92,8 @@ namespace pbrt {
 
     TYPE_INFINITE_LIGHT_SOURCE=70,
     TYPE_DISTANT_LIGHT_SOURCE,
+    TYPE_SPOT_LIGHT_SOURCE,
+    TYPE_POINT_LIGHT_SOURCE,
   };
     
   /*! a simple buffer for binary data */
@@ -328,6 +330,10 @@ namespace pbrt {
         return std::make_shared<InfiniteLightSource>();
       case TYPE_DISTANT_LIGHT_SOURCE:
         return std::make_shared<DistantLightSource>();
+      case TYPE_SPOT_LIGHT_SOURCE:
+        return std::make_shared<SpotLightSource>();
+      case TYPE_POINT_LIGHT_SOURCE:
+        return std::make_shared<PointLightSource>();
       case TYPE_SPECTRUM:
         return std::make_shared<Spectrum>();
       default:
@@ -744,6 +750,7 @@ namespace pbrt {
     binary.read(scale);
     binary.read(nSamples);
   }
+
   
   /*! serialize out to given binary writer */
   int DistantLightSource::writeTo(BinaryWriter &binary) 
@@ -761,6 +768,53 @@ namespace pbrt {
     binary.read(from);
     binary.read(to);
     binary.read(L);
+    binary.read(scale);
+  }
+
+
+
+  /*! serialize out to given binary writer */
+  int SpotLightSource::writeTo(BinaryWriter &binary) 
+  {
+    binary.write(from);
+    binary.write(to);
+    binary.write(I);
+    binary.write(Ispectrum);
+    binary.write(coneAngle);
+    binary.write(coneDeltaAngle);
+    binary.write(scale);
+    return TYPE_DISTANT_LIGHT_SOURCE;
+  }
+
+  /*! serialize out to given binary reader */
+  void SpotLightSource::readFrom(BinaryReader &binary) 
+  {
+    binary.read(from);
+    binary.read(to);
+    binary.read(I);
+    binary.read(Ispectrum);
+    binary.read(coneAngle);
+    binary.read(coneDeltaAngle);
+    binary.read(scale);
+  }
+
+
+  /*! serialize out to given binary writer */
+  int PointLightSource::writeTo(BinaryWriter &binary) 
+  {
+    binary.write(from);
+    binary.write(I);
+    binary.write(Ispectrum);
+    binary.write(scale);
+    return TYPE_POINT_LIGHT_SOURCE;
+  }
+
+  /*! serialize out to given binary reader */
+  void PointLightSource::readFrom(BinaryReader &binary) 
+  {
+    binary.read(from);
+    binary.read(I);
+    binary.read(Ispectrum);
     binary.read(scale);
   }
   

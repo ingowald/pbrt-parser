@@ -52,6 +52,10 @@ namespace pbrt {
         numCurves.print("curves");
         numCurveSegments.print("curve segments");
         numLights.print("lights");
+        numPointLights.print("point lights");
+        numSpotLights.print("spot lights");
+        numDistantLights.print("distant lights");
+        numInfiniteLights.print("infinite lights");
         std::cout << "total num materials " << usedMaterials.size() << std::endl;
         std::map<std::string,int> matsUsedByType;
         for (auto mat : usedMaterials)
@@ -73,12 +77,25 @@ namespace pbrt {
  
         numObjects.add(firstTime,1);
         numLights.add(firstTime,object->lightSources.size());
+
+        for (auto light : object->lightSources) {
+          if (light->as<PointLightSource>())
+            numPointLights.add(firstTime,1);
+          if (light->as<SpotLightSource>())
+            numSpotLights.add(firstTime,1);
+          if (light->as<InfiniteLightSource>())
+            numInfiniteLights.add(firstTime,1);
+          if (light->as<DistantLightSource>())
+            numDistantLights.add(firstTime,1);
+        }
+        
         numShapes.add(firstTime,object->shapes.size());
         
         for (auto shape : object->shapes) {
           usedMaterials.insert(shape->material);
-          if (shape->areaLight)
+          if (shape->areaLight) {
             numAreaLights.add(firstTime,1);
+          }
           if (TriangleMesh::SP mesh=std::dynamic_pointer_cast<TriangleMesh>(shape)){
             numTriangles.add(firstTime,mesh->index.size());
           } else if (QuadMesh::SP mesh=std::dynamic_pointer_cast<QuadMesh>(shape)){
@@ -125,6 +142,10 @@ namespace pbrt {
       Counter numCurveSegments;
       Counter numShapes;
       Counter numLights;
+      Counter numSpotLights;
+      Counter numPointLights;
+      Counter numDistantLights;
+      Counter numInfiniteLights;
       Counter numVolumes;
       
       std::set<Object::SP> alreadyTraversed;

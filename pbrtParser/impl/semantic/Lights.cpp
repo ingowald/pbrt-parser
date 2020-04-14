@@ -60,6 +60,86 @@ namespace pbrt {
     return light;
   }
   
+  LightSource::SP SemanticParser::createLightSource_point
+  (pbrt::syntactic::LightSource::SP in)
+  {
+    PointLightSource::SP light = std::make_shared<PointLightSource>();
+    affine3f transform = in->transform.atStart;
+    for (auto it : in->param) {
+      const std::string name = it.first;
+      if (name == "from") {
+        in->getParam3f(&light->from.x,name);
+        light->from = xfmPoint(transform,light->from);
+        continue;
+      }
+      if (name == "scale") {
+        in->getParam3f(&light->scale.x,name);
+        continue;
+      }
+      if (name == "I") {
+        if (in->hasParam3f(name)) 
+          in->getParam3f(&light->I.x,name);
+        else {
+          std::size_t N=0;
+          in->getParamPairNf(nullptr,&N,name);
+          light->Ispectrum.spd.resize(N);
+          in->getParamPairNf(light->Ispectrum.spd.data(),&N,name);
+        }
+        continue;
+      }
+      throw std::runtime_error("unknown 'point' light source param '"+name+"'");
+    }
+    
+    return light;
+  }
+  
+  LightSource::SP SemanticParser::createLightSource_spot
+  (pbrt::syntactic::LightSource::SP in)
+  {
+    SpotLightSource::SP light = std::make_shared<SpotLightSource>();
+    affine3f transform = in->transform.atStart;
+
+    for (auto it : in->param) {
+      const std::string name = it.first;
+      if (name == "from") {
+        in->getParam3f(&light->from.x,name);
+        light->from = xfmPoint(transform,light->from);
+        continue;
+      }
+      if (name == "to") {
+        in->getParam3f(&light->to.x,name);
+        light->to = xfmPoint(transform,light->to);
+        continue;
+      }
+      if (name == "scale") {
+        in->getParam3f(&light->scale.x,name);
+        continue;
+      }
+      if (name == "conedeltaangle") {
+        light->coneDeltaAngle = in->getParam1f(name,light->coneDeltaAngle);
+        continue;
+      }
+      if (name == "coneangle") {
+        light->coneAngle = in->getParam1f(name,light->coneAngle);
+        continue;
+      }
+      if (name == "I") {
+        if (in->hasParam3f(name)) 
+          in->getParam3f(&light->I.x,name);
+        else {
+          std::size_t N=0;
+          in->getParamPairNf(nullptr,&N,name);
+          light->Ispectrum.spd.resize(N);
+          in->getParamPairNf(light->Ispectrum.spd.data(),&N,name);
+        }
+        continue;
+      }
+      throw std::runtime_error("unknown 'spot' light source param '"+name+"'");
+    }
+    
+    return light;
+  }
+  
   LightSource::SP SemanticParser::createLightSource_distant
   (pbrt::syntactic::LightSource::SP in)
   {
@@ -106,6 +186,14 @@ namespace pbrt {
     if (type == "distant") 
       return createLightSource_distant(in);
 
+    // ==================================================================
+    if (type == "spot") 
+      return createLightSource_spot(in);
+
+    // ==================================================================
+    if (type == "point") 
+      return createLightSource_point(in);
+ 
     // ==================================================================
 #ifndef NDEBUG
     std::cout << "Warning: un-recognized light type '"+type+"'" << std::endl;

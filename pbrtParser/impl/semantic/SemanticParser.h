@@ -105,6 +105,8 @@ namespace pbrt {
     LightSource::SP findOrCreateLightSource(pbrt::syntactic::LightSource::SP in);
     LightSource::SP createLightSource_infinite(pbrt::syntactic::LightSource::SP in);
     LightSource::SP createLightSource_distant(pbrt::syntactic::LightSource::SP in);
+    LightSource::SP createLightSource_point(pbrt::syntactic::LightSource::SP in);
+    LightSource::SP createLightSource_spot(pbrt::syntactic::LightSource::SP in);
 
     // ==================================================================
     // Materials

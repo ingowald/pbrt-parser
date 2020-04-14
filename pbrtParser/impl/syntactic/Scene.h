@@ -700,12 +700,10 @@ namespace pbrt {
       /*! default constructor - creates a new (and at first, empty) scene */
       Scene()
         : world(std::make_shared<Object>("<root>"))
-        {}
+      {}
       virtual ~Scene()
       {
-        std::cout << "destructor in scene .." << std::endl;
         world = nullptr;
-        std::cout << "deleted world" << std::endl;
       }
 
       /*! parse the given file name, return parsed scene */
