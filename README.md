@@ -42,9 +42,13 @@ A few screenshots:
 
 # Release Notes
 
+V 2.4:
+
+- added point and spot light sources - can now parse villa-lights-on
+
 V 2.3:
 
-- added 'hair' material (can now parse pbrt v3 hair files)
+- added 'hair' shape (can now parse pbrt v3 hair files)
 - removed all DLL build for windows; now using only static libraries on windows
   (this avoids windows issues with passing std::string etc through dll boundaries)
 
