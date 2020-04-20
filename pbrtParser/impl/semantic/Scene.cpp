@@ -444,7 +444,7 @@ namespace pbrt {
     if (!world->shapes.empty())
       return false;
     for (auto inst : world->instances)
-      if (!inst->object->instances.empty())
+      if (inst && inst->object && !inst->object->instances.empty())
         return false;
     return true;
   }
