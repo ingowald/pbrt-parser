@@ -23,8 +23,13 @@
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+#if defined(_MSC_VER)
 #ifndef __PRETTY_FUNCTION__
 #  define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+#else
+// Assume MinGW gcc or llvm-mingw(clang)
+// __PRETTY_FUNCTION__ is provided for such compilers
 #endif
 #endif
 
