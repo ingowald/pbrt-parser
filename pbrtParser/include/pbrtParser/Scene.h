@@ -289,6 +289,8 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
 
     std::string fileName;
+    float uscale = 1.f;
+    float vscale = 1.f;
   };
   
   /*! a texture defined by a disney ptex file. these are kind-of like

@@ -33,6 +33,20 @@ namespace pbrt {
       geom->textures[param.first] = findOrCreateTexture(shape->getParamTexture(param.first));//param.second);
     }
   }
+
+  Texture::SP SemanticParser::createTexture_image(pbrt::syntactic::Texture::SP in)
+  {
+    const std::string fileName = in->getParamString("filename");
+    if (fileName == "")
+      std::cerr << "warning: pbrt image texture, but no filename!?" << std::endl;
+
+    ImageTexture::SP tex = std::make_shared<ImageTexture>(fileName);
+    if (in->hasParam1f("uscale"))
+      tex->uscale = in->getParam1f("uscale");
+    if (in->hasParam1f("vscale"))
+      tex->vscale = in->getParam1f("vscale");
+    return tex;
+  }
   
   Texture::SP SemanticParser::createTexture_mix(pbrt::syntactic::Texture::SP in)
   {
@@ -134,6 +148,8 @@ namespace pbrt {
     // ------------------------------------------------------------------
     // switch to type-specialized parsing functions ...
     // ------------------------------------------------------------------
+    if (in->mapType == "imagemap")
+      return createTexture_image(in);
     if (in->mapType == "scale") 
       return createTexture_scale(in);
     if (in->mapType == "mix") 
@@ -149,12 +165,6 @@ namespace pbrt {
     // do small ones right here (todo: move those to separate
     // functions for cleanliness' sake)
     // ------------------------------------------------------------------
-    if (in->mapType == "imagemap") {
-      const std::string fileName = in->getParamString("filename");
-      if (fileName == "")
-        std::cerr << "warning: pbrt image texture, but no filename!?" << std::endl;
-      return std::make_shared<ImageTexture>(fileName);
-    }
     if (in->mapType == "fbm") {
       FbmTexture::SP tex = std::make_shared<FbmTexture>();
       return tex;

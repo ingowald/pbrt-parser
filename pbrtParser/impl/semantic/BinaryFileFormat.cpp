@@ -956,6 +956,8 @@ namespace pbrt {
   {
     Texture::writeTo(binary);
     binary.write(fileName);
+    binary.write(uscale);
+    binary.write(vscale);
     return TYPE_IMAGE_TEXTURE;
   }
   
@@ -964,6 +966,8 @@ namespace pbrt {
   {
     Texture::readFrom(binary);
     binary.read(fileName);
+    binary.read(uscale);
+    binary.read(vscale);
   }
 
 

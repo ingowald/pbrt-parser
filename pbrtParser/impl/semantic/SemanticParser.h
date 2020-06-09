@@ -78,6 +78,7 @@ namespace pbrt {
       checking whether that was already created */
     Texture::SP createTextureFrom(pbrt::syntactic::Texture::SP in);
     /*! @{ specializing parsing function for given texture type */
+    Texture::SP createTexture_image(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_mix(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_scale(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_ptex(pbrt::syntactic::Texture::SP in);
