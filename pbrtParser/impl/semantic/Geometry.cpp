@@ -16,68 +16,182 @@
 
 #include "SemanticParser.h"
 // ply parser:
-#include "../3rdParty/happly.h"
+#include "../3rdParty/rply.h"
+
+static int rply_vertex_callback_vec3(p_ply_argument argument) {
+  float* buffer;
+  ply_get_argument_user_data(argument, (void**)&buffer, nullptr);
+
+  long index;
+  ply_get_argument_element(argument, nullptr, &index);
+
+  float value = (float)ply_get_argument_value(argument);
+  buffer[index * 3] = value;
+  return 1;
+}
+
+static int rply_vertex_callback_vec2(p_ply_argument argument) {
+    float* buffer;
+    ply_get_argument_user_data(argument, (void**)&buffer, nullptr);
+
+    long index;
+    ply_get_argument_element(argument, nullptr, &index);
+
+    float value = (float)ply_get_argument_value(argument);
+    buffer[index * 2] = value;
+    return 1;
+}
+
+static int rply_face_callback(p_ply_argument argument) {
+  int* buffer;
+  ply_get_argument_user_data(argument, (void**)&buffer, nullptr);
+
+  long length, value_index;
+  ply_get_argument_property(argument, nullptr, &length, &value_index);
+
+  // the first value of a list property, the one that gives the number of entries
+  if (value_index == -1) {
+    if (length != 3) {
+      // NOTE: we can also handles quads if necessary (length == 4)
+      throw std::runtime_error("Found face with vertex count different from 3, only triangles are supported");
+    }
+    return 1; // continue;
+  }
+
+  long index;
+  ply_get_argument_element(argument, nullptr, &index);
+  buffer[index * 3 + value_index] = (int)ply_get_argument_value(argument);
+  return 1;
+}
 
 namespace pbrt {
   namespace ply {
-    
     void parse(const std::string &fileName,
-               std::vector<vec3f> &pos,
-               std::vector<vec3f> &nor,
-               std::vector<vec2f> &tex,
-               std::vector<vec3i> &idx)
+      std::vector<vec3f> &pos,
+      std::vector<vec3f> &nor,
+      std::vector<vec2f> &tex,
+      std::vector<vec3i> &idx)
     {
-      happly::PLYData ply(fileName);
-        
-      if(ply.hasElement("vertex")) {
-        happly::Element& elem = ply.getElement("vertex");
-        if(elem.hasProperty("x") && elem.hasProperty("y") && elem.hasProperty("z")) {
-          std::vector<float> x = elem.getProperty<float>("x");
-          std::vector<float> y = elem.getProperty<float>("y");
-          std::vector<float> z = elem.getProperty<float>("z");
-          pos.resize(x.size());
-          for(int i = 0; i < (int)x.size(); i ++) {
-            pos[i] = vec3f(x[i], y[i], z[i]);
-          }
-        } else {
-          throw std::runtime_error("missing positions in ply");
-        }
-        if(elem.hasProperty("nx") && elem.hasProperty("ny") && elem.hasProperty("nz")) {
-          std::vector<float> x = elem.getProperty<float>("nx");
-          std::vector<float> y = elem.getProperty<float>("ny");
-          std::vector<float> z = elem.getProperty<float>("nz");
-          nor.resize(x.size());
-          for(int i = 0; i < (int)x.size(); i ++) {
-            nor[i] = vec3f(x[i], y[i], z[i]);
-          }
-        }
-        if(elem.hasProperty("u") && elem.hasProperty("v")) {
-          std::vector<float> u = elem.getProperty<float>("u");
-          std::vector<float> v = elem.getProperty<float>("v");
-          tex.resize(u.size());
-          for(int i = 0; i < (int)u.size(); i ++) {
-            tex[i] = vec2f(u[i], v[i]);
-          }
-        }
-      } else {
-        throw std::runtime_error("missing positions in ply");
-      }
-      if (ply.hasElement("face")) {
-        happly::Element& elem = ply.getElement("face");
-        if(elem.hasProperty("vertex_indices")) {
-          std::vector<std::vector<int>> faces = elem.getListPropertyAnySign<int>("vertex_indices");
-          for(int j = 0; j < (int)faces.size(); j ++) {
-            std::vector<int>& face = faces[j];
-            for (int i=2;i<(int)face.size();i++) {
-              idx.push_back(vec3i(face[0], face[i-1], face[i]));
+      p_ply ply = ply_open(fileName.c_str(), nullptr, 0, nullptr);
+      if (!ply)
+        throw std::runtime_error(std::string("Couldn't open PLY file " + fileName).c_str());
+
+      if (!ply_read_header(ply))
+        throw std::runtime_error(std::string("Unable to read the header of PLY file " + fileName).c_str());
+
+      long vertex_count = 0;
+      long face_count = 0;
+      bool has_normals = false;
+      bool has_uvs = false;
+      bool has_indices = false;
+      const char* tex_coord_u_name = nullptr;
+      const char* tex_coord_v_name = nullptr;
+      const char* vertex_indices_name = nullptr;
+
+      // Inspect structure of the PLY file.
+      p_ply_element element = nullptr;
+      while ((element = ply_get_next_element(ply, element)) != nullptr) {
+        const char* name;
+        long instance_count;
+        ply_get_element_info(element, &name, &instance_count);
+
+        // Check for vertex element.
+        if (strcmp(name, "vertex") == 0) {
+          vertex_count = instance_count;
+
+          bool has_position_components[3] = {false};
+          bool has_normal_components[3] = {false};
+          bool has_uv_components[2] = {false};
+         
+          // Inspect vertex properties.
+          p_ply_property property = nullptr;
+          while ((property = ply_get_next_property(element, property)) != nullptr) {
+            const char* pname;
+            ply_get_property_info(property, &pname, nullptr, nullptr, nullptr);
+
+            if (!strcmp(pname, "x"))
+              has_position_components[0] = true;
+            else if (!strcmp(pname, "y"))
+              has_position_components[1] = true;
+            else if (!strcmp(pname, "z"))
+              has_position_components[2] = true;
+            else if (!strcmp(pname, "nx"))
+              has_normal_components[0] = true;
+            else if (!strcmp(pname, "ny"))
+              has_normal_components[1] = true;
+            else if (!strcmp(pname, "nz"))
+              has_normal_components[2] = true;
+            else if (!strcmp(pname, "u") || !strcmp(pname, "s") || !strcmp(pname, "texture_u") || !strcmp(pname, "texture_s")) {
+              has_uv_components[0] = true;
+              tex_coord_u_name = pname;
+            }
+            else if (!strcmp(pname, "v") || !strcmp(pname, "t") || !strcmp(pname, "texture_v") || !strcmp(pname, "texture_t")) {
+              has_uv_components[1] = true;
+              tex_coord_v_name = pname;
             }
           }
-        } else {
-          throw std::runtime_error("missing faces in ply");
-        }          
-      } else {
-        throw std::runtime_error("missing faces in ply");
-      }                        
+
+          if (!(has_position_components[0] && has_position_components[1] && has_position_components[2]))
+            throw std::runtime_error(fileName + ": Vertex coordinate property not found!");
+
+          has_normals = has_normal_components[0] && has_normal_components[1] && has_normal_components[2];
+          has_uvs = has_uv_components[0] && has_uv_components[1];
+        }
+
+        // Check for face element.
+        else if (strcmp(name, "face") == 0) {
+          face_count = instance_count;
+
+          // Inspect face properties.
+          p_ply_property property = nullptr;
+          while ((property = ply_get_next_property(element, property)) != nullptr) {
+            const char* pname;
+            ply_get_property_info(property, &pname, nullptr, nullptr, nullptr);
+            if (!strcmp(pname, "vertex_index") || !strcmp(pname, "vertex_indices")) {
+              has_indices = true;
+              vertex_indices_name = pname;
+            }
+          }
+        }
+      }
+
+      if (vertex_count == 0 || face_count == 0)
+        throw std::runtime_error(fileName + ": PLY file is invalid! No face/vertex elements found!");
+
+      pos.resize(vertex_count);
+      if (has_normals)
+        nor.resize(vertex_count);
+      if (has_uvs)
+        tex.resize(vertex_count);
+      if (has_indices)
+        idx.resize(face_count);
+
+      // Set callbacks to process the PLY properties.
+      ply_set_read_cb(ply, "vertex", "x", rply_vertex_callback_vec3, &pos[0].x, 0);
+      ply_set_read_cb(ply, "vertex", "y", rply_vertex_callback_vec3, &pos[0].y, 0);
+      ply_set_read_cb(ply, "vertex", "z", rply_vertex_callback_vec3, &pos[0].z, 0);
+
+      if (has_normals) {
+        ply_set_read_cb(ply, "vertex", "nx", rply_vertex_callback_vec3, &nor[0].x, 0);
+        ply_set_read_cb(ply, "vertex", "ny", rply_vertex_callback_vec3, &nor[0].y, 0);
+        ply_set_read_cb(ply, "vertex", "nz", rply_vertex_callback_vec3, &nor[0].z, 0);
+      }
+
+      if (has_uvs) {
+        ply_set_read_cb(ply, "vertex", tex_coord_u_name, rply_vertex_callback_vec2, &tex[0].x, 0);
+        ply_set_read_cb(ply, "vertex", tex_coord_v_name, rply_vertex_callback_vec2, &tex[0].y, 0);
+      }
+
+      if (has_indices) {
+        ply_set_read_cb(ply, "face", vertex_indices_name, rply_face_callback, &idx[0].x, 0);
+      }
+
+      // Read ply file.
+      if (!ply_read(ply)) {
+        ply_close(ply);
+        throw std::runtime_error(fileName + ": unable to read the contents of PLY file");
+      }
+      ply_close(ply);
     }
   } // ::pbrt::ply
 
