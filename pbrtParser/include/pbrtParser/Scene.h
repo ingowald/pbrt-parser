@@ -244,6 +244,7 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
 
     vec3f L;
+    int nSamples = 1;
   };
 
   /*! a area light of type 'diffuse', with a 'blackbody L' parameter */
@@ -261,6 +262,7 @@ namespace pbrt {
     vec3f LinRGB() const;
 
     float temperature, scale;
+    int nSamples = 1;
   };
 
   struct Texture : public Entity {

@@ -365,10 +365,12 @@ namespace pbrt {
         in->getParam2f(&v.x,"L");
         diffuse->temperature = v.x;
         diffuse->scale       = v.y;
+        diffuse->nSamples = in->getParam1i("nsamples", 1);
         return diffuse;
       } else if (in->hasParam3f("L")) {
         DiffuseAreaLightRGB::SP diffuse = std::make_shared<DiffuseAreaLightRGB>();
         in->getParam3f(&diffuse->L.x,"L");
+        diffuse->nSamples = in->getParam1i("nsamples", 1);
         return diffuse;
       } else {
         std::cout << "Warning: diffuse area light, but no 'L' parameter, or L is neither two (blackbody) nor three (rgba) floats?! Ignoring." << std::endl;
