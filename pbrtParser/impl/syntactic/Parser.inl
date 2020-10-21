@@ -420,7 +420,8 @@ namespace pbrt {
         // -------------------------------------------------------
         if (token == "LightSource") {
           std::shared_ptr<LightSource> lightSource
-            = std::make_shared<LightSource>(next().text,ctm);
+            = std::make_shared<LightSource>(next().text,ctm,
+                                            currentGraphicsState->getClone());
           parseParams(lightSource->param);
           getCurrentObject()->lightSources.push_back(lightSource);
           // attributesStack.top()->lightSources.push_back(lightSource);
@@ -435,8 +436,6 @@ namespace pbrt {
             = std::make_shared<AreaLightSource>(next().text);
           parseParams(lightSource->param);
           // getCurrentObject()->lightSources.push_back(lightSource);
-          PING;
-          PRINT(token.text);
           currentGraphicsState->areaLightSources.push_back(lightSource);
           currentGraphicsState->modified();
           continue;

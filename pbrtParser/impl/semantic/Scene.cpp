@@ -389,6 +389,7 @@ namespace pbrt {
       : result(std::make_shared<Object>())
     {
       traverse(world, affine3f::identity());
+      result->lightSources = world->lightSources;
     }
     
     Object::SP
