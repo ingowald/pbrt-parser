@@ -111,11 +111,11 @@ namespace pbrt {
       Attributes() = default;
       Attributes(const Attributes&) = delete;
       Attributes& operator=(const Attributes&) = delete;
-      Attributes(Attributes::SP parent)
-        : parent(parent),
-          areaLightSources(areaLightSources),
-          mediumInterface(mediumInterface),
-          reverseOrientation(reverseOrientation)
+      Attributes(Attributes::SP _parent)
+        : parent(_parent),
+          areaLightSources(_parent->areaLightSources),
+          mediumInterface(_parent->mediumInterface),
+          reverseOrientation(_parent->reverseOrientation)
       {}
 
       /*! Save the current graphics state and initialize a new one */
@@ -126,7 +126,10 @@ namespace pbrt {
         // newGraphicsState->reverseOrientation = graphicsState->reverseOrientation;
         // newGraphicsState->parent = graphicsState;
         // graphicsState = newGraphicsState;
-        current = std::make_shared<Attributes>(current);
+        current 
+          = current.get()
+          ? std::make_shared<Attributes>(current)
+          : std::make_shared<Attributes>();
       }
 
       /*! when shapes etc get created, they need a copy of the full
@@ -171,7 +174,7 @@ namespace pbrt {
           attribtues gets created that's a full copy of the current
           attribute stack. as this operation is expensive, we cache
           the last clone'd object */
-      Attributes::SP lastClone;
+      Attributes::SP lastClone = nullptr;
       
       /*! Restore the parent graphics state */
       static void pop(Attributes::SP &current) {

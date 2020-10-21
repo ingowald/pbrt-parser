@@ -255,6 +255,7 @@ namespace pbrt {
     BasicParser<DS>::BasicParser(const std::string &basePath) 
       : basePath(basePath)
       , scene(std::make_shared<Scene>())
+      , currentGraphicsState(std::make_shared<Attributes>())
       , dbg(false)
     {
       ctm.reset();
