@@ -19,7 +19,7 @@ include(CMakePackageConfigHelpers)
 project(pbrtParser)
 
 set(pbrtParser_VERSION_MAJOR 2)
-set(pbrtParser_VERSION_MINOR 2)
+set(pbrtParser_VERSION_MINOR 4)
 set(pbrtParser_VERSION_PATCH 0)
 
 if(COMMAND cmake_policy)

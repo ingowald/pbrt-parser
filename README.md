@@ -42,6 +42,10 @@ A few screenshots:
 
 # Release Notes
 
+V 2.4:
+
+- major bugfixes; changed attribute handling, can not properly parse area lights again
+
 V 2.3:
 
 - added 'hair' material (can now parse pbrt v3 hair files)
