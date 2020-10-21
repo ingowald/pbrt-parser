@@ -26,6 +26,12 @@
 
 #define _unused(x) ((void)(x))
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
+
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   
@@ -249,7 +255,6 @@ namespace pbrt {
     BasicParser<DS>::BasicParser(const std::string &basePath) 
       : basePath(basePath)
       , scene(std::make_shared<Scene>())
-      , currentGraphicsState(std::make_shared<Attributes>())
       , dbg(false)
     {
       ctm.reset();
@@ -293,7 +298,7 @@ namespace pbrt {
     {
       popTransform();
       Attributes::pop(currentGraphicsState);
-      currentMaterial = materialStack.top();
+      currentMaterial  = materialStack.top();
       materialStack.pop();
     }
     
@@ -381,6 +386,8 @@ namespace pbrt {
         /* according to the docs, 'ReverseOrientation' only flips the
            normals, not the actual transform */
         currentGraphicsState->reverseOrientation = !currentGraphicsState->reverseOrientation;
+        currentGraphicsState->modified();
+
         return true;
       }
       if (token == "CoordSysTransform") {
@@ -428,7 +435,10 @@ namespace pbrt {
             = std::make_shared<AreaLightSource>(next().text);
           parseParams(lightSource->param);
           // getCurrentObject()->lightSources.push_back(lightSource);
+          PING;
+          PRINT(token.text);
           currentGraphicsState->areaLightSources.push_back(lightSource);
+          currentGraphicsState->modified();
           continue;
         }
 
@@ -441,7 +451,7 @@ namespace pbrt {
             = std::make_shared<Material>(type);
           parseParams(material->param);
           currentMaterial = material;
-          material->attributes = Attributes::freeze(currentGraphicsState);
+          material->attributes = currentGraphicsState->getClone();
           continue;
         }
 
@@ -455,7 +465,7 @@ namespace pbrt {
           std::shared_ptr<Texture> texture
             = std::make_shared<Texture>(name,texelType,mapType);
           currentGraphicsState->insertNamedTexture(name, texture);
-          texture->attributes = Attributes::freeze(currentGraphicsState);
+          texture->attributes = currentGraphicsState->getClone();
           parseParams(texture->param);
           continue;
         }
@@ -469,7 +479,7 @@ namespace pbrt {
             = std::make_shared<Material>("<implicit>");
           currentGraphicsState->insertNamedMaterial(name, material);
           parseParams(material->param);
-          material->attributes = Attributes::freeze(currentGraphicsState);
+          material->attributes = currentGraphicsState->getClone();
           
           /* named material have the parameter type implicitly as a
              parameter rather than explicitly on the
@@ -550,6 +560,7 @@ namespace pbrt {
         if (token == "MediumInterface") {
           currentGraphicsState->mediumInterface.first = next().text;
           currentGraphicsState->mediumInterface.second = next().text;
+          currentGraphicsState->modified();
           continue;
         }
 
@@ -579,7 +590,7 @@ namespace pbrt {
           std::shared_ptr<Shape> shape
             = std::make_shared<Shape>(next().text,
                                       currentMaterial,
-                                      Attributes::freeze(currentGraphicsState),
+                                      currentGraphicsState->getClone(),
                                       ctm);
           parseParams(shape->param);
           getCurrentObject()->shapes.push_back(shape);

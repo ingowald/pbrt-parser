@@ -18,6 +18,16 @@
 // ply parser:
 #include "../3rdParty/happly.h"
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+#ifdef __WIN32__
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __FUNCTION__ << std::endl;
+#else
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+#endif
+
+
 namespace pbrt {
   namespace ply {
     
@@ -295,20 +305,19 @@ namespace pbrt {
 
     Shape::SP newShape = emitShape(pbrtShape);
     emittedShapes[pbrtShape] = newShape;
+
     if (pbrtShape->attributes) {
       newShape->reverseOrientation
         = pbrtShape->attributes->reverseOrientation;
       /* now, add area light sources */
       
       if (!pbrtShape->attributes->areaLightSources.empty()) {
-        std::cout << "Shape has " << pbrtShape->attributes->areaLightSources.size()
-                  << " area light sources..." << std::endl;
+        // std::cout << "Shape has " << pbrtShape->attributes->areaLightSources.size()
+        //           << " area light sources..." << std::endl;
         auto &areaLights = pbrtShape->attributes->areaLightSources;
-        if (!areaLights.empty()) {
-          if (areaLights.size() > 1)
-            std::cout << "Warning: Shape has more than one area light!?" << std::endl;
-          newShape->areaLight = parseAreaLight(areaLights[0]);
-        }
+        if (areaLights.size() > 1)
+          std::cout << "Warning: Shape has more than one area light!?" << std::endl;
+        newShape->areaLight = parseAreaLight(areaLights[0]);
       }
     }
 

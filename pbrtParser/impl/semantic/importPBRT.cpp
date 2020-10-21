@@ -691,12 +691,18 @@ namespace pbrt {
       return Shape::SP();
     }
 
+    AreaLightSource::SP getAreaLight(pbrt::syntactic::Attributes::SP attributes)
+    {
+      return 0;  kljlakdf;
+    }
+    
     Shape::SP findOrCreateShape(pbrt::syntactic::Shape::SP pbrtShape)
     {
       if (emittedShapes.find(pbrtShape) != emittedShapes.end())
         return emittedShapes[pbrtShape];
 
       emittedShapes[pbrtShape] = emitShape(pbrtShape);
+      emittedShapes[pbrtShape]->areaLight = getAreaLight(pbrtShape->attributes);
       return emittedShapes[pbrtShape];
     }
     
