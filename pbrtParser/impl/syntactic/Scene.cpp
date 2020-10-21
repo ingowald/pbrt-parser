@@ -20,6 +20,11 @@
 #include <sstream>
 #include <utility>
 
+#ifndef PRINT
+# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
+#endif
+
 /*! namespace for all things pbrt parser, both syntactical *and* semantical parser */
 namespace pbrt {
   /*! namespace for syntactic-only parser - this allows to distringuish

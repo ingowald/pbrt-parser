@@ -44,7 +44,11 @@ A few screenshots:
 
 V 2.4:
 
+<<<<<<< HEAD
 - added point and spot light sources - can now parse villa-lights-on
+=======
+- major bugfixes; changed attribute handling, can not properly parse area lights again
+>>>>>>> devel
 
 V 2.3:
 
