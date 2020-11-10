@@ -132,36 +132,7 @@ namespace pbrt {
           : std::make_shared<Attributes>();
       }
 
-      /*! when shapes etc get created, they need a copy of the full
-          attribute stack; and in a way that future changes to any
-          attributes, list of names somethigs, etc, will not reversely
-          affect already created objects. To do this, we allow
-          attribtues to be 'cloned', in which case a new set of
-          attribtues gets created that's a full copy of the current
-          attribute stack. as this operation is expensive, we cache
-          the last clone'd object */
-      Attributes::SP getClone() {
-        if (!lastClone) {
-          lastClone = std::make_shared<Attributes>();
-          lastClone->mediumInterface = mediumInterface;
-          lastClone->reverseOrientation = reverseOrientation;
-          lastClone->areaLightSources = areaLightSources;
-          std::stack<Attributes *> fullHistory;
-          for (Attributes *s = this; s; s = s->parent.get())
-            fullHistory.push(s);
-          while (!fullHistory.empty()) {
-            Attributes *att = fullHistory.top();
-            fullHistory.pop();
-            for (auto it : att->namedMaterial)
-              lastClone->namedMaterial[it.first] = it.second;
-            for (auto it : att->namedMedium)
-              lastClone->namedMedium[it.first] = it.second;
-            for (auto it : att->namedTexture)
-              lastClone->namedTexture[it.first] = it.second;
-          }
-        }
-        return lastClone;
-      }
+      Attributes::SP getClone();
 
       /*! clear the cache of the last clone - see 'lastClone' */
       void modified() { lastClone = nullptr; }
@@ -184,18 +155,22 @@ namespace pbrt {
       }
 
       /*! Insert named material */
-      void insertNamedMaterial(std::string name, std::shared_ptr<Material> material) {
+      void insertNamedMaterial(std::string name,
+                               std::shared_ptr<Material> material) {
         namedMaterial[name] = material;
+        modified();
       }
 
       /*! Insert named medium */
       void insertNamedMedium(std::string name, std::shared_ptr<Medium> medium) {
         namedMedium[name] = medium;
+        modified();
       }
 
       /*! Insert named texture */
       void insertNamedTexture(std::string name, std::shared_ptr<Texture> texture) {
         namedTexture[name] = texture;
+        modified();
       }
 
       /*! Find named material either in this or in a parent scope */
@@ -217,7 +192,7 @@ namespace pbrt {
       std::pair<std::string,std::string>               mediumInterface;
       bool reverseOrientation { false };
 
-    private:
+    // private:
       /*! Parent graphics state */
       Attributes::SP parent = nullptr;
 
@@ -238,7 +213,7 @@ namespace pbrt {
         parent scopes if not found. Also search prior versions */
       template <typename Item>
       Item findNamedItem(Item item, std::string name) {
-        auto items = get(Item{});
+        auto &items = get(Item{});
         auto it = items.find(name);
         if (it != items.end()) return it->second;
         if (parent) return parent->findNamedItem(item,name);

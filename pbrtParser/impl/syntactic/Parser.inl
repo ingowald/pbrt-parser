@@ -477,6 +477,7 @@ namespace pbrt {
           std::string name = next().text;
           std::shared_ptr<Material> material
             = std::make_shared<Material>("<implicit>");
+
           currentGraphicsState->insertNamedMaterial(name, material);
           parseParams(material->param);
           material->attributes = currentGraphicsState->getClone();

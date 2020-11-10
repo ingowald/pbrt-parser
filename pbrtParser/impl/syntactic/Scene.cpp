@@ -355,5 +355,37 @@ namespace pbrt {
       return ss.str();
     }
 
+    /*! when shapes etc get created, they need a copy of the full
+      attribute stack; and in a way that future changes to any
+      attributes, list of names somethigs, etc, will not reversely
+      affect already created objects. To do this, we allow
+      attribtues to be 'cloned', in which case a new set of
+      attribtues gets created that's a full copy of the current
+      attribute stack. as this operation is expensive, we cache
+      the last clone'd object */
+    Attributes::SP Attributes::getClone()
+    {
+      if (!lastClone) {
+        lastClone = std::make_shared<Attributes>();
+        lastClone->mediumInterface = mediumInterface;
+        lastClone->reverseOrientation = reverseOrientation;
+        lastClone->areaLightSources = areaLightSources;
+        std::stack<Attributes *> fullHistory;
+        for (Attributes *s = this; s; s = s->parent.get())
+          fullHistory.push(s);
+        while (!fullHistory.empty()) {
+          Attributes *att = fullHistory.top();
+          fullHistory.pop();
+          for (auto it : att->namedMaterial) {
+            lastClone->namedMaterial[it.first] = it.second;
+          }
+          for (auto it : att->namedMedium)
+            lastClone->namedMedium[it.first] = it.second;
+          for (auto it : att->namedTexture)
+            lastClone->namedTexture[it.first] = it.second;
+        }
+      }
+      return lastClone;
+    }
   } // ::pbrt::syntactic
 } // ::pbrt
