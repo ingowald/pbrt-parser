@@ -334,7 +334,7 @@ namespace pbrt {
     if (in->hasParamTexture("amount"))
       mat->map_amount = findOrCreateTexture(in->getParamTexture("amount"));
     else
-      in->getParam3f(&mat->amount.x,"amount");
+      mat->amount = in->getParam3f("amount",vec3f(0.5f));
           
     const std::string name0 = in->getParamString("namedmaterial1");
     if (name0 == "")
