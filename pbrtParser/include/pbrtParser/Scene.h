@@ -244,6 +244,7 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
 
     vec3f L;
+    int nSamples = 1;
   };
 
   /*! a area light of type 'diffuse', with a 'blackbody L' parameter */
@@ -261,6 +262,7 @@ namespace pbrt {
     vec3f LinRGB() const;
 
     float temperature, scale;
+    int nSamples = 1;
   };
 
   struct Texture : public Entity {
@@ -289,6 +291,8 @@ namespace pbrt {
     virtual void readFrom(BinaryReader &) override;
 
     std::string fileName;
+    float uscale = 1.f;
+    float vscale = 1.f;
   };
   
   /*! a texture defined by a disney ptex file. these are kind-of like
@@ -1108,6 +1112,62 @@ namespace pbrt {
     std::string        fileName;
   };
 
+  struct Sampler : public Entity {
+      typedef std::shared_ptr<Sampler> SP;
+
+      enum class Type {
+          stratified
+      };
+
+      Type type = Type::stratified;
+      int pixelSamples = 1;
+
+      // used by stratified sampler
+      int xSamples = 1;
+      int ySamples = 1;
+
+      std::string toString() const override { return "Sampler"; }
+      int writeTo(BinaryWriter &) override;
+      void readFrom(BinaryReader &) override;
+  };
+
+  struct Integrator : public Entity {
+      typedef std::shared_ptr<Integrator> SP;
+
+      enum class Type {
+          direct_lighting,
+          path_tracer
+      };
+
+      Type type = Type::path_tracer;
+      int maxDepth = 0;
+
+      std::string toString() const override { return "Integrator"; }
+      int writeTo(BinaryWriter &) override;
+      void readFrom(BinaryReader &) override;
+  };
+
+  struct PixelFilter : public Entity {
+      typedef std::shared_ptr<PixelFilter> SP;
+
+      enum class Type {
+          box,
+          gaussian,
+          triangle
+      };
+
+      Type type = Type::box;
+      float radius = 0.f;
+
+      // used by gaussian filter
+      float alpha = 0.f;
+
+      std::string toString() const override { return "PixelFilter"; }
+      int writeTo(BinaryWriter &) override;
+      void readFrom(BinaryReader &) override;
+
+  };
+
   /*! the complete scene - pretty much the 'root' object that
     contains the WorldBegin/WorldEnd entities, plus high-level
     stuff like camera, frame buffer specification, etc */
@@ -1152,7 +1212,13 @@ namespace pbrt {
     std::vector<Camera::SP> cameras;
       
     Film::SP                film;
-    
+
+    Sampler::SP             sampler;
+
+    Integrator::SP          integrator;
+
+    PixelFilter::SP         pixelFilter;
+
     /*! the worldbegin/worldend content */
     Object::SP              world;
   };

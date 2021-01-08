@@ -78,6 +78,7 @@ namespace pbrt {
       checking whether that was already created */
     Texture::SP createTextureFrom(pbrt::syntactic::Texture::SP in);
     /*! @{ specializing parsing function for given texture type */
+    Texture::SP createTexture_image(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_mix(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_scale(pbrt::syntactic::Texture::SP in);
     Texture::SP createTexture_ptex(pbrt::syntactic::Texture::SP in);
@@ -214,7 +215,13 @@ namespace pbrt {
 
   /*! parse syntactic camera's 'film' value */
   void createFilm(Scene::SP ours, pbrt::syntactic::Scene::SP pbrt);
-  
+
+  void createSampler(Scene::SP ours, pbrt::syntactic::Scene::SP pbrt);
+
+  void createIntegrator(Scene::SP ours, pbrt::syntactic::Scene::SP pbrt);
+
+  void createPixelFilter(Scene::SP ours, pbrt::syntactic::Scene::SP pbrt);
+
   /*! create a scene->camera from the pbrt model, if specified, or
     leave unchanged if not */
   void createCamera(Scene::SP scene, pbrt::syntactic::Scene::SP pbrt);
