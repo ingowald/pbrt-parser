@@ -53,6 +53,8 @@ namespace pbrt {
     TYPE_CAMERA,
     TYPE_FILM,
     TYPE_SPECTRUM,
+    TYPE_SAMPLER,
+    TYPE_INTEGRATOR,
     
     TYPE_MATERIAL=10,
     TYPE_DISNEY_MATERIAL,
@@ -94,6 +96,8 @@ namespace pbrt {
     TYPE_DISTANT_LIGHT_SOURCE,
     TYPE_SPOT_LIGHT_SOURCE,
     TYPE_POINT_LIGHT_SOURCE,
+
+    TYPE_PIXEL_FILTER = 80,
   };
     
   /*! a simple buffer for binary data */
@@ -336,6 +340,12 @@ namespace pbrt {
         return std::make_shared<PointLightSource>();
       case TYPE_SPECTRUM:
         return std::make_shared<Spectrum>();
+      case TYPE_SAMPLER:
+        return std::make_shared<Sampler>();
+      case TYPE_INTEGRATOR:
+        return std::make_shared<Integrator>();
+      case TYPE_PIXEL_FILTER:
+        return std::make_shared<PixelFilter>();
       default:
         std::cerr << "unknown entity type tag " << typeTag << " in binary file" << std::endl;
         return Entity::SP();
@@ -574,7 +584,53 @@ namespace pbrt {
     binary.read(fileName);
   }
 
+  int Sampler::writeTo(BinaryWriter &binary) {
+      int samplerType = static_cast<int>(type);
+      binary.write(samplerType);
+      binary.write(pixelSamples);
+      binary.write(xSamples);
+      binary.write(ySamples);
+      return TYPE_SAMPLER;
+  }
 
+  void Sampler::readFrom(BinaryReader &binary) {
+      int samplerType;
+      binary.read(samplerType);
+      type = static_cast<Type>(samplerType);
+      binary.read(pixelSamples);
+      binary.read(xSamples);
+      binary.read(ySamples);
+  }
+
+int Integrator::writeTo(BinaryWriter &binary)  {
+    int integratorType = static_cast<int>(type);
+    binary.write(integratorType);
+    binary.write(maxDepth);
+    return TYPE_INTEGRATOR;
+}
+
+void Integrator::readFrom(BinaryReader &binary) {
+    int integratorType;
+    binary.read(integratorType);
+    type = static_cast<Type>(integratorType);
+    binary.read(maxDepth);
+}
+
+int PixelFilter::writeTo(BinaryWriter &binary)  {
+    int filterType = static_cast<int>(type);
+    binary.write(filterType);
+    binary.write(radius);
+    binary.write(alpha);
+    return TYPE_PIXEL_FILTER;
+}
+
+void PixelFilter::readFrom(BinaryReader &binary) {
+    int filterType;
+    binary.read(filterType);
+    type = static_cast<Type>(filterType);
+    binary.read(radius);
+    binary.read(alpha);
+}
 
   /*! serialize out to given binary writer */
   int Shape::writeTo(BinaryWriter &binary) 
