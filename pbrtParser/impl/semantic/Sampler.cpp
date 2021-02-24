@@ -1,3 +1,4 @@
+#include <cmath>
 #include "SemanticParser.h"
 
 namespace pbrt {
