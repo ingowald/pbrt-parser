@@ -20,6 +20,9 @@ set(SOURCES
   include/pbrtParser/Scene.h
 
   # our actual implemenatation files
+  impl/3rdparty/rplyfile.h
+  impl/3rdparty/rply.h
+  impl/3rdparty/rply.c
   impl/syntactic/Buffer.h
   impl/syntactic/Buffer.inl
   impl/syntactic/FileMapping.h
@@ -41,6 +44,9 @@ set(SOURCES
   impl/semantic/Scene.cpp
   impl/semantic/BinaryFileFormat.cpp
   impl/semantic/importPBRT.cpp
+  impl/semantic/Integrator.cpp
+  impl/semantic/Sampler.cpp
+  impl/semantic/PixelFilter.cpp
   )
 
 # ------------------------------------------------------------------
