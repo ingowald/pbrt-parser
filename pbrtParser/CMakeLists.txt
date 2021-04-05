@@ -20,9 +20,9 @@ set(SOURCES
   include/pbrtParser/Scene.h
 
   # our actual implemenatation files
-  impl/3rdparty/rplyfile.h
-  impl/3rdparty/rply.h
-  impl/3rdparty/rply.c
+  impl/3rdParty/rplyfile.h
+  impl/3rdParty/rply.h
+  impl/3rdParty/rply.c
   impl/syntactic/Buffer.h
   impl/syntactic/Buffer.inl
   impl/syntactic/FileMapping.h
