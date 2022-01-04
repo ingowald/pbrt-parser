@@ -717,6 +717,11 @@ namespace pbrt {
     /*! if enabled, the geometry normal of this shape should get
         flipped during rendering */
     bool reverseOrientation { false };
+
+    /*! opacity value of that shape; a value of 0 means "fully
+        transparent" (and is often used on ligth soruces) to create
+        "virtual" quad light sources */
+    float alpha = 1.f;
     
     /*! textures directl assigned to the shape (ie, not to the
       material) */

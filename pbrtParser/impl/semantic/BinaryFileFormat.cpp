@@ -33,7 +33,7 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 5
+#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 7
 
   /* 
      4: InfiniteLight::L,nsamples,scale
@@ -577,6 +577,7 @@ namespace pbrt {
     binary.write(textures);
     binary.write(areaLight);
     binary.write((int8_t)reverseOrientation);
+    binary.write(alpha);
     return TYPE_SHAPE;
   }
   
@@ -587,6 +588,7 @@ namespace pbrt {
     binary.read(textures);
     binary.read(areaLight);
     reverseOrientation = binary.read<int8_t>();
+    binary.read(alpha);
   }
 
 

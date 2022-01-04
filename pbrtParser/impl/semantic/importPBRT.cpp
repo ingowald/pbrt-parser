@@ -581,6 +581,9 @@ namespace pbrt {
       // triangle vertex indices - param "P", 3x int each
       ours->index = extractVector<vec3i>(shape,"indices");
 
+      if (auto alpha = shape->findParam<float>("alpha"))
+        ours->alpha = alpha.get(0);
+        
       affine3f xfm = shape->transform.atStart;
       for (vec3f &v : ours->vertex)
         v = xfmPoint(xfm,v);
