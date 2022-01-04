@@ -56,7 +56,8 @@ namespace pbrt {
       }
       throw std::runtime_error("unknown 'infinite' light source param '"+name+"'");
     }
-    
+
+    std::cout << "found infinite light source w/ map " << light->mapName << std::endl;
     return light;
   }
   
