@@ -106,11 +106,12 @@ namespace pbrt {
       : binStream(str)
     {
       int32_t formatTag;
-      
+      if (!binStream.good())
+        throw std::runtime_error("invalid input stream - could not open file?");
       binStream.read((char*)&formatTag,sizeof(formatTag));
       if (formatTag != ourFormatTag) {
         std::cout << "Warning: pbf file uses a different format tag ("
-                  << ((int*)(size_t)formatTag) << ") than what this library is expeting ("
+                  << ((int*)(size_t)formatTag) << ") than what this library is expecting ("
                   << ((int *)(size_t)ourFormatTag) << ")" << std::endl;
         int ourMajor = ourFormatTag >> 16;
         int fileMajor = formatTag >> 16;
