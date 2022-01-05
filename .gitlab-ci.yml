@@ -6,39 +6,6 @@ variables:
 
 
 # -------------------------------------------------------
-# ubuntu 16
-# -------------------------------------------------------
-ubuntu16-gcc-release:
-  stage: build
-  tags:
-    - docker
-  image: ubuntu:16.04
-  script:
-    - apt -y update
-    - apt -y install git cmake g++
-    - mkdir build
-    - cd build
-    - export CXX=g++
-    - cmake ${CMAKE_OPTIONS} -DCMAKE_BUILD_TYPE=Release ..
-    - make
-    - ./unittests
-
-ubuntu16-gcc-debug:
-  stage: build
-  tags:
-    - docker
-  image: ubuntu:16.04
-  script:
-    - apt -y update
-    - apt -y install git cmake g++
-    - mkdir build
-    - cd build
-    - export CXX=g++
-    - cmake ${CMAKE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug ..
-    - make
-    - ./unittests
-
-# -------------------------------------------------------
 # ubuntu 18
 # -------------------------------------------------------
 ubuntu18-gcc-release:

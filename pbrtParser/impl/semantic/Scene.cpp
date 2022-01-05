@@ -62,7 +62,10 @@ namespace pbrt {
       std::lock_guard<std::mutex> lock(mutex);
       if (haveComputedBounds) return bounds;
       bounds = box3f::empty_box();
-      for (auto v : vertex) bounds.extend(v);
+      for (auto v : vertex) {
+        bounds.extend(v);
+      }
+      
       haveComputedBounds = true;
       return bounds;
     }
@@ -243,12 +246,14 @@ namespace pbrt {
     it getsc omputed by transforming the object's bbox */
   box3f Instance::getBounds() 
   {
+    assert(object);
+    
     if (haveComputedBounds) return bounds;
 
     std::lock_guard<std::mutex> lock(mutex);
     if (haveComputedBounds) return bounds;
     const box3f ob = object->getBounds();
-    if (bounds.empty()) {
+    if (ob.empty()) {
       this->bounds = ob;
       haveComputedBounds = true;
       return ob;
@@ -383,6 +388,8 @@ namespace pbrt {
     SingleLevelFlattener(Object::SP world)
       : result(std::make_shared<Object>())
     {
+      for (auto lightSource : world->lightSources)
+        result->lightSources.push_back(lightSource);
       traverse(world, affine3f::identity());
     }
     
@@ -395,8 +402,10 @@ namespace pbrt {
       Object::SP ours = std::make_shared<Object>("ShapeFrom:"+object->name);
       for (auto geom : object->shapes)
         ours->shapes.push_back(geom);
-      for (auto lightSource : object->lightSources)
-        ours->lightSources.push_back(lightSource);
+      // light sources in instantiated objects aren't handled yet ...
+      // for (auto lightSource : object->lightSources)
+      //   ours->lightSources.push_back(lightSource);
+
       return alreadyEmitted[object] = ours;
     }
     

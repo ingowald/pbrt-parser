@@ -157,6 +157,7 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
+    affine3f transform;
     vec3f from  { 0.f,0.f,0.f };
     vec3f to    { 0.f,0.f,1.f };
     vec3f L     { 1.f,1.f,1.f };
@@ -717,6 +718,11 @@ namespace pbrt {
     /*! if enabled, the geometry normal of this shape should get
         flipped during rendering */
     bool reverseOrientation { false };
+
+    /*! opacity value of that shape; a value of 0 means "fully
+        transparent" (and is often used on ligth soruces) to create
+        "virtual" quad light sources */
+    float alpha = 1.f;
     
     /*! textures directl assigned to the shape (ie, not to the
       material) */

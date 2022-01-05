@@ -128,10 +128,11 @@ namespace pbrt {
     };
     struct box3f {
       vec3f lower, upper;
-      box3f() : lower(FLT_MAX), upper(FLT_MIN) {}//= default;
+      box3f() : lower(FLT_MAX), upper(-FLT_MAX) {}//= default;
       box3f(const vec3f& lower, const vec3f& upper) : lower{lower}, upper{upper} { }
-      inline bool  empty()  const { return upper.x < lower.x || upper.y < lower.y || upper.z < lower.z; }
-      static box3f empty_box() { return box3f(vec3f(FLT_MAX), vec3f(FLT_MIN)); }
+      inline bool  empty()  const
+      { return (upper.x < lower.x) || (upper.y < lower.y) || (upper.z < lower.z); }
+      static box3f empty_box() { return box3f(vec3f(FLT_MAX), vec3f(-FLT_MAX)); }
       void extend(const vec3f& a);
       void extend(const box3f& a);
     };
