@@ -14,13 +14,16 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif()
 cmake_minimum_required(VERSION 3.4)
 include(CMakePackageConfigHelpers)
-project(pbrtParser)
+project(pbrtParser VERSION 2.2.0)
 
-set(pbrtParser_VERSION_MAJOR 2)
-set(pbrtParser_VERSION_MINOR 2)
-set(pbrtParser_VERSION_PATCH 0)
+#set(pbrtParser_VERSION_MAJOR 2)
+#set(pbrtParser_VERSION_MINOR 2)
+#set(pbrtParser_VERSION_PATCH 0)
 
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
