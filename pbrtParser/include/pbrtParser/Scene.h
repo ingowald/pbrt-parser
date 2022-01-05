@@ -157,6 +157,7 @@ namespace pbrt {
     /*! serialize _in_ from given binary file reader */
     virtual void readFrom(BinaryReader &) override;
 
+    affine3f transform;
     vec3f from  { 0.f,0.f,0.f };
     vec3f to    { 0.f,0.f,1.f };
     vec3f L     { 1.f,1.f,1.f };

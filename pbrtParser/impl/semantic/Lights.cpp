@@ -65,6 +65,7 @@ namespace pbrt {
   (pbrt::syntactic::LightSource::SP in)
   {
     DistantLightSource::SP light = std::make_shared<DistantLightSource>();
+    light->transform = in->transform.atStart;
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "from") {

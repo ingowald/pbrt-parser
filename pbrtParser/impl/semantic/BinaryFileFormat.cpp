@@ -33,9 +33,11 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 7
+#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 8
 
-  /* 
+  /* file version history
+     8: added transform to distant lights
+     6/7: mesh.alpha, and light sources with alpha
      4: InfiniteLight::L,nsamples,scale
      3: added Shape::reverseOrientatetion
      2: added light sources to objects
@@ -754,6 +756,7 @@ namespace pbrt {
     binary.write(to);
     binary.write(L);
     binary.write(scale);
+    binary.write(transform);
     return TYPE_DISTANT_LIGHT_SOURCE;
   }
 
@@ -764,6 +767,7 @@ namespace pbrt {
     binary.read(to);
     binary.read(L);
     binary.read(scale);
+    binary.read(transform);
   }
   
   
