@@ -84,12 +84,12 @@ add_library(pbrtParser STATIC
   ${SOURCES}
 )
 
-set_target_properties(pbrtParser PROPERTIES VERSION ${pbrtParser_VERSION})
-set_target_properties(pbrtParser PROPERTIES
-  VERSION ${pbrtParser_VERSION}
-  CXX_STANDARD 11
-  CXX_STANDARD_REQUIRED ON
-)
+#set_target_properties(pbrtParser PROPERTIES VERSION ${pbrtParser_VERSION})
+#set_target_properties(pbrtParser PROPERTIES
+#  VERSION ${pbrtParser_VERSION}
+#  CXX_STANDARD 11
+#  CXX_STANDARD_REQUIRED ON
+#)
 
 target_include_directories(pbrtParser PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>

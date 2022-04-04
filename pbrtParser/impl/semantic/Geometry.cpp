@@ -253,7 +253,11 @@ namespace pbrt {
     for (vec3f &v : ours->normal)
       v = xfmNormal(xfm,v);
     extractTextures(ours,shape);
-      
+    
+    auto alphaParam = shape->findParam<float>("alpha");
+    if (alphaParam) 
+      ours->alpha = alphaParam->get(0);
+    
     return ours;
   }
 
@@ -458,6 +462,9 @@ namespace pbrt {
       LightSource::SP ourLightSource = findOrCreateLightSource(lightSource);
       if (ourLightSource)
         ourObject->lightSources.push_back(ourLightSource);
+      else
+        std::cout << "***warning***: could ont parse light source '" << lightSource->toString() << "'"
+                  << std::endl;
     }
 
     for (auto shape : pbrtObject->shapes) {
@@ -469,6 +476,9 @@ namespace pbrt {
     for (auto instance : pbrtObject->objectInstances)
       ourObject->instances.push_back(emitInstance(instance));
 
+    std::cout << "created object w/ " << ourObject->shapes.size() << " shapes, "
+              << ourObject->instances.size() << " instances, and "
+              << ourObject->lightSources.size() << " light sources" << std::endl;
     return ourObject;
   }
 

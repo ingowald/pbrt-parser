@@ -388,6 +388,8 @@ namespace pbrt {
     SingleLevelFlattener(Object::SP world)
       : result(std::make_shared<Object>())
     {
+      for (auto lightSource : world->lightSources)
+        result->lightSources.push_back(lightSource);
       traverse(world, affine3f::identity());
       result->lightSources = world->lightSources;
     }
@@ -401,8 +403,10 @@ namespace pbrt {
       Object::SP ours = std::make_shared<Object>("ShapeFrom:"+object->name);
       for (auto geom : object->shapes)
         ours->shapes.push_back(geom);
-      for (auto lightSource : object->lightSources)
-        ours->lightSources.push_back(lightSource);
+      // light sources in instantiated objects aren't handled yet ...
+      // for (auto lightSource : object->lightSources)
+      //   ours->lightSources.push_back(lightSource);
+
       return alreadyEmitted[object] = ours;
     }
     

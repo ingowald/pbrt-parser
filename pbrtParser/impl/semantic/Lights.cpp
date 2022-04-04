@@ -56,7 +56,8 @@ namespace pbrt {
       }
       throw std::runtime_error("unknown 'infinite' light source param '"+name+"'");
     }
-    
+
+    std::cout << "found infinite light source w/ map " << light->mapName << std::endl;
     return light;
   }
   
@@ -144,6 +145,7 @@ namespace pbrt {
   (pbrt::syntactic::LightSource::SP in)
   {
     DistantLightSource::SP light = std::make_shared<DistantLightSource>();
+    light->transform = in->transform.atStart;
     for (auto it : in->param) {
       std::string name = it.first;
       if (name == "from") {

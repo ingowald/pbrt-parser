@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2015-2020 Ingo Wald                                            //
+// Copyright 2015-2022 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -33,9 +33,12 @@
 
 namespace pbrt {
 
-#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 6
+#define    PBRT_PARSER_SEMANTIC_FORMAT_ID 9
 
-  /* 
+  /* file version history
+     9: after merge of gitlab into github version
+     8: added transform to distant lights
+     6/7: mesh.alpha, and light sources with alpha
      4: InfiniteLight::L,nsamples,scale
      3: added Shape::reverseOrientatetion
      2: added light sources to objects
@@ -112,11 +115,12 @@ namespace pbrt {
       : binStream(str)
     {
       int32_t formatTag;
-      
+      if (!binStream.good())
+        throw std::runtime_error("invalid input stream - could not open file?");
       binStream.read((char*)&formatTag,sizeof(formatTag));
       if (formatTag != ourFormatTag) {
         std::cout << "Warning: pbf file uses a different format tag ("
-                  << ((int*)(size_t)formatTag) << ") than what this library is expeting ("
+                  << ((int*)(size_t)formatTag) << ") than what this library is expecting ("
                   << ((int *)(size_t)ourFormatTag) << ")" << std::endl;
         int ourMajor = ourFormatTag >> 16;
         int fileMajor = formatTag >> 16;
@@ -639,6 +643,7 @@ void PixelFilter::readFrom(BinaryReader &binary) {
     binary.write(textures);
     binary.write(areaLight);
     binary.write((int8_t)reverseOrientation);
+    binary.write(alpha);
     return TYPE_SHAPE;
   }
   
@@ -649,6 +654,7 @@ void PixelFilter::readFrom(BinaryReader &binary) {
     binary.read(textures);
     binary.read(areaLight);
     reverseOrientation = binary.read<int8_t>();
+    binary.read(alpha);
   }
 
 
@@ -815,6 +821,7 @@ void PixelFilter::readFrom(BinaryReader &binary) {
     binary.write(to);
     binary.write(L);
     binary.write(scale);
+    binary.write(transform);
     return TYPE_DISTANT_LIGHT_SOURCE;
   }
 
@@ -825,6 +832,7 @@ void PixelFilter::readFrom(BinaryReader &binary) {
     binary.read(to);
     binary.read(L);
     binary.read(scale);
+    binary.read(transform);
   }
 
 

@@ -1,5 +1,5 @@
 ## ======================================================================== ##
-## Copyright 2009-2020 Ingo Wald                                            ##
+## Copyright 2009-2022 Ingo Wald                                            ##
 ##                                                                          ##
 ## Licensed under the Apache License, Version 2.0 (the "License");          ##
 ## you may not use this file except in compliance with the License.         ##
@@ -14,13 +14,12 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif()
 cmake_minimum_required(VERSION 3.4)
 include(CMakePackageConfigHelpers)
-project(pbrtParser)
-
-set(pbrtParser_VERSION_MAJOR 2)
-set(pbrtParser_VERSION_MINOR 4)
-set(pbrtParser_VERSION_PATCH 1)
+project(pbrtParser VERSION 2.4.0 LANGUAGES C CXX)
 
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
@@ -40,7 +39,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 option(pbrtParser_ENABLE_UNITTESTS "Build unit tests" OFF)
 
-set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
+#set(pbrtParser_VERSION "${pbrtParser_VERSION_MAJOR}.${pbrtParser_VERSION_MINOR}.${pbrtParser_VERSION_PATCH}")
 
 add_subdirectory(pbrtParser)
 add_subdirectory(apps)
