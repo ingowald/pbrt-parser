@@ -1,3 +1,8 @@
+Note: If you're using this project to import models
+like PBRT landscape and/or Disney Moana for some rendering research purposes,
+then you'll almost certainly want to use my newer `miniScene`
+project instead of this one. Have a look here: https://github.com/ingowald/miniScene
+
 PBRT-Parser (V1.1)
 ==================
 
